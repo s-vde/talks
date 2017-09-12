@@ -271,7 +271,7 @@ valgrind --tool=helgrind -v program
 # ThreadSanitizer & Helgrind: Data Races
 <br/><br/>
 <tr>
-    <td><img src="./trees/sanitizer/jpg/data-race-1-hb.jpg" style="height: 300px;"/></td>
+    <td><img src="./images/jpg/tsan_data-race-no-locks-hb.jpg" style="height: 300px;"/></td>
     <td><img src="./images/jpg/shadow_state_x.001.jpeg" style="height: 300px;"/></td>
 </tr>
 
@@ -280,7 +280,7 @@ valgrind --tool=helgrind -v program
 Using the *happens-before* relation:
 <br/><br/>
 <tr>
-    <td><img src='./trees/sanitizer/jpg/data-race-2-hb-1.jpg' height="400"/></td>
+    <td><img src='./images/jpg/tsan_data-race-locks-hb-1.jpg' height="400"/></td>
 </tr>
 .center[]
 
@@ -290,7 +290,7 @@ count: false
 Using the *happens-before* relation:
 <br/><br/>
 <tr>
-    <td><img src='./trees/sanitizer/jpg/data-race-2-hb-2.jpg' height="400"/></td>
+    <td><img src='./images/jpg/tsan_data-race-locks-hb-2.jpg' height="400"/></td>
 </tr>
 
 ---
@@ -299,7 +299,7 @@ count: false
 Using the *happens-before* relation:
 <br/><br/>
 <tr>
-    <td><img src='./trees/sanitizer/jpg/data-race-2-hb-3.jpg' height="400"/></td>
+    <td><img src='./images/jpg/tsan_data-race-locks-hb-3.jpg' height="400"/></td>
     <td><img src="./images/jpg/shadow_state_x.002.jpeg" style="height: 400px;"/></td>
 </tr>
 
@@ -312,7 +312,7 @@ it acquires the lock.
 # ThreadSanitizer & Helgrind: Data Races
 Limited information in *single* execution:
 <br/><br/><br/>
-.center[<img src='./trees/sanitizer/jpg/data-race-3-hb.jpg' height="375"/>]
+.center[<img src='./images/jpg/tsan_data-race-branch-hb.jpg' height="375"/>]
 
 ---
 # ThreadSanitizer: Deadlock
