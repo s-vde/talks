@@ -57,39 +57,39 @@ February 21, 2017
 
 ---
 # Threads
-.left[<img src='images/threads/threads.001.jpeg' height="500"/>]
+.left[<img src='images/jpg/threads.001.jpeg' height="500"/>]
 ---
 count: false
 # Threads
-.left[<img src='images/threads/threads.002.jpeg' height="500"/>]
+.left[<img src='images/jpg/threads.002.jpeg' height="500"/>]
 ---
 count: false
 # Threads
-.left[<img src='images/threads/threads.003.jpeg' height="500"/>]
+.left[<img src='images/jpg/threads.003.jpeg' height="500"/>]
 ---
 count: false
 # Threads
-.left[<img src='images/threads/threads.004.jpeg' height="500"/>]
+.left[<img src='images/jpg/threads.004.jpeg' height="500"/>]
 ---
 count: false
 # Threads
-.left[<img src='images/threads/threads.005.jpeg' height="500"/>]
+.left[<img src='images/jpg/threads.005.jpeg' height="500"/>]
 ---
 count: false
 # Threads
-.left[<img src='images/threads/threads.006.jpeg' height="500"/>]
+.left[<img src='images/jpg/threads.006.jpeg' height="500"/>]
 ---
 count: false
 # Threads
-.left[<img src='images/threads/threads.007.jpeg' height="500"/>]
+.left[<img src='images/jpg/threads.007.jpeg' height="500"/>]
 ---
 count: false
 # Threads
-.left[<img src='images/threads/threads.008.jpeg' height="500"/>]
+.left[<img src='images/jpg/threads.008.jpeg' height="500"/>]
 ---
 count: false
 # Threads
-.left[<img src='images/threads/threads.009.jpeg' height="500"/>]
+.left[<img src='images/jpg/threads.009.jpeg' height="500"/>]
 
 ---
 # What's Hard About Concurrency?
@@ -183,7 +183,7 @@ count: false
 ### State Space Explosion
 Number of possible thread interleavings is *exponential* in the number of threads and instructions!
 <br/><br/><br/>
-.center[<img src='./trees/jpg/data_races.jpg' width="800"/>]
+.center[<img src='./images/jpg/state_space_explosion.jpg' width="800"/>]
 
 ---
 # What's Hard About Concurrency?
@@ -191,7 +191,7 @@ Number of possible thread interleavings is *exponential* in the number of thread
 
 The interleaving of threads is out of the programmer's control
 <br/><br/><br/><br/>
-.center[<img src='./trees/jpg/data_races.jpg' width="800"/>]
+.center[<img src='./images/jpg/state_space_explosion.jpg' width="800"/>]
 
 ---
 count: false
@@ -200,7 +200,7 @@ count: false
 
 The interleaving of threads is out of the programmer's control
 <br/><br/><br/><br/>
-.center[<img src='./trees/jpg/data_races_highlight1.jpg' width="800"/>]
+.center[<img src='./images/jpg/state_space_explosion_buggy.jpg' width="800"/>]
 
 ???
 It may depend on 
@@ -214,7 +214,7 @@ count: false
 
 The interleaving of threads is out of the programmer's control
 <br/><br/><br/><br/>
-.center[<img src='./trees/jpg/data_races_highlight2.jpg' width="800"/>]
+.center[<img src='./images/jpg/state_space_explosion_good.jpg' width="800"/>]
 
 ---
 class: center, middle
@@ -272,7 +272,7 @@ valgrind --tool=helgrind -v program
 <br/><br/>
 <tr>
     <td><img src="./trees/sanitizer/jpg/data-race-1-hb.jpg" style="height: 300px;"/></td>
-    <td><img src="./images/shadow_state_x.001.jpeg" style="height: 300px;"/></td>
+    <td><img src="./images/jpg/shadow_state_x.001.jpeg" style="height: 300px;"/></td>
 </tr>
 
 ---
@@ -300,7 +300,7 @@ Using the *happens-before* relation:
 <br/><br/>
 <tr>
     <td><img src='./trees/sanitizer/jpg/data-race-2-hb-3.jpg' height="400"/></td>
-    <td><img src="./images/shadow_state_x.002.jpeg" style="height: 400px;"/></td>
+    <td><img src="./images/jpg/shadow_state_x.002.jpeg" style="height: 400px;"/></td>
 </tr>
 
 ???
@@ -316,7 +316,7 @@ Limited information in *single* execution:
 
 ---
 # ThreadSanitizer: Deadlock
-<img src='./images/deadlock.jpeg' height="500"/>
+<img src='./images/jpg/tsan_deadlock.jpeg' height="500"/>
 
 ---
 class: middle, center
@@ -325,7 +325,7 @@ class: middle, center
 ---
 # Systematic Exploration
 <br/><br/>
-.center[<img src='./trees/jpg/data_races.jpg' width="800"/>]
+.center[<img src='./images/jpg/state_space_explosion.jpg' width="800"/>]
 
 ---
 # Taking Control Over the Thread Interleavings
@@ -398,7 +398,7 @@ void scheduler_thread(schedule)
 ### Simple depth-first exploration
 State space explosion: becomes infeasible for larger programs
 <br/><br/>
-.center[<img src='./trees/jpg/data_races.jpg' width="800"/>]
+.center[<img src='./images/jpg/state_space_explosion.jpg' width="800"/>]
 
 ---
 # State Space Reduction
@@ -508,31 +508,31 @@ bool dependent(lock_instr1, lock_instr2)
 
 <br/>
 <tr>
-    <td><img src='./trees/sanitizer/jpg/data-race-dpor-hb-1.jpg' width="350"/></td>
-    <td><img src="./trees/sanitizer/jpg/data-race-dpor-hb-2.jpg" width="350"/></td>
+    <td><img src='./images/jpg/happens_before_equivalence_class_1.jpg' width="350"/></td>
+    <td><img src="./images/jpg/happens_before_equivalence_class_2.jpg" width="350"/></td>
 </tr>
 
 ---
 # Partial Order Reduction
 <br/><br/>
-.left[<img src='./trees/sanitizer/jpg/data-race-dpor-hb-ex-1.jpg' width="550"/>]
+.left[<img src='./images/jpg/dpor_data_race_example_1.jpg' width="550"/>]
 
 ---
 count: false
 # Partial Order Reduction
 <br/><br/>
-.left[<img src='./trees/sanitizer/jpg/data-race-dpor-hb-ex-2.jpg' width="750"/>]
+.left[<img src='./images/jpg/dpor_data_race_example_2.jpg' width="750"/>]
 ---
 count: false
 # Partial Order Reduction
 <br/><br/>
-.left[<img src='./trees/sanitizer/jpg/data-race-dpor-hb-ex-3.jpg' width="750"/>]
+.left[<img src='./images/jpg/dpor_data_race_example_3.jpg' width="750"/>]
 
 ---
 count: false
 # Partial Order Reduction
 <br/><br/>
-.left[<img src='./trees/sanitizer/jpg/data-race-dpor-hb-ex-4.jpg' width="750"/>]
+.left[<img src='./images/jpg/dpor_data_race_example_4.jpg' width="750"/>]
 
 ---
 # Partial Order Reduction
