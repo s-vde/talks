@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Testing and Verifying Concurrent Programs</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <style type="text/css">
+      @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
+      @import url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
+      @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+      
+      @page 
+      {
+         size: 1210px 681px;
+         margin: 0;
+      }
+
+      @media print 
+      {
+         .remark-slide-scaler {
+            width: 100% !important;
+            height: 100% !important;
+            transform: scale(1) !important;
+            top: 0 !important;
+            left: 0 !important;
+         }
+      }
+
+      body { font-family: 'Droid Serif'; }
+      h1, h2, h3 
+      {
+        font-family: 'Yanone Kaffeesatz';
+        font-weight: normal;
+      }
+      
+      .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+      
+      .remark-container {
+        background-color: grey;
+      }
+      
+      li 
+      {
+         margin: 0.75em 0;
+      }
+    </style>
+  </head>
+  <body onload="var slideshow = remark.create();">
+    <textarea id="source">
+
+class: center, middle
+
+# Verifying Multi-Threaded Programs
+### Susanne van den Elsen
+Native Instruments
+
+February 21, 2017
+
+---
+# Threads
+.left[<img src='images/threads/threads.001.jpeg' height="500"/>]
+---
+count: false
+# Threads
+.left[<img src='images/threads/threads.002.jpeg' height="500"/>]
+---
+count: false
+# Threads
+.left[<img src='images/threads/threads.003.jpeg' height="500"/>]
+---
+count: false
+# Threads
+.left[<img src='images/threads/threads.004.jpeg' height="500"/>]
+---
+count: false
+# Threads
+.left[<img src='images/threads/threads.005.jpeg' height="500"/>]
+---
+count: false
+# Threads
+.left[<img src='images/threads/threads.006.jpeg' height="500"/>]
+---
+count: false
+# Threads
+.left[<img src='images/threads/threads.007.jpeg' height="500"/>]
+---
+count: false
+# Threads
+.left[<img src='images/threads/threads.008.jpeg' height="500"/>]
+---
+count: false
+# Threads
+.left[<img src='images/threads/threads.009.jpeg' height="500"/>]
+
+---
+# What's Hard About Concurrency?
+### Shared Resources
+
+```c++
+int x, y, z = 0;
+
+thread 0                   thread 1
+--------                   --------
+
+if (x == 1)                x = 1; 
+{                          z = x + y;
+   y = 1;                  std::cout << z << "\n";                   
+}                                          
+```
+
+--
+count: false
+#### Datarace: 
+Two (or more) threads access the same memory location *concurrently* and at least one 
+of them is a *write*
+
+---
+# What's Hard About Concurrency?
+### Synchronisation
+
+```c++
+array<int,2> nr_meals_eaten = {0, 0};
+mutex fork1, fork2;
+
+philosopher 0              philosopher 1
+-------------              -------------
+
+lock(fork1);               lock(fork2);
+lock(fork2);               lock(fork1);
+++nr_meals_eaten[0];       ++nr_meals_eaten[1];
+unlock(fork2);             unlock(fork1);
+unlock(fork1);             unlock(fork2);
+```
+
+---
+# What's Hard About Concurrency?
+### Synchronisation
+
+```c++
+array<int,2> nr_meals_eaten = {0, 0};
+mutex fork1, fork2;
+
+philosopher 0              philosopher 1
+-------------              -------------
+
+lock(fork1);               
+                           lock(fork2);
+lock(fork2);               
+                           lock(fork1);
+++nr_meals_eaten[0];       ++nr_meals_eaten[1];
+unlock(fork2);             unlock(fork1);
+unlock(fork1);             unlock(fork2);
+```
+
+--
+count: false
+#### Deadlock: 
+Two or more threads wait for each other indefinitely
+
+???
+- False sharing: Threads running on different processor cores access different variables located in the same cache line frequently. This will slow down the involved threads due to frequent exchange of cache lines
+- Lock contention: One thread blocks the progress of other threads by holding a lock too long
+
+---
+# What's Hard About Concurrency?
+### State Space Explosion
+--
+count: false
+```c++
+int x, y, z = 0;
+
+thread 0                   thread 1
+--------                   --------
+
+if (x == 1)                x = 1; 
+{                          z = x + y;
+   y = 1;                  std::cout << z << "\n";                   
+}                                          
+```
+
+---
+count: false
+# What's Hard About Concurrency?
+### State Space Explosion
+Number of possible thread interleavings is *exponential* in the number of threads and instructions!
+<br/><br/><br/>
+.center[<img src='./trees/jpg/data_races.jpg' width="800"/>]
+
+---
+# What's Hard About Concurrency?
+### Nondeterminism
+
+The interleaving of threads is out of the programmer's control
+<br/><br/><br/><br/>
+.center[<img src='./trees/jpg/data_races.jpg' width="800"/>]
+
+---
+count: false
+# What's Hard About Concurrency?
+### Nondeterminism
+
+The interleaving of threads is out of the programmer's control
+<br/><br/><br/><br/>
+.center[<img src='./trees/jpg/data_races_highlight1.jpg' width="800"/>]
+
+???
+It may depend on 
+- load on the maschine 
+- OS scheduler strategy
+
+---
+count: false
+# What's Hard About Concurrency?
+### Nondeterminism
+
+The interleaving of threads is out of the programmer's control
+<br/><br/><br/><br/>
+.center[<img src='./trees/jpg/data_races_highlight2.jpg' width="800"/>]
+
+---
+class: center, middle
+# Concurrency Error Detectors
+
+---
+# Concurrency Error Detectors
+### ThreadSanitzer
+```shell
+clang++ program_under_test.cpp -fsanitize=thread -o program_under_test
+./program_under_test
+```
+--
+count: false
+#### Compiler Instrumentation (LLVM IR)
+
+Instrument every potentially *visible* instruction (e.g. `load`, `store`)
+--
+count: false
+```
+define void @function() {
+__tsan_func_entry(caller)
+%2 = alloca i32
+__tsan_store(%2)
+store i32 %0, i32* %2
+__tsan_load(%2)
+%4 = load i32, i32* %2
+ret i32 %4
+__tsan_func_exit()
+}
+```
+
+---
+count: false
+# Concurrency Error Detectors
+### ThreadSanitzer
+#### Runtime library
+The `__tsan_` functions are callbacks to a Runtime Library (part of clang-rt)
+
+Maintains a state maschine using shadow state for analysis
+
+---
+# Concurrency Error Detectors
+### Helgrind
+#### Binary Instrumentation
+```shell
+valgrind --tool=helgrind -v program
+```
+
+- Program is run on synthetic CPU provided by Valgrind Core 
+- Threads are fully serialzed (only single CPU used)
+
+---
+# ThreadSanitizer & Helgrind: Data Races
+<br/><br/>
+<tr>
+    <td><img src="./trees/sanitizer/jpg/data-race-1-hb.jpg" style="height: 300px;"/></td>
+    <td><img src="./images/shadow_state_x.001.jpeg" style="height: 300px;"/></td>
+</tr>
+
+---
+# ThreadSanitizer & Helgrind: Data Races
+Using the *happens-before* relation:
+<br/><br/>
+<tr>
+    <td><img src='./trees/sanitizer/jpg/data-race-2-hb-1.jpg' height="400"/></td>
+</tr>
+.center[]
+
+---
+count: false
+# ThreadSanitizer & Helgrind: Data Races
+Using the *happens-before* relation:
+<br/><br/>
+<tr>
+    <td><img src='./trees/sanitizer/jpg/data-race-2-hb-2.jpg' height="400"/></td>
+</tr>
+
+---
+count: false
+# ThreadSanitizer & Helgrind: Data Races
+Using the *happens-before* relation:
+<br/><br/>
+<tr>
+    <td><img src='./trees/sanitizer/jpg/data-race-2-hb-3.jpg' height="400"/></td>
+    <td><img src="./images/shadow_state_x.002.jpeg" style="height: 400px;"/></td>
+</tr>
+
+???
+When a mutex is unlocked by thread T1 and later (or immediately) locked by thread T2, 
+then the memory accesses in T1 prior to the unlock must happen-before those in T2 after 
+it acquires the lock.
+
+---
+# ThreadSanitizer & Helgrind: Data Races
+Limited information in *single* execution:
+<br/><br/><br/>
+.center[<img src='./trees/sanitizer/jpg/data-race-3-hb.jpg' height="375"/>]
+
+---
+# ThreadSanitizer: Deadlock
+<img src='./images/deadlock.jpeg' height="500"/>
+
+---
+class: middle, center
+# Systematic Exploration
+
+---
+# Systematic Exploration
+<br/><br/>
+.center[<img src='./trees/jpg/data_races.jpg' width="800"/>]
+
+---
+# Taking Control Over the Thread Interleavings
+#### LLVM IR Instumentation Pass
+
+Replace 
+```c++
+pthread_create(pid, attr, start_routine, args)
+pthread_join(pid)
+``` 
+by 
+```c++ 
+wrapper_spawn_thread(pid, attr, start_routine, args)
+wrapper_pthread_join()
+```
+
+#### Scheduler
+```c++
+void wrapper_spawn_thread(pid, attr, start_routine, args)
+{
+   semaphores.insert({ pid, semaphore() })
+   pthread_create(pid, attr, start_routine, args)
+}
+```
+
+---
+count: false
+# Taking Control Over the Thread Interleavings
+#### LLVM IR Instumentation Pass
+
+Insert call to potentially *visible* instructions
+```
+wrap_post_task(instruction(store, %2, is_atomic))
+store i32 %0, i32* %2
+```
+
+#### Scheduler
+```c++
+void wrapper_post_task(instruction)
+{
+   task_pool.insert({ this_thread::id(), instruction });
+   semaphores[this_thread::id()].wait();
+   // wait for turn
+   
+   task_pool.remove(this_thread::id());
+   // perform instructions
+}
+```
+
+---
+count: false
+# Taking Control Over the Thread Interleavings
+#### Scheduler
+
+```c++
+void scheduler_thread(schedule)
+{
+   for (thread_id : schedule)
+   {
+      wait_until(task_pool.contains_key(thread_id));
+      current_thread_id = thread_id;
+      semaphore[thread_id].post();
+      // notify the waiting thread
+   }
+}
+```
+
+---
+# Systematic Exploration
+### Simple depth-first exploration
+State space explosion: becomes infeasible for larger programs
+<br/><br/>
+.center[<img src='./trees/jpg/data_races.jpg' width="800"/>]
+
+---
+# State Space Reduction
+- Explore only a subset of interleavings
+- Provide coverage guarantees: quantify the class / number of interleavings seen
+
+---
+# Bounded Search
+```cpp
+bounded_search(program, bound_function, bound)
+{
+   for (interleaving : program.interleavings())
+   {
+      if (bound_function(interleaving) <= bound)
+      {
+         explore(interleaving);
+      }
+   }
+}
+```
+--
+count: zero
+### Bound Functions
+- Number of context-switches
+- Number of preemptions
+
+---
+##### Bounded Search with Preemption Bound = 0
+.left[<img src='./trees/bounded_search/jpg/work-stealing-queue-pre-0-1.jpg' height="550"/>]
+
+---
+count: false
+##### Bounded Search with Preemption Bound = 0
+.left[<img src='./trees/bounded_search/jpg/work-stealing-queue-pre-0-1-no-1.jpg' height="550"/>]
+
+---
+count: false
+##### Bounded Search with Preemption Bound = 0
+.left[<img src='./trees/bounded_search/jpg/work-stealing-queue-pre-0-1-no-2.jpg' height="550"/>]
+
+---
+count: false
+##### Bounded Search with Preemption Bound = 0
+.left[<img src='./trees/bounded_search/jpg/work-stealing-queue-pre-0-2.jpg' height="550"/>]
+
+---
+##### Bounded Search with Preemption Bound = 1
+.left[<img src='./trees/bounded_search/jpg/work-stealing-queue-pre-1-1.jpg' height="550"/>]
+
+---
+count: false
+##### Bounded Search with Preemption Bound = 1
+.left[<img src='./trees/bounded_search/jpg/work-stealing-queue-pre-1-2.jpg' height="550"/>]
+
+---
+count: false
+##### Bounded Search with Preemption Bound = 1
+.left[<img src='./trees/bounded_search/jpg/work-stealing-queue-pre-1-3.jpg' height="550"/>]
+
+---
+count: false
+##### Bounded Search with Preemption Bound = 1
+<br/><br/><br/><br/><br/>
+.left[<img src='./trees/bounded_search/jpg/work-stealing-queue-all-preemptions-1.jpg' width="750"/>]
+
+---
+# Bounded Search
+
+### Advantages:
+- Very fast for low bounds
+- Quantifiable coverage
+- Incremental
+
+### Disadvantages:
+- Incomplete
+- For high bounds not better than depth first search
+
+---
+# Partial Order Reduction
+
+Different interleavings may yield *equivalent* executions:
+Ideally explore only a single one of those
+
+--
+count: false
+#### Dependence Relation
+
+```c++
+bool dependent(memory_instr1, memory_instr2)
+{
+   return same_thread(memory_instr1, memory_instr2) || 
+          ( same_operand(memory_instr1, memory_instr2) &&
+            memory_instr1.is_write() || memory_inst2.is_write() );
+}
+```
+```c++
+bool dependent(lock_instr1, lock_instr2)
+{
+   return same_thread(lock_instr1, lock_instr2) || 
+          ( same_operand(lock_instr1, lock_instr2) &&
+            lock_instr1.is_lock() && lock_inst2.is_lock() );
+}
+```
+
+---
+# Partial Order Reduction 
+
+<br/>
+<tr>
+    <td><img src='./trees/sanitizer/jpg/data-race-dpor-hb-1.jpg' width="350"/></td>
+    <td><img src="./trees/sanitizer/jpg/data-race-dpor-hb-2.jpg" width="350"/></td>
+</tr>
+
+---
+# Partial Order Reduction
+<br/><br/>
+.left[<img src='./trees/sanitizer/jpg/data-race-dpor-hb-ex-1.jpg' width="550"/>]
+
+---
+count: false
+# Partial Order Reduction
+<br/><br/>
+.left[<img src='./trees/sanitizer/jpg/data-race-dpor-hb-ex-2.jpg' width="750"/>]
+---
+count: false
+# Partial Order Reduction
+<br/><br/>
+.left[<img src='./trees/sanitizer/jpg/data-race-dpor-hb-ex-3.jpg' width="750"/>]
+
+---
+count: false
+# Partial Order Reduction
+<br/><br/>
+.left[<img src='./trees/sanitizer/jpg/data-race-dpor-hb-ex-4.jpg' width="750"/>]
+
+---
+# Partial Order Reduction
+
+### Advantages:
+- Complete coverage
+
+### Disadvantages:
+- Still infeasible for large state-spaces with many dependencies
+- Not incremental
+
+---
+class: center, middle
+# Thank you!
+
+---
+# Links
+
+#### Helgrind
+http://valgrind.org/docs/manual/hg-manual.html
+
+#### ThreadSanitizer:
+https://github.com/google/sanitizers/wiki
+
+#### My Project:
+https://github.com/s-vde/record-replay
+
+https://github.com/s-vde/state-space-explorer
+
+
+
+    </textarea>
+    <script src="https://gnab.github.io/remark/downloads/remark-latest.min.js">
+        </script>
+    <script>
+        var slideshow = remark.create({
+        });
+        </script>
+    </body>
+</html>

@@ -1,0 +1,55 @@
+digraph "" {
+	graph [directed=True,
+		dpi=300,
+		forcelabels=True,
+		nodesep=3,
+		ordering=out,
+		rankdir=TB,
+		ranksep=0.3,
+		"strict"=False
+	];
+	node [color=black,
+		fillcolor=black,
+		fixedsize=true,
+		fontsize=22,
+		height=.05,
+		shape=point,
+		style=filled,
+		width=.05
+	];
+	edge [arrowsize=0.5,
+		color=black,
+		fontname="Ubuntu Code",
+		fontsize=22,
+		penwidth=1,
+		weight=100
+	];
+	"_instr_s.0"	 [fontcolor=red,
+		width=0,
+		xlabel="1 read x  "];
+	s -> "_instr_s.0"	 [dir=none];
+	"_instr_s.0.0"	 [fontcolor=blue,
+		width=0,
+		xlabel="1 read y  "];
+	"s.0" -> "_instr_s.0.0"	 [dir=none];
+	"_instr_s.0" -> "s.0";
+	"_instr_s.0.0.1"	 [fontcolor=red,
+		width=0,
+		xlabel="2 write x  "];
+	"s.0.0" -> "_instr_s.0.0.1"	 [dir=none];
+	"_instr_s.0.0" -> "s.0.0";
+	"_instr_s.0.0.1.1"	 [width=0,
+		xlabel="2 read x  "];
+	"s.0.0.1" -> "_instr_s.0.0.1.1"	 [dir=none];
+	"_instr_s.0.0.1" -> "s.0.0.1";
+	"_instr_s.0.0.1.1.1"	 [fontcolor=blue,
+		width=0,
+		xlabel="2 read y  "];
+	"s.0.0.1.1" -> "_instr_s.0.0.1.1.1"	 [dir=none];
+	"_instr_s.0.0.1.1" -> "s.0.0.1.1";
+	"_instr_s.0.0.1.1.1.1"	 [width=0,
+		xlabel="2 write z  "];
+	"s.0.0.1.1.1" -> "_instr_s.0.0.1.1.1.1"	 [dir=none];
+	"_instr_s.0.0.1.1.1" -> "s.0.0.1.1.1";
+	"_instr_s.0.0.1.1.1.1" -> "s.0.0.1.1.1.1";
+}

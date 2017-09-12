@@ -1,0 +1,274 @@
+digraph "" {
+	graph [directed=True,
+		dpi=300,
+		forcelabels=True,
+		nodesep=1.5,
+		ordering=out,
+		rankdir=TB,
+		ranksep=0.3,
+		"strict"=False
+	];
+	node [color=black,
+		fillcolor=black,
+		fixedsize=true,
+		fontsize=22,
+		height=.05,
+		shape=point,
+		style=filled,
+		width=.05
+	];
+	edge [arrowsize=0.5,
+		color=black,
+		fontname="Ubuntu Code",
+		fontsize=22,
+		penwidth=1,
+		weight=100
+	];
+	s	 [color=green];
+	"_instr_s.0"	 [color=green,
+		width=0,
+		xlabel="0 read x  "];
+	s -> "_instr_s.0"	 [color=green,
+		dir=none,
+		penwidth=3];
+	"_instr_s.1"	 [width=0,
+		xlabel="1 write x  "];
+	s -> "_instr_s.1"	 [dir=none];
+	"s.0"	 [color=green];
+	"_instr_s.0.0"	 [color=green,
+		width=0,
+		xlabel="0 read y  "];
+	"s.0" -> "_instr_s.0.0"	 [color=green,
+		dir=none,
+		penwidth=3];
+	"_instr_s.0.1"	 [width=0,
+		xlabel="1 write x  "];
+	"s.0" -> "_instr_s.0.1"	 [dir=none];
+	"_instr_s.0" -> "s.0"	 [color=green,
+		penwidth=3];
+	"s.0.0"	 [color=green];
+	"_instr_s.0.0.1"	 [color=green,
+		width=0,
+		xlabel="1 write x  "];
+	"s.0.0" -> "_instr_s.0.0.1"	 [color=green,
+		dir=none,
+		penwidth=3];
+	"_instr_s.0.0" -> "s.0.0"	 [color=green,
+		penwidth=3];
+	"s.0.0.1"	 [color=green];
+	"_instr_s.0.0.1.1"	 [color=green,
+		width=0,
+		xlabel="1 read x  "];
+	"s.0.0.1" -> "_instr_s.0.0.1.1"	 [color=green,
+		dir=none,
+		penwidth=3];
+	"_instr_s.0.0.1" -> "s.0.0.1"	 [color=green,
+		penwidth=3];
+	"s.0.0.1.1"	 [color=green];
+	"_instr_s.0.0.1.1.1"	 [color=green,
+		width=0,
+		xlabel="1 read y  "];
+	"s.0.0.1.1" -> "_instr_s.0.0.1.1.1"	 [color=green,
+		dir=none,
+		penwidth=3];
+	"_instr_s.0.0.1.1" -> "s.0.0.1.1"	 [color=green,
+		penwidth=3];
+	"s.0.0.1.1.1"	 [color=green];
+	"_instr_s.0.0.1.1.1.1"	 [color=green,
+		width=0,
+		xlabel="1 write z  "];
+	"s.0.0.1.1.1" -> "_instr_s.0.0.1.1.1.1"	 [color=green,
+		dir=none,
+		penwidth=3];
+	"_instr_s.0.0.1.1.1" -> "s.0.0.1.1.1"	 [color=green,
+		penwidth=3];
+	"s.0.0.1.1.1.1"	 [color=green];
+	"_instr_s.0.0.1.1.1.1" -> "s.0.0.1.1.1.1"	 [color=green,
+		penwidth=3];
+	"_instr_s.0.1.0"	 [width=0,
+		xlabel="0 read y  "];
+	"s.0.1" -> "_instr_s.0.1.0"	 [dir=none];
+	"_instr_s.0.1.1"	 [width=0,
+		xlabel="1 read x  "];
+	"s.0.1" -> "_instr_s.0.1.1"	 [dir=none];
+	"_instr_s.0.1" -> "s.0.1";
+	"_instr_s.0.1.0.1"	 [width=0,
+		xlabel="1 read x  "];
+	"s.0.1.0" -> "_instr_s.0.1.0.1"	 [dir=none];
+	"_instr_s.0.1.0" -> "s.0.1.0";
+	"_instr_s.0.1.0.1.1"	 [width=0,
+		xlabel="1 read y  "];
+	"s.0.1.0.1" -> "_instr_s.0.1.0.1.1"	 [dir=none];
+	"_instr_s.0.1.0.1" -> "s.0.1.0.1";
+	"_instr_s.0.1.0.1.1.1"	 [width=0,
+		xlabel="1 write z  "];
+	"s.0.1.0.1.1" -> "_instr_s.0.1.0.1.1.1"	 [dir=none];
+	"_instr_s.0.1.0.1.1" -> "s.0.1.0.1.1";
+	"_instr_s.0.1.0.1.1.1" -> "s.0.1.0.1.1.1";
+	"_instr_s.0.1.1.0"	 [width=0,
+		xlabel="0 read y  "];
+	"s.0.1.1" -> "_instr_s.0.1.1.0"	 [dir=none];
+	"_instr_s.0.1.1.1"	 [width=0,
+		xlabel="1 read y  "];
+	"s.0.1.1" -> "_instr_s.0.1.1.1"	 [dir=none];
+	"_instr_s.0.1.1" -> "s.0.1.1";
+	"_instr_s.0.1.1.0.1"	 [width=0,
+		xlabel="1 read y  "];
+	"s.0.1.1.0" -> "_instr_s.0.1.1.0.1"	 [dir=none];
+	"_instr_s.0.1.1.0" -> "s.0.1.1.0";
+	"_instr_s.0.1.1.0.1.1"	 [width=0,
+		xlabel="1 write z  "];
+	"s.0.1.1.0.1" -> "_instr_s.0.1.1.0.1.1"	 [dir=none];
+	"_instr_s.0.1.1.0.1" -> "s.0.1.1.0.1";
+	"_instr_s.0.1.1.0.1.1" -> "s.0.1.1.0.1.1";
+	"_instr_s.0.1.1.1.0"	 [width=0,
+		xlabel="0 read y  "];
+	"s.0.1.1.1" -> "_instr_s.0.1.1.1.0"	 [dir=none];
+	"_instr_s.0.1.1.1.1"	 [width=0,
+		xlabel="1 write z  "];
+	"s.0.1.1.1" -> "_instr_s.0.1.1.1.1"	 [dir=none];
+	"_instr_s.0.1.1.1" -> "s.0.1.1.1";
+	"_instr_s.0.1.1.1.0.1"	 [width=0,
+		xlabel="1 write z  "];
+	"s.0.1.1.1.0" -> "_instr_s.0.1.1.1.0.1"	 [dir=none];
+	"_instr_s.0.1.1.1.0" -> "s.0.1.1.1.0";
+	"_instr_s.0.1.1.1.0.1" -> "s.0.1.1.1.0.1";
+	"_instr_s.0.1.1.1.1.0"	 [width=0,
+		xlabel="0 read y  "];
+	"s.0.1.1.1.1" -> "_instr_s.0.1.1.1.1.0"	 [dir=none];
+	"_instr_s.0.1.1.1.1" -> "s.0.1.1.1.1";
+	"_instr_s.0.1.1.1.1.0" -> "s.0.1.1.1.1.0";
+	"_instr_s.1.0"	 [width=0,
+		xlabel="0 read x  "];
+	"s.1" -> "_instr_s.1.0"	 [dir=none];
+	"_instr_s.1.1"	 [width=0,
+		xlabel="1 read x  "];
+	"s.1" -> "_instr_s.1.1"	 [dir=none];
+	"_instr_s.1" -> "s.1";
+	"_instr_s.1.0.0"	 [width=0,
+		xlabel="0 read y  "];
+	"s.1.0" -> "_instr_s.1.0.0"	 [dir=none];
+	"_instr_s.1.0.1"	 [width=0,
+		xlabel="1 read x  "];
+	"s.1.0" -> "_instr_s.1.0.1"	 [dir=none];
+	"_instr_s.1.0" -> "s.1.0";
+	"_instr_s.1.0.0.1"	 [width=0,
+		xlabel="1 read x  "];
+	"s.1.0.0" -> "_instr_s.1.0.0.1"	 [dir=none];
+	"_instr_s.1.0.0" -> "s.1.0.0";
+	"_instr_s.1.0.0.1.1"	 [width=0,
+		xlabel="1 read y  "];
+	"s.1.0.0.1" -> "_instr_s.1.0.0.1.1"	 [dir=none];
+	"_instr_s.1.0.0.1" -> "s.1.0.0.1";
+	"_instr_s.1.0.0.1.1.1"	 [width=0,
+		xlabel="1 write z  "];
+	"s.1.0.0.1.1" -> "_instr_s.1.0.0.1.1.1"	 [dir=none];
+	"_instr_s.1.0.0.1.1" -> "s.1.0.0.1.1";
+	"_instr_s.1.0.0.1.1.1" -> "s.1.0.0.1.1.1";
+	"_instr_s.1.0.1.0"	 [width=0,
+		xlabel="0 read y  "];
+	"s.1.0.1" -> "_instr_s.1.0.1.0"	 [dir=none];
+	"_instr_s.1.0.1.1"	 [width=0,
+		xlabel="1 read y  "];
+	"s.1.0.1" -> "_instr_s.1.0.1.1"	 [dir=none];
+	"_instr_s.1.0.1" -> "s.1.0.1";
+	"_instr_s.1.0.1.0.1"	 [width=0,
+		xlabel="1 read y  "];
+	"s.1.0.1.0" -> "_instr_s.1.0.1.0.1"	 [dir=none];
+	"_instr_s.1.0.1.0" -> "s.1.0.1.0";
+	"_instr_s.1.0.1.0.1.1"	 [width=0,
+		xlabel="1 write z  "];
+	"s.1.0.1.0.1" -> "_instr_s.1.0.1.0.1.1"	 [dir=none];
+	"_instr_s.1.0.1.0.1" -> "s.1.0.1.0.1";
+	"_instr_s.1.0.1.0.1.1" -> "s.1.0.1.0.1.1";
+	"_instr_s.1.0.1.1.0"	 [width=0,
+		xlabel="0 read y  "];
+	"s.1.0.1.1" -> "_instr_s.1.0.1.1.0"	 [dir=none];
+	"_instr_s.1.0.1.1.1"	 [width=0,
+		xlabel="1 write z  "];
+	"s.1.0.1.1" -> "_instr_s.1.0.1.1.1"	 [dir=none];
+	"_instr_s.1.0.1.1" -> "s.1.0.1.1";
+	"_instr_s.1.0.1.1.0.1"	 [width=0,
+		xlabel="1 write z  "];
+	"s.1.0.1.1.0" -> "_instr_s.1.0.1.1.0.1"	 [dir=none];
+	"_instr_s.1.0.1.1.0" -> "s.1.0.1.1.0";
+	"_instr_s.1.0.1.1.0.1" -> "s.1.0.1.1.0.1";
+	"_instr_s.1.0.1.1.1.0"	 [width=0,
+		xlabel="0 read y  "];
+	"s.1.0.1.1.1" -> "_instr_s.1.0.1.1.1.0"	 [dir=none];
+	"_instr_s.1.0.1.1.1" -> "s.1.0.1.1.1";
+	"_instr_s.1.0.1.1.1.0" -> "s.1.0.1.1.1.0";
+	"_instr_s.1.1.0"	 [width=0,
+		xlabel="0 read x  "];
+	"s.1.1" -> "_instr_s.1.1.0"	 [dir=none];
+	"_instr_s.1.1.1"	 [width=0,
+		xlabel="1 read y  "];
+	"s.1.1" -> "_instr_s.1.1.1"	 [dir=none];
+	"_instr_s.1.1" -> "s.1.1";
+	"_instr_s.1.1.0.0"	 [width=0,
+		xlabel="0 read y  "];
+	"s.1.1.0" -> "_instr_s.1.1.0.0"	 [dir=none];
+	"_instr_s.1.1.0.1"	 [width=0,
+		xlabel="1 read y  "];
+	"s.1.1.0" -> "_instr_s.1.1.0.1"	 [dir=none];
+	"_instr_s.1.1.0" -> "s.1.1.0";
+	"_instr_s.1.1.0.0.1"	 [width=0,
+		xlabel="1 read y  "];
+	"s.1.1.0.0" -> "_instr_s.1.1.0.0.1"	 [dir=none];
+	"_instr_s.1.1.0.0" -> "s.1.1.0.0";
+	"_instr_s.1.1.0.0.1.1"	 [width=0,
+		xlabel="1 write z  "];
+	"s.1.1.0.0.1" -> "_instr_s.1.1.0.0.1.1"	 [dir=none];
+	"_instr_s.1.1.0.0.1" -> "s.1.1.0.0.1";
+	"_instr_s.1.1.0.0.1.1" -> "s.1.1.0.0.1.1";
+	"_instr_s.1.1.0.1.0"	 [width=0,
+		xlabel="0 read y  "];
+	"s.1.1.0.1" -> "_instr_s.1.1.0.1.0"	 [dir=none];
+	"_instr_s.1.1.0.1.1"	 [width=0,
+		xlabel="1 write z  "];
+	"s.1.1.0.1" -> "_instr_s.1.1.0.1.1"	 [dir=none];
+	"_instr_s.1.1.0.1" -> "s.1.1.0.1";
+	"_instr_s.1.1.0.1.0.1"	 [width=0,
+		xlabel="1 write z  "];
+	"s.1.1.0.1.0" -> "_instr_s.1.1.0.1.0.1"	 [dir=none];
+	"_instr_s.1.1.0.1.0" -> "s.1.1.0.1.0";
+	"_instr_s.1.1.0.1.0.1" -> "s.1.1.0.1.0.1";
+	"_instr_s.1.1.0.1.1.0"	 [width=0,
+		xlabel="0 read y  "];
+	"s.1.1.0.1.1" -> "_instr_s.1.1.0.1.1.0"	 [dir=none];
+	"_instr_s.1.1.0.1.1" -> "s.1.1.0.1.1";
+	"_instr_s.1.1.0.1.1.0" -> "s.1.1.0.1.1.0";
+	"_instr_s.1.1.1.0"	 [width=0,
+		xlabel="0 read x  "];
+	"s.1.1.1" -> "_instr_s.1.1.1.0"	 [dir=none];
+	"_instr_s.1.1.1.1"	 [width=0,
+		xlabel="1 write z  "];
+	"s.1.1.1" -> "_instr_s.1.1.1.1"	 [dir=none];
+	"_instr_s.1.1.1" -> "s.1.1.1";
+	"_instr_s.1.1.1.0.0"	 [width=0,
+		xlabel="0 read y  "];
+	"s.1.1.1.0" -> "_instr_s.1.1.1.0.0"	 [dir=none];
+	"_instr_s.1.1.1.0.1"	 [width=0,
+		xlabel="1 write z  "];
+	"s.1.1.1.0" -> "_instr_s.1.1.1.0.1"	 [dir=none];
+	"_instr_s.1.1.1.0" -> "s.1.1.1.0";
+	"_instr_s.1.1.1.0.0.1"	 [width=0,
+		xlabel="1 write z  "];
+	"s.1.1.1.0.0" -> "_instr_s.1.1.1.0.0.1"	 [dir=none];
+	"_instr_s.1.1.1.0.0" -> "s.1.1.1.0.0";
+	"_instr_s.1.1.1.0.0.1" -> "s.1.1.1.0.0.1";
+	"_instr_s.1.1.1.0.1.0"	 [width=0,
+		xlabel="0 read y  "];
+	"s.1.1.1.0.1" -> "_instr_s.1.1.1.0.1.0"	 [dir=none];
+	"_instr_s.1.1.1.0.1" -> "s.1.1.1.0.1";
+	"_instr_s.1.1.1.0.1.0" -> "s.1.1.1.0.1.0";
+	"_instr_s.1.1.1.1.0"	 [width=0,
+		xlabel="0 read x  "];
+	"s.1.1.1.1" -> "_instr_s.1.1.1.1.0"	 [dir=none];
+	"_instr_s.1.1.1.1" -> "s.1.1.1.1";
+	"_instr_s.1.1.1.1.0.0"	 [width=0,
+		xlabel="0 read y  "];
+	"s.1.1.1.1.0" -> "_instr_s.1.1.1.1.0.0"	 [dir=none];
+	"_instr_s.1.1.1.1.0" -> "s.1.1.1.1.0";
+	"_instr_s.1.1.1.1.0.0" -> "s.1.1.1.1.0.0";
+}

@@ -1,0 +1,116 @@
+digraph "" {
+	graph [directed=True,
+		dpi=300,
+		forcelabels=True,
+		nodesep=3,
+		ordering=out,
+		rankdir=TB,
+		ranksep=0.3,
+		"strict"=False
+	];
+	node [color=black,
+		fillcolor=black,
+		fixedsize=true,
+		fontsize=22,
+		height=.05,
+		label="\N",
+		shape=point,
+		style=filled,
+		width=.05
+	];
+	edge [arrowsize=0.5,
+		color=black,
+		fontname="Ubuntu Code",
+		fontsize=22,
+		penwidth=1,
+		weight=100
+	];
+	s	 [label=""];
+	"_instr_s.0"	 [width=0,
+		xlabel="  0 thread create  "];
+	s -> "_instr_s.0"	 [dir=none,
+		penwidth=3];
+	_instr_s	 [width=0];
+	"s.0"	 [label=""];
+	"_instr_s.0.0"	 [width=0,
+		xlabel="  0 atomic load tail  "];
+	"s.0" -> "_instr_s.0.0"	 [dir=none,
+		penwidth=3];
+	"_instr_s.0" -> "s.0"	 [penwidth=3];
+	"s.0.0"	 [label=""];
+	"_instr_s.0.0.0"	 [width=0,
+		xlabel="  0 atomic load head  "];
+	"s.0.0" -> "_instr_s.0.0.0"	 [dir=none,
+		penwidth=3];
+	"_instr_s.0.0" -> "s.0.0"	 [penwidth=3];
+	"s.0.0.0"	 [label=""];
+	"_instr_s.0.0.0.0"	 [width=0,
+		xlabel="  0 load mask  "];
+	"s.0.0.0" -> "_instr_s.0.0.0.0"	 [dir=none,
+		penwidth=3];
+	"_instr_s.0.0.0" -> "s.0.0.0"	 [penwidth=3];
+	"s.0.0.0.0"	 [label=""];
+	"_instr_s.0.0.0.0.0"	 [width=0,
+		xlabel="  0 store jobs[0]  "];
+	"s.0.0.0.0" -> "_instr_s.0.0.0.0.0"	 [dir=none,
+		penwidth=3];
+	"_instr_s.0.0.0.0" -> "s.0.0.0.0"	 [penwidth=3];
+	"s.0.0.0.0.0"	 [label=""];
+	"_instr_s.0.0.0.0.0.0"	 [width=0,
+		xlabel="  0 atomic store tail  "];
+	"s.0.0.0.0.0" -> "_instr_s.0.0.0.0.0.0"	 [dir=none,
+		penwidth=3];
+	"_instr_s.0.0.0.0.0" -> "s.0.0.0.0.0"	 [penwidth=3];
+	"s.0.0.0.0.0.0"	 [fillcolor=blue,
+		height=0.3,
+		label="",
+		shape=diamond,
+		width=0.3];
+	"_instr_s.0.0.0.0.0.0.0"	 [width=0,
+		xlabel="  0  "];
+	"s.0.0.0.0.0.0" -> "_instr_s.0.0.0.0.0.0.0"	 [dir=none];
+	"_instr_s.0.0.0.0.0.0.1"	 [width=0,
+		xlabel="  1 thread create  "];
+	"s.0.0.0.0.0.0" -> "_instr_s.0.0.0.0.0.0.1"	 [dir=none,
+		penwidth=3];
+	"_instr_s.0.0.0.0.0.0" -> "s.0.0.0.0.0.0"	 [penwidth=3];
+	"s.0.0.0.0.0.0.0"	 [label=""];
+	"_instr_s.0.0.0.0.0.0.0.0"	 [width=0,
+		xlabel="  0  "];
+	"s.0.0.0.0.0.0.0" -> "_instr_s.0.0.0.0.0.0.0.0"	 [dir=none];
+	"_instr_s.0.0.0.0.0.0.0" -> "s.0.0.0.0.0.0.0";
+	"s.0.0.0.0.0.0.0.0"	 [label=""];
+	"_instr_s.0.0.0.0.0.0.0.0.1"	 [width=0,
+		xlabel="  1  "];
+	"s.0.0.0.0.0.0.0.0" -> "_instr_s.0.0.0.0.0.0.0.0.1"	 [dir=none];
+	"_instr_s.0.0.0.0.0.0.0.0" -> "s.0.0.0.0.0.0.0.0";
+	"s.0.0.0.0.0.0.0.0.1"	 [label=""];
+	"_instr_s.0.0.0.0.0.0.0.0.1.1"	 [width=0,
+		xlabel="  1  "];
+	"s.0.0.0.0.0.0.0.0.1" -> "_instr_s.0.0.0.0.0.0.0.0.1.1"	 [dir=none];
+	"_instr_s.0.0.0.0.0.0.0.0.1" -> "s.0.0.0.0.0.0.0.0.1";
+	"s.0.0.0.0.0.0.0.0.1.1"	 [label=""];
+	"_instr_s.0.0.0.0.0.0.0.0.1.1.1"	 [width=0,
+		xlabel="  1  "];
+	"s.0.0.0.0.0.0.0.0.1.1" -> "_instr_s.0.0.0.0.0.0.0.0.1.1.1"	 [dir=none];
+	"_instr_s.0.0.0.0.0.0.0.0.1.1" -> "s.0.0.0.0.0.0.0.0.1.1";
+	"s.0.0.0.0.0.0.0.0.1.1.1"	 [label=""];
+	"_instr_s.0.0.0.0.0.0.0.0.1.1.1.1"	 [width=0,
+		xlabel="  1  "];
+	"s.0.0.0.0.0.0.0.0.1.1.1" -> "_instr_s.0.0.0.0.0.0.0.0.1.1.1.1"	 [dir=none];
+	"_instr_s.0.0.0.0.0.0.0.0.1.1.1" -> "s.0.0.0.0.0.0.0.0.1.1.1";
+	"s.0.0.0.0.0.0.0.0.1.1.1.1"	 [label=""];
+	"_instr_s.0.0.0.0.0.0.0.0.1.1.1.1.1"	 [width=0,
+		xlabel="  1  "];
+	"s.0.0.0.0.0.0.0.0.1.1.1.1" -> "_instr_s.0.0.0.0.0.0.0.0.1.1.1.1.1"	 [dir=none];
+	"_instr_s.0.0.0.0.0.0.0.0.1.1.1.1" -> "s.0.0.0.0.0.0.0.0.1.1.1.1";
+	"s.0.0.0.0.0.0.0.0.1.1.1.1.1"	 [label=""];
+	"_instr_s.0.0.0.0.0.0.0.0.1.1.1.1.1.1"	 [width=0,
+		xlabel="  1  "];
+	"s.0.0.0.0.0.0.0.0.1.1.1.1.1" -> "_instr_s.0.0.0.0.0.0.0.0.1.1.1.1.1.1"	 [dir=none];
+	"_instr_s.0.0.0.0.0.0.0.0.1.1.1.1.1" -> "s.0.0.0.0.0.0.0.0.1.1.1.1.1";
+	"s.0.0.0.0.0.0.0.0.1.1.1.1.1.1"	 [label=""];
+	"_instr_s.0.0.0.0.0.0.0.0.1.1.1.1.1.1" -> "s.0.0.0.0.0.0.0.0.1.1.1.1.1.1";
+	"s.0.0.0.0.0.0.1"	 [label=""];
+	"_instr_s.0.0.0.0.0.0.1" -> "s.0.0.0.0.0.0.1"	 [penwidth=3];
+}
