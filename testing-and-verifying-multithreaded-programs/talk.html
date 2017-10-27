@@ -1,59 +1,66 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Testing and Verifying Multi-Threaded Programs</title>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-    <style type="text/css">
-      @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
-      @import url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
-      @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+   <head>
+      <title>Testing and Verifying Multi-Threaded Programs</title>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+      <style type="text/css">
       
-      @page 
-      {
-         size: 1024px 768px;
-         margin: 0;
-      }
-
-      @media print 
-      {
-         .remark-slide-scaler {
-            width: 100% !important;
-            height: 100% !important;
-            transform: scale(1) !important;
-            top: 0 !important;
-            left: 0 !important;
+         @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
+         @import url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
+         @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+      
+         @page 
+         {
+            size: 1024px 768px;
+            margin: 0;
          }
-      }
 
-      body { font-family: 'Droid Serif'; }
-      h1, h2, h3 
-      {
-        font-family: 'Yanone Kaffeesatz';
-        font-weight: normal;
-      }
+         @media print 
+         {
+            .remark-slide-scaler {
+               width: 100% !important;
+               height: 100% !important;
+               transform: scale(1) !important;
+               top: 0 !important;
+               left: 0 !important;
+            }
+         }
+         
+         .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
       
-      .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
-      
-      .remark-container {
-        background-color: grey;
-      }
-      
-      li 
-      {
-         margin: 0.75em 0;
-      }
-    </style>
-  </head>
-  <body onload="var slideshow = remark.create();">
-    <textarea id="source">
+         .remark-container { background-color: grey; }
+
+         body { font-family: 'Droid Serif'; }
+         
+         h1, h2, h3 
+         {
+            font-family: 'Yanone Kaffeesatz';
+            font-weight: normal;
+         }
+         
+         li { margin: 0.75em 0; }
+         
+      </style>
+   </head>
+   <body>
+      <textarea id="source">
+
+
+
+
 
 class: center, middle
 
+<!--- section:TITLE -->
+
 # Testing and Verifying Multi-Threaded Programs
 ### Susanne van den Elsen
-Native Instruments
+Software Developer @ Native Instruments
 
-February 21, 2017
+### Meeting C++
+November, 2017
+
+<!--- section:THREADS -->
 
 ---
 # Threads
@@ -90,6 +97,8 @@ count: false
 count: false
 # Threads
 .left[<img src='images/jpg/threads.009.jpeg' height="500"/>]
+
+<!--- section:CONCURRENCY_HARD -->
 
 ---
 # What's Hard About Concurrency?
@@ -216,6 +225,8 @@ The interleaving of threads is out of the programmer's control
 <br/><br/><br/><br/>
 .center[<img src='./images/jpg/state_space_explosion_good.jpg' width="800"/>]
 
+<!--- section:CONCURRENCY_ERROR_DETECTORS -->
+
 ---
 class: center, middle
 # Concurrency Error Detectors
@@ -326,6 +337,8 @@ class: middle, center
 # Systematic Exploration
 <br/><br/>
 .center[<img src='./images/jpg/state_space_explosion.jpg' width="800"/>]
+
+<!--- section:SYSTEMATIC_EXPLORATION -->
 
 ---
 # Taking Control Over the Thread Interleavings
@@ -548,6 +561,8 @@ count: false
 class: center, middle
 # Thank you!
 
+<!--- section:LINKS -->
+
 ---
 # Links
 
@@ -564,12 +579,10 @@ https://github.com/s-vde/state-space-explorer
 
 
 
-    </textarea>
-    <script src="https://gnab.github.io/remark/downloads/remark-latest.min.js">
-        </script>
-    <script>
-        var slideshow = remark.create({
-        });
-        </script>
-    </body>
+
+
+      </textarea>
+      <script src="https://gnab.github.io/remark/downloads/remark-latest.min.js"></script>
+      <script>var slideshow = remark.create();</script>
+   </body>
 </html>
