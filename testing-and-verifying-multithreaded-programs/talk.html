@@ -12,15 +12,245 @@
 
 class: center, middle
 
+<!-- =============================================================================================================== -->
 <!--- section:TITLE -->
 
-# Testing and Verifying Multi-Threaded Programs
+# Verifying Multi-Threaded Programs Using Dynamic Analysis
 ### Susanne van den Elsen
 Software Developer @ Native Instruments
 
 ### Meeting C++
-November, 2017
+November 10, 2017
 
+
+
+<!-- =============================================================================================================== -->
+<!--- section:Multi-Threading at Native Instruments -->
+
+---
+# Multi-Threading at Native Instruments
+
+<!-- links
+-   http://www.rossbencina.com/code/real-time-audio-programming-101-time-waits-for-nothing
+-->
+
+
+<!-- =============================================================================================================== -->
+<!-- section:Challenges in Testing and Verifying Multi-Threaded Programs -->
+
+---
+layout: true
+# Challenges in Testing and Verifying Multi-Threaded Programs
+
+---
+
+<!-- subsection:Concurrency Bugs -->
+
+---
+## Concurrency Bugs
+
+--
+- Arise from multiple threads sharing resources
+
+---
+## Concurrency Bugs
+### Race Conditions
+
+---
+## Concurrency Bugs
+### Data Races
+- Definition
+- Reason about memory since C++11 memory model
+- Since then: undefined behavior!
+
+---
+## Concurrency Bugs
+### Deadlocks
+
+---
+## Concurrency Bugs
+### Livelocks
+
+---
+## Concurrency Bugs
+- Need specialized tools that catch these kind of bugs
+- Trace Analysis for concurrency error *detection*: e.g. ThreadSanitizer and Helgrind
+- Instrument the program (source vs. binary) and observe its execution
+- Deploy algorithms specifically tailored to detect data races (happens-before relation) and deadlocks (cycle detection)
+  at run-time
+
+<!-- links
+-   https://github.com/google/sanitizers
+-   http://valgrind.org/docs/manual/hg-manual.html
+-->
+
+<!-- subsection:Nondeterminism -->
+
+---
+## Nondeterminism
+- Single-threaded programs have nondeterminism for example from user input or randomization
+- Multi-threaded programs have another level of nondeterminism
+- Program specifies only *partial order* on the instructions performed by different threads (e.g. by atomics
+  and memory order constraints and by locks / condition variables)
+- The total order of instructions becoming visible is outsourced to the OS scheduler and the processor.
+
+---
+## Nondeterminism
+### What does this mean for testing?
+- Heisenbugs: Bugs that tend to disappear when you want to find them (e.g. does not appear when compiled without
+  optimization, as often done for debuggers, or changes in timing when ran under control of a debugger)
+- Rare schedules: Bugs that only occur under very rare schedules
+- Coverage: Running tests repeatedly without guarantee that schedules will be different
+- Coverage: Inducing bad schedules by forcing context-switches, but not systematic
+- Reproducibility: If buggy behavior is observed, not easy to reproduce
+
+---
+## Nondeterminism
+### Demo: Helgrind on background_thread
+
+
+
+<!-- =============================================================================================================== -->
+<!-- section:Systematic Exploration of Program Behavior -->
+
+---
+layout: true
+# Systematic Exploration
+
+---
+--
+- Insight: Test cases are schedules
+- Take control over the interleaving of threads: 
+    - Instrument system under test using LLVM compiler pass with hooks to be used by a custom scheduler;
+        * Instrument *every* memory access
+        * Instrument thread creation, joining, entering/leaving a function
+    - Scheduler records the runtime interleaving of the system under test;
+    - Scheduler can replay the system under test under any *valid* input thread interleaving.
+        * High-level implementation: semaphore for each thread, at any point in time all but one thread are blocked
+          on their semaphore
+        * Underlying OS is forced to schedule the thread that is no blocked.
+- A search algorithm driving the system under test through interesting interleavings.
+
+---
+<div style="padding-top: 1em;">
+<div class="mermaid" style="align: left; width: 100%; margin: 0px auto;">
+   graph TD;
+      exploration[Exploration Algorithm];
+      
+      exploration --> |00001111| instr_exe1[Executable];
+      instr_exe1 --> |trace| exploration;
+      
+      exploration --> |00011110| instr_exe2[Executable];
+      instr_exe2 --> |trace| exploration;
+      
+      exploration --> |....| instr_exei[Executable];
+      instr_exei --> |trace| exploration;
+      
+      exploration --> |11110000| instr_exen[Executable];
+      instr_exen --> |trace| exploration;
+</div></div>
+
+---
+<div style="padding-top: 1em;">
+<div class="mermaid" style="align: left; width: 100%; margin: 0px auto;">
+   graph TD;
+      sut[Souce Code] --> |Clang| ir[LLVM IR];
+      ir --> |RecordReplay Instrumentation Pass| instr_ir[Instrumented IR];
+      
+      scheduler[Run Time Scheduler Library];
+      
+      instr_exe[Instrumented Executable];
+      
+      instr_ir --> instr_exe;
+      scheduler --> instr_exe;
+</div></div>
+
+<!-- subsection:Combinatorial Explosion -->
+
+---
+## Combinatorial Explosion
+- Simple Depth-First Search on State Space
+- Problem: The number of possible thread interleavings grows exponentially with the size of the program!
+- Solution: Prune state-space!
+- Techniques to reduce the state space to explore, while still being able to give coverage guarantees
+
+<!-- subsection:Bounded Search -->
+
+---
+## Bounded Search
+- Prune the state space based on a "bounding function" (function on executions/traces) and a "bound value".
+- Empirically, many bugs in concurrent software manifest are exposed by SOME schedule with small number of context
+  switches/preemptions (TODO: citation)
+- Already notion of different schedules leading to same behavior, some with high, some with low depth.
+- Complexity: program with n threads that each execute at most k steps: O(n^(2c)k^c) schedules with c context-switches.
+    polynomial in k, for fixed context-bound
+
+<!-- citations
+-   S. Qadeer and J. Rehof. 
+    Context-bounded model checking of concurrent software. 
+    In TACAS 05: Tools and Algorithms for the Construction and Analysis of Systems,
+    volume 3440 of Lecture Notes in Computer Science, pages 93–107. Springer, 2005
+-->
+
+<!-- subsection:Partial Order Reduction -->
+
+---
+## Partial Order Reduction
+- Prune state-space based on equivalence relation on executions/traces
+- Complete: explore at least one schedule per equivalence class;
+- Ideally explore a single trace/schedule per equivalence class to be fast
+
+
+
+<!-- =============================================================================================================== -->
+<!-- section:References -->
+
+---
+layout: true
+# References
+
+---
+TODO
+
+
+---
+
+
+<!-- =============================================================================================================== -->
+<!-- notes:
+* Many tools available for testing / verifying sequential code (that is hard enough already!);
+* Tool still in progress: not full support of C++11 memory model (e.g. visible sequences of side effects, atomics).
+
+
+* Even though we see a tendency towards more and more high-level concurrency constructs (e.g. futures, coroutines) and 
+programmers are more and more discouraged to use std::thread, and std::mutex, which become implementation details, there 
+are domains where exactly these implementation details still matter (e.g. realtime systems, cyberphysical systems).
+* Other examples such as CppMem (http://svr-pes20-cppmem.cl.cam.ac.uk/cppmem/).
+* Runtime nature of the tool, but can still prove completeness of the exploration tree (e.q. using Coq).
+* Something about the implementation details, i.e. vector clocks?
+
+
+* Difference between software testing and software verification;
+* General limitations of software verification and dynamic verification, e.g. non-halting programs excluded;
+* Verification w.r.t. a *class* of bugs/errors, a specification (e.g. Datarace free);
+* Difference between static analysis and dynamic analysis (e.g. examples from Flanagan/Godefroid).
+
+section:Concurrency and Concurrency Errors 
+- Test input is a program and a schedule, observation is execution/trace and execution result
+- Difficult to reason about the interaction of threads
+
+* Think about examples:
+    - background_thread
+    - workstealing_queue
+    - double_instance
+    - Depth-bounding examples from the paper, showing that empirically, many bugs have small depth
+    - Example with large depth
+    - Example where POR and optimal POR differ a lot
+-->
+
+
+
+<!-- =============================================================================================================== -->
 <!--- section:THREADS -->
 
 ---
@@ -522,7 +752,7 @@ count: false
 class: center, middle
 # Thank you!
 
-<!--- section:LINKS -->
+<!-- section:LINKS -->
 
 ---
 # Links
@@ -541,7 +771,30 @@ https://github.com/s-vde/state-space-explorer
 
 
       </textarea>
+      
+      <script src="../libs/mermaid/dist/mermaid.js"></script>
+      <link rel="stylesheet" href="../libs/mermaid/dist/mermaid.forest.css">
       <script src="https://gnab.github.io/remark/downloads/remark-latest.min.js"></script>
-      <script>var slideshow = remark.create();</script>
+      <script>
+         var slideshow = remark.create({ 
+            ratio: '16:9' 
+         });
+         mermaid.initialize({ 
+            startOnLoad: false,
+            cloneCssStyles: false
+         });
+         function initMermaid(s) {
+            var diagrams = document.querySelectorAll('.mermaid');
+            var i;
+            for (i=0; i < diagrams.length; i++) {
+               if(diagrams[i].offsetWidth>0){
+                  mermaid.init(undefined, diagrams[i]);
+               }
+            }
+         }
+         slideshow.on('afterShowSlide', initMermaid);
+         initMermaid(slideshow.getSlides()[slideshow.getCurrentSlideIndex()]);
+      </script>
+      
    </body>
 </html>

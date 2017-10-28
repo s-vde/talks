@@ -1,11 +1,12 @@
 
 @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
-@import url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
+@import url(https://fonts.googleapis.com/css?family=Open+Sans:400,700,400italic);
+@import url(https://fonts.googleapis.com/css?family=Roboto:400,700,400italic);
 @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
 
 @page 
 {
-   size: 1024px 768px;
+   size: 1920px 1080px;
    margin: 0;
 }
 
@@ -22,13 +23,26 @@
 
 .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
 
-.remark-container { background-color: grey; }
+.remark-slide-scaler { box-shadow: none; /* remove slide frame */ }
 
-body { font-family: 'Droid Serif'; }
+.remark-container { background-color: white; }
 
-h1, h2, h3 
+body 
 {
+   font-family: 'Open Sans';
+   /*font-family: 'Futura';*/
+   /*font-family: 'Gill Sans';*/
+   /*font-family: 'Helvetica';*/
+   /*font-family: 'Roboto';*/
+   /*font-family: 'Yanone Kaffeesatz';*/
+}
+         
+h1, h2, h3
+{
+   /*font-family: 'Open Sans';*/
+   /*font-family: 'Roboto';*/
    font-family: 'Yanone Kaffeesatz';
+   /*font-weight: lighter;*/
    font-weight: normal;
 }
 

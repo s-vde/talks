@@ -1,0 +1,153 @@
+\documentclass[]{article}
+
+\newtheorem{definition}{Definition}
+
+\begin{document}
+\title{Verifying Multi-Threaded Programs Using Dynamic Analysis}
+\author{Susanne van den Elsen}
+\date{November 10, 2017}
+\maketitle
+
+% 5850 words for 45 minutes (130 per minute)
+
+\section*{Instroduction}
+\paragraph{Multi-Threading at Native Instruments}
+I am a software developer at Native Instruments in Berlin. 
+At Native Instruments we create software and hardware for computer-based audio production.
+Before that, I was doing research at the Max Planck Institute for Software Systems.
+My research interests were in automated software verification, and one of my projects focused specifically on
+verification of multi-threaded software.
+Multi-threading is very relevant in audio production software.
+First of all, the audio processing should always run in order not to produce glitchy artifacts. 
+Therefore, it should run on a dedicated, high priority thread.
+It should never wait for something else in the program.
+At the same time, it needs to communicate with the user interface, for example to receive parameter changes.
+Second, audio processing itself, potentially running complex DSP algorithms, is generally CPU-heavy and often needs to 
+exploit the power of multiple cores.
+In short, we need to address challenges in performance and correctness related to multi-threading on a daily basis.
+
+\paragraph{}
+There are many good conference talks about what is multi-threading, when and when not to use it and when you use it, 
+how to do it right.
+In this talk I will focus on techniques for automatically verifying that a given multi-threaded program is correct.
+I will present a tool I developed in the context of my research and give a very high-level explanation of the theory
+behind it.
+
+
+\section*{Traditional Testing / Verification Tools}
+Before diving into solutions, let me first explain why testing and verification tools designed for single-threaded 
+programs are not sufficient for testing or verifying multi-threading programs.
+
+\paragraph{Concurrency Errors}
+First of all, multi-threading introduces a whole new set of potential bugs.
+These generally arise from the fact that threads can operate on shared resources.
+\begin{definition}[Race Condition]
+A \emph{race condition} occurs when the \emph{timing} or \emph{ordering} of events may lead to erroneous program 
+behavior. It is therefore a purely \emph{semantic} error.
+\end{definition}
+\begin{definition}[Data Race]
+A \emph{data race} occurs when two instructions performed by different threads access the same memory location, at 
+least one of the accesses is modifying the data at that location and the two instructions are not related by the 
+\emph{happens-before relation}. Intuitively, this means that they may occur \emph{concurrently} and it is undefined
+which of the accesses will become visible first.
+\end{definition}
+\begin{definition}[Dead Lock]
+A \emph{deadlock} occurs when two or more threads cannot make progress because they are waiting for each other to 
+release a shared resource.
+\end{definition}
+
+
+\paragraph{Concurrency}
+Concurrency is notoriously hard to get right.
+The difficulty lies in reasoning about the possible interactions between threads or processes.
+These interactions may introduce subtle bugs like race conditions, data races and deadlocks.
+
+\paragraph{Debugging}
+Debugging multi-threaded programs is challenging as well.
+Trace analysis tools, like ThreadSanitizer and Helgrind, deploy algorithms specifically tailored to detect data races 
+and deadlocks from a program's execution trace.
+Using these tools, many bugs in real-world software have been detected.
+However, trace analysis by itself cannot provide any guarantees about the bug-freedom of a program.
+The behavior of the program is largely determined by the order in which threads are scheduled or in which their
+actions become visible to other threads.
+A potential bug may only manifest itself in a single, very rare scheduling, which happens not to occur during 
+testing, leaving the bug undetected and unsolved.
+Even when detected, since the scheduling is not under the programmer's control, a bug is not easily reproducible.
+
+\paragraph{Systematic Exploration}
+Systematic exploration is a technique to overcome these challenges.
+It involves taking control over the scheduler and repeatedly executing a program under test under a different, 
+unexplored schedule.
+Schedules leading to buggy executions can be recorded and replayed at any time.
+
+The most straightforward way to do systematic exploration is to do a depth-first exploration of the tree corresponding
+to a program's set of possible schedules.
+This variant is complete, that is, all behaviors of the program are seen and all bugs detected.
+However, it suffers from combinatorial explosion; the number of possible schedules grows exponentially with the size
+of the program.
+Therefore, for nontrivial programs, this method is not feasible.
+
+The problem of combinatorial explosion can be tackled by carefully pruning the tree of schedules that are considered for
+exploration.
+This introduces a trade-off between the number of explored schedules and the strength of the provided correctness 
+guarantees.
+
+\paragraph{Preemption Bounded Search}
+Preemption bounded search reduces the schedules considered by limiting the number of preemptive context switches that
+are allowed in a schedule.
+Small bounds greatly reduce the state-space.
+On the other hand, the method is not complete.
+It provides bounded coverage guarantees: all remaining, undiscovered bugs require $c+1$ preemptions to manifest
+themselves.
+The method can be run iteratively with increasing bound, so that \emph{in the limit} all schedules are explored.
+In short, this method allows to trade-off resource budget for coverage.
+Also, it tends to produce counterexamples that are easy to understand.
+Empirical study has shown that many bugs can be indeed found with low preemption bound [1,2].
+
+\paragraph{Partial Order Reduction}
+The high level idea behind partial order reduction (POR) is to group together schedules that induce equivalent behavior 
+in equivalence classes. Then, ideally only a single schedule per equivalence class is explored. An often used 
+equivalence relation, the happens-before relation, is the reflexive, transitive closure of the dependence
+relation on transitions.
+
+\section*{Bibliography}
+\begin{description}
+\item[1]
+M. Musuvathi and S. Qadeer.  
+Iterative context bounding for systematic testing of multithreaded programs. 
+In PLDI, pages 446–455, 2007.
+%https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/pldi07-icb.pdf
+
+\item[2]
+%https://people.engr.ncsu.edu/gjin2/Classes/591/Spring2017/concurrency-schedule-bounding.pdf
+%https://github.com/mc-imperial/sctbench
+\end{description}
+
+
+\section*{Notes}
+Dynamic analysis is a technique in which a program under test is run and a trace of its execution is analyzed to detect 
+potential errors.
+
+Automated verification is the task of, given an input program and a specification, algorithmically decide whether the 
+program satisfies the specification.
+The verification task is undecidable in general.
+Therefore, efforts restrict either the class of input programs, the language in which specifications can be expressed, 
+or both.
+In this talk, I focus on multi-threaded programs that are guaranteed to terminate and specification that the program
+is datarace and deadlock free.
+
+
+
+for example by at each 
+point forcing the operating system's scheduler to schedule a given thread.
+It performs trace analysis on the execution and then computes the next schedule to run the program through.
+
+Delay bounding: limiting the number of times a schedule can deviate from a given deterministic scheduler.
+
+
+
+
+\section{Definitions}
+
+
+\end{document}

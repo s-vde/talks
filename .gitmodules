@@ -1,0 +1,9 @@
+[submodule "testing-and-verifying-multithreaded-programs/demos/state-space-explorer"]
+	path = testing-and-verifying-multithreaded-programs/demos/state-space-explorer
+	url = https://github.com/s-vde/state-space-explorer.git
+[submodule "testing-and-verifying-multithreaded-programs/demos/sctbench"]
+	path = testing-and-verifying-multithreaded-programs/demos/sctbench
+	url = https://github.com/mc-imperial/sctbench.git
+[submodule "libs/mermaid"]
+	path = libs/mermaid
+	url = https://github.com/knsv/mermaid.git

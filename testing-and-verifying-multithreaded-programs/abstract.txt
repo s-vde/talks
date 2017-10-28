@@ -1,0 +1,10 @@
+Title: Testing and Verification of Concurrent Programs
+Desc: <p>Concurrency is notoriously hard to get right. First of all, it introduces a new class of errors. For example, multiple threads operating on shared data may be involved in a data race and synchronisation mechanisms, when not applied correctly, can introduce deadlock. Moreover, the behaviour of a concurrent system depends on the runtime interleaving of threads or processes, which is a source of nondeterminism. This nondeterminism makes concurrent systems hard to reason about and potential bugs hard to find and reproduce using traditional tools.</p>
+<p>In this talk I will discuss dynamic analysis tools that are specifically tailored to detect concurrency errors or give guarantees about their absence. I will give an insight into&nbsp;the techniques used in these tools and demonstrate them on multithreaded C++ programs. I will start with trace analysis, used in concurrency error detectors like ThreadSanitizer and Helgrind. The focus of this talk will be on systematic testing, a technique that drives the system under test through a carefully chosen set of thread interleavings and analyses the resulting execution traces.</p>
+Outline: <ul>
+<li>Brief&nbsp;Introduction to Concurrency and Common Concurrency Errors</li>
+<li>Challenges in Testing and Verifying Concurrent Systems</li>
+<li>Trace Analysis</li>
+<li>Systematic Testing</li>
+<li>Combinatorial Explosion and State Space Reduction Techniques</li>
+</ul>
