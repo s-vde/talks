@@ -34,16 +34,21 @@ body
    /*font-family: 'Gill Sans';*/
    /*font-family: 'Helvetica';*/
    /*font-family: 'Roboto';*/
-   /*font-family: 'Yanone Kaffeesatz';*/
 }
-         
-h1, h2, h3
+
+h1, h2, h3, h4
 {
    /*font-family: 'Open Sans';*/
    /*font-family: 'Roboto';*/
    font-family: 'Yanone Kaffeesatz';
-   /*font-weight: lighter;*/
    font-weight: normal;
+   margin-top: 0.2em;
+}
+
+h4
+{
+   font-size: 1.5em;
+   margin-bottom: 0.5em;
 }
 
 li { margin: 0.75em 0; }

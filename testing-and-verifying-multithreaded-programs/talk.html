@@ -47,32 +47,29 @@ layout: true
 <!-- subsection:Concurrency Bugs -->
 
 ---
-## Concurrency Bugs
+layout: true
+#### Challenges in Testing and Verifying Multi-Threaded Programs
+# Concurrency Bugs
+
+---
 
 --
+count: false
 - Arise from multiple threads sharing resources
 
 ---
-## Concurrency Bugs
 ### Race Conditions
 
 ---
-## Concurrency Bugs
 ### Data Races
 - Definition
 - Reason about memory since C++11 memory model
 - Since then: undefined behavior!
 
 ---
-## Concurrency Bugs
 ### Deadlocks
 
 ---
-## Concurrency Bugs
-### Livelocks
-
----
-## Concurrency Bugs
 - Need specialized tools that catch these kind of bugs
 - Trace Analysis for concurrency error *detection*: e.g. ThreadSanitizer and Helgrind
 - Instrument the program (source vs. binary) and observe its execution
@@ -87,7 +84,14 @@ layout: true
 <!-- subsection:Nondeterminism -->
 
 ---
-## Nondeterminism
+layout: true
+#### Challenges in Testing and Verifying Multi-Threaded Programs
+# Nondeterminism
+
+---
+
+--
+count: false
 - Single-threaded programs have nondeterminism for example from user input or randomization
 - Multi-threaded programs have another level of nondeterminism
 - Program specifies only *partial order* on the instructions performed by different threads (e.g. by atomics
@@ -95,7 +99,6 @@ layout: true
 - The total order of instructions becoming visible is outsourced to the OS scheduler and the processor.
 
 ---
-## Nondeterminism
 ### What does this mean for testing?
 - Heisenbugs: Bugs that tend to disappear when you want to find them (e.g. does not appear when compiled without
   optimization, as often done for debuggers, or changes in timing when ran under control of a debugger)
@@ -105,7 +108,6 @@ layout: true
 - Reproducibility: If buggy behavior is observed, not easy to reproduce
 
 ---
-## Nondeterminism
 ### Demo: Helgrind on background_thread
 
 
@@ -118,8 +120,16 @@ layout: true
 # Systematic Exploration
 
 ---
+
+---
+layout: true
+#### Systematic Exploration
+
+---
+
 --
-- Insight: Test cases are schedules
+count: false
+- Test cases are schedules
 - Take control over the interleaving of threads: 
     - Instrument system under test using LLVM compiler pass with hooks to be used by a custom scheduler;
         * Instrument *every* memory access
@@ -132,43 +142,53 @@ layout: true
 - A search algorithm driving the system under test through interesting interleavings.
 
 ---
-<div style="padding-top: 1em;">
-<div class="mermaid" style="align: left; width: 100%; margin: 0px auto;">
-   graph TD;
-      exploration[Exploration Algorithm];
-      
-      exploration --> |00001111| instr_exe1[Executable];
-      instr_exe1 --> |trace| exploration;
-      
-      exploration --> |00011110| instr_exe2[Executable];
-      instr_exe2 --> |trace| exploration;
-      
-      exploration --> |....| instr_exei[Executable];
-      instr_exei --> |trace| exploration;
-      
-      exploration --> |11110000| instr_exen[Executable];
-      instr_exen --> |trace| exploration;
+# RecordReplay Library
+<div class="mermaid" style="align: center; width: 60%; margin: 0px auto;">
+   graph TD
+      sut[Souce Code] --> |Clang| ir[LLVM IR]
+      ir --> |RecordReplay Instrumentation Pass| instr_ir[Instrumented IR]
+      scheduler[Run Time Scheduler Library]
+      instr_exe[Instrumented Executable]
+      instr_ir --> instr_exe
+      scheduler --> instr_exe
 </div></div>
 
 ---
-<div style="padding-top: 1em;">
-<div class="mermaid" style="align: left; width: 100%; margin: 0px auto;">
-   graph TD;
-      sut[Souce Code] --> |Clang| ir[LLVM IR];
-      ir --> |RecordReplay Instrumentation Pass| instr_ir[Instrumented IR];
+# RecordReplay Library
+<div class="mermaid" style="align: center; width: 60%; margin: 0px auto;">
+   graph LR
+      schedule[Schedule<br/><br/>00001111] --> instr_exe[Instrumented Executable]
+      instr_exe --> trace[Trace<br/><br/>0 lock mutex</br>0 load x1<br/>0 store x1<br/>0 unlock mutex<br/>1 load x1<br/>1 load x2<br/>1 store x3<br/>1 store x1]
+</div></div>
+
+<!-- Notes:
+LLVM IR: low-level assembly-like language that is designed so that many higher level langauges
+         can be mapped to it;
+-->
+
+---
+# StateSpaceExplorer
+<div class="mermaid" style="align: center; width: 80%; margin: 0px auto;">
+   graph TD
+      exploration[Exploration Algorithm]
       
-      scheduler[Run Time Scheduler Library];
+      exploration --> |00001111| instr_exe1[Instrumented<br/>Executable]
+      instr_exe1 --> |trace| exploration
       
-      instr_exe[Instrumented Executable];
+      exploration --> |00011110| instr_exe2[Instrumented<br/>Executable]
+      instr_exe2 --> |trace| exploration
       
-      instr_ir --> instr_exe;
-      scheduler --> instr_exe;
+      exploration --> |....| instr_exei[Instrumented<br/>Executable]
+      instr_exei --> |trace| exploration
+      
+      exploration --> |11110000| instr_exen[Instrumented<br/>Executable]
+      instr_exen --> |trace| exploration
 </div></div>
 
 <!-- subsection:Combinatorial Explosion -->
 
 ---
-## Combinatorial Explosion
+# Combinatorial Explosion
 - Simple Depth-First Search on State Space
 - Problem: The number of possible thread interleavings grows exponentially with the size of the program!
 - Solution: Prune state-space!
@@ -177,7 +197,7 @@ layout: true
 <!-- subsection:Bounded Search -->
 
 ---
-## Bounded Search
+# Bounded Search
 - Prune the state space based on a "bounding function" (function on executions/traces) and a "bound value".
 - Empirically, many bugs in concurrent software manifest are exposed by SOME schedule with small number of context
   switches/preemptions (TODO: citation)
@@ -195,7 +215,7 @@ layout: true
 <!-- subsection:Partial Order Reduction -->
 
 ---
-## Partial Order Reduction
+# Partial Order Reduction
 - Prune state-space based on equivalence relation on executions/traces
 - Complete: explore at least one schedule per equivalence class;
 - Ideally explore a single trace/schedule per equivalence class to be fast
