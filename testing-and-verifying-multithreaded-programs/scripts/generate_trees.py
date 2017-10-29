@@ -45,36 +45,37 @@ def iterate_with_increasing_bound(mode_exe, program, compiler_options):
 # ------------------------------------------------------------------------------
 
 def main(argv):
-    rr_src = "./demos/state-space-explorer/libs/record-replay"
     sse_src = "./demos/state-space-explorer"
     sse_build = "./build/demos/state-space-explorer"
 
     search_tree = os.path.join(sse_src, "tools/search_tree.py")
 
-    real_world_programs = os.path.join(rr_src,
-                                       "tests/test_programs/real_world")
+    test_programs = "./build/demos/programs"
 
     programs = {
                 # # filesystem
-                # os.path.join(real_world_programs, "filesystem.c"):
+                # os.path.join(programs, "filesystem.c"):
                 # (["inode", "busy", "locki", "lockb", "START"],
                 #  "",
                 #  ["dpor"]),
                 # # dining_philosophers (deadlock)
-                # os.path.join(real_world_programs, "dining_philosophers.cpp"):
+                # os.path.join(programs, "dining_philosophers.cpp"):
                 # (["forks", "nr_meals", "START"],
                 #  "--c -std=c++14"),
                 # work_stealing_queue
-                # os.path.join(real_world_programs, "work_stealing_queue.cpp"):
+                # os.path.join(programs, "work_stealing_queue.cpp"):
                 # (["queue", "START"],
                 #  "--opt 3 --c -std=c++14",
                 #  ["dpor"]),
                 # readers_nonpreemptive
-                "%s/tests/test_programs/benchmarks/readers_nonpreemptive.c" \
-                % sse_src:
-                (["x", "START"],
-                 "",
-                 ["bounded_search"])
+                # "%s/tests/test_programs/benchmarks/readers_nonpreemptive.c" \
+                # % sse_src:
+                # (["x", "START"],
+                #  "",
+                #  ["bounded_search"]),
+                # background_thread
+                os.path.join(test_programs, "background_thread.cpp"):
+                ([], "--opt 3 --c -std=c++14", ["depth_first_search"])
                }
 
     for program, properties in programs.items():
