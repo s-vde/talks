@@ -21,7 +21,11 @@
    }
 }
 
-.remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+.remark-code, .remark-inline-code 
+{ 
+   font-size: 0.9em;
+   font-family: 'Ubuntu Mono'; 
+}
 
 .remark-slide-scaler { box-shadow: none; /* remove slide frame */ }
 
@@ -47,6 +51,7 @@ h1, h2, h3, h4
 
 h4
 {
+   color: #A4A4A4;
    font-size: 1.5em;
    margin-bottom: 0.5em;
 }

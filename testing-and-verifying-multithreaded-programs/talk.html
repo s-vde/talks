@@ -28,6 +28,7 @@ November 10, 2017
 <!--- section:Multi-Threading at Native Instruments -->
 
 ---
+exclude: true
 # Multi-Threading at Native Instruments
 
 <!-- links
@@ -57,22 +58,213 @@ layout: true
 count: false
 - Arise from multiple threads sharing resources
 
----
-### Race Conditions
+<!-- subsubsection:Race Conditions -->
 
 ---
-### Data Races
-- Definition
-- Reason about memory since C++11 memory model
-- Since then: undefined behavior!
+layout: true
+#### Challenges in Testing and Verifying Multi-Threaded Programs | Concurrency Bugs
+# Race Conditions
 
 ---
-### Deadlocks
+Arise when the program's correctness depends on the relative timing or ordering of thread 
+instructions
 
 ---
-- Need specialized tools that catch these kind of bugs
-- Trace Analysis for concurrency error *detection*: e.g. ThreadSanitizer and Helgrind
-- Instrument the program (source vs. binary) and observe its execution
+```cpp
+transfer(account& from, int amount, account& to)
+{
+   const auto balance_from = from.balance.load();
+   if (balance_from >= amount)
+   {
+      to.balance.fetch_add(amount);
+      from.balance.fetch_sub(amount);
+   }
+}
+
+TEST(BalancesArePositive)
+{
+   array<atomic<int>, 2> accounts = {{ 100, 0 }};
+   thread mallory(transfer, ref(accounts[0]), 100, ref(accounts[1]));
+   thread marvin(transfer, ref(accounts[0]), 100, ref(accounts[1]));
+   
+   mallory.join();
+   marvin.join();
+   
+   ASSERT(all_of(accounts.begin(), accounts.end(), [](auto balance){ positive(balance); }));
+}
+```
+
+---
+```cpp
+mallory                                      marvin                                       accounts
+
+balance_from = from.balance.load() = 100;                                                 { 100,  0   }
+                                             balance_from = from.balance.load() = 100;    { 100,  0   }
+to.balance.fetch_add(amount);                                                             { 100,  100 }
+from.balance.fetch_sub(amount);                                                           { 0,    100 }         
+                                             to.balance.fetch_add(amount);                { 0,    200 }
+                                             from.balance.fetch_sub(amount);              { -100, 200 }
+```
+
+<!-- subsubsection:Data Races -->
+
+---
+layout: true
+#### Challenges in Testing and Verifying Multi-Threaded Programs | Concurrency Bugs
+# Data Races
+
+---
+Arise when two threads 
+- may access the same memory location concurrently; and 
+- at least one of the accesses is a write
+
+--
+count: false
+*memory location:* since the c++11 memory model we can reason about memory accesses
+
+--
+count: false
+*may access concurrently:* accesses are not ordered by the *happens-before relation*
+
+--
+count: false
+Data races are **Undefined Behaviour!**
+
+---
+```cpp
+int x, y, z = 0;
+
+int main()
+{
+   thread t1([]{
+      if (x == 1)
+         y = 1;
+   });
+   
+   thread t2([]{
+      x = 1;
+      z = x + y;
+   });
+}                                   
+```
+
+---
+```cpp
+t1                   t2             x,    y,    z
+
+x == 1?                             0,    0,    0
+                     x = 1          1,    0,    0
+                     read y         1,    0,    0 
+                     z = x + y      1,    0,    1
+```
+
+--
+count: false
+```cpp
+t1                   t2             x,    y,    z
+
+                     x = 1          1,    0,    0
+x == 1?                             1,    0,    0
+y = 1                               1,    1,    0
+                     read y         1,    1,    0 
+                     z = x + y      1,    1,    2                                   
+```
+
+<!-- subsubsection:Deadlocks -->
+
+---
+layout: true
+#### Challenges in Testing and Verifying Multi-Threaded Programs | Concurrency Bugs
+# Deadlocks
+
+---
+Two or more threads wait for each other indefinitely
+
+---
+```cpp
+struct background_thread_manager
+{
+   void cancel() {
+      if (m_background_thread.joinable())
+         m_background_thread.join();
+   }
+   
+   void run_thread() {
+      if (m_mutex.try_lock()) {        // no background_thread already running
+         cancel();
+      
+         m_background_thread([this]() {            
+            m_mutex.lock();
+            // ... perform task ...
+            m_mutex.unlock();
+         });
+      
+         m_mutex.unlock();             // only now m_background_thread can perform task
+      }
+   }
+   
+   thread m_background_thread;
+   mutex m_mutex;
+};
+```
+
+---
+```cpp
+struct background_thread_manager                         int main()
+{                                                        {
+   void cancel() {                                          background_thread_manager m;
+      if (m_background_thread.joinable())                   m.run_thread();
+         m_background_thread.join();                        this_thread::sleep_for(1s);
+   }                                                        m.run_thread();
+                                                            
+   void run_thread() {                                      m.cancel();
+      if (m_mutex.try_lock()) {                          }
+         cancel();
+      
+         m_background_thread([this]() {            
+            m_mutex.lock();
+            // ... perform task ...
+            m_mutex.unlock();
+         });
+      
+         m_mutex.unlock();
+      }
+   }
+   
+   thread m_background_thread;
+   mutex m_mutex;
+};
+```
+
+---
+```cpp
+main                                   m_background_thread        m_mutex
+                                 
+run_thread();                                                     unlocked
+   m_mutex.try_lock();                                            locked
+   cancel();            
+      m_background_thread.joinable()?  // not joinable
+   spawn m_background_thread           // becomes joinable
+   m_mutex.unlock();                                              unlocked
+
+this_thread::sleep_for(1s);
+
+run_thread();      
+   m_mutex.try_lock();                                            locked
+   cancel();
+      m_background_thread.joinable()?
+      m_background_thread.join();      // not joinable
+                                       m_mutex.lock(); // blocked
+```
+
+---
+layout: true
+#### Challenges in Testing and Verifying Multi-Threaded Programs | Concurrency Bugs
+# Specialized Tools For Concurrency Bug Detection
+
+---
+*State-Of-The-Art Examples:* ThreadSanitizer and Helgrind
+- Instrument the program (source vs. binary), run it, and observe its execution
 - Deploy algorithms specifically tailored to detect data races (happens-before relation) and deadlocks (cycle detection)
   at run-time
 
@@ -185,25 +377,96 @@ LLVM IR: low-level assembly-like language that is designed so that many higher l
       instr_exen --> |trace| exploration
 </div></div>
 
-<!-- subsection:Combinatorial Explosion -->
+<!-- subsection:Exploration Algorithms -->
 
 ---
-# Combinatorial Explosion
-- Simple Depth-First Search on State Space
-- Problem: The number of possible thread interleavings grows exponentially with the size of the program!
-- Solution: Prune state-space!
-- Techniques to reduce the state space to explore, while still being able to give coverage guarantees
+layout: true
+#### Systematic Exploration
+# Exploration Algorithms
+
+---
+
+---
+layout: true
+#### Systematic Exploration - Exploration Algorithms
+
+<!-- subsubsection:Depth-First Exploration -->
+
+---
+# Depth-First Exploration
+
+--
+count: false
+*pseudocode:*
+```cpp
+depth_first_exploration(program)
+{
+   for (schedule : possible_schedules(program))
+   {
+      run(program, schedule);
+   }
+}
+```
+
+<!-- TODO: state-space explosion tree -->
+
+---
+# Combinatorial Explosion!
+
+--
+count: false
+*Problem:* The number of possible thread interleavings grows exponentially with the size of the program!
+
+--
+count: false
+*Solution:* Prune the state-space
+
+--
+count: false
+*Challenge:* Coverage Guaranteees
 
 <!-- subsection:Bounded Search -->
 
 ---
-# Bounded Search
-- Prune the state space based on a "bounding function" (function on executions/traces) and a "bound value".
+layout: true
+#### Systematic Exploration - Exploration Algorithms
+# Bounded Exploration
+
+---
+
+--
+count: false
+*bound function:* a function on schedules (e.g. length, number of context-switches, number of preemptions)
+
+--
+count: false
+*bound value:*
+
+--
+count: false
+*pseudocode:*
+```cpp
+bounded_exploration(program, bound_function, bound_value)
+{
+   for (schedule : possible_schedules(program))
+   {
+      if (bound_function(schedule) <= bound_value)
+      {
+         run(program, schedule);
+      }
+   }
+}
+```
+
+<!-- TODO: example run -->
+
+---
 - Empirically, many bugs in concurrent software manifest are exposed by SOME schedule with small number of context
   switches/preemptions (TODO: citation)
 - Already notion of different schedules leading to same behavior, some with high, some with low depth.
 - Complexity: program with n threads that each execute at most k steps: O(n^(2c)k^c) schedules with c context-switches.
     polynomial in k, for fixed context-bound
+- But: May still explore many schedules that lead to *semantically* equivalent program executions.
 
 <!-- citations
 -   S. Qadeer and J. Rehof. 
@@ -215,10 +478,33 @@ LLVM IR: low-level assembly-like language that is designed so that many higher l
 <!-- subsection:Partial Order Reduction -->
 
 ---
+layout: true
+#### Systematic Exploration - Exploration Algorithms
 # Partial Order Reduction
-- Prune state-space based on equivalence relation on executions/traces
+
+---
+
+--
+count: false
+*equivalence relation:* groups schedules that lead to the same observable program behaviour
+
+--
+count: false
+*pseudocode:*
+```cpp
+partial_order_reduction(program)
+{
+   for (equivalence_class : equivalence_classes(program))
+   {
+      schedule = representative(equivalence_class);
+      run(program, schedule);
+   }
+}
+```
+
+---
 - Complete: explore at least one schedule per equivalence class;
-- Ideally explore a single trace/schedule per equivalence class to be fast
+- Ideally explore a single trace/schedule per equivalence class
 
 
 
@@ -234,13 +520,12 @@ TODO
 
 
 ---
-
+layout: false
 
 <!-- =============================================================================================================== -->
 <!-- notes:
 * Many tools available for testing / verifying sequential code (that is hard enough already!);
 * Tool still in progress: not full support of C++11 memory model (e.g. visible sequences of side effects, atomics).
-
 
 * Even though we see a tendency towards more and more high-level concurrency constructs (e.g. futures, coroutines) and 
 programmers are more and more discouraged to use std::thread, and std::mutex, which become implementation details, there 
@@ -268,76 +553,14 @@ section:Concurrency and Concurrency Errors
     - Example where POR and optimal POR differ a lot
 -->
 
-
-
-<!-- =============================================================================================================== -->
-<!--- section:THREADS -->
-
----
-# Threads
-.left[<img src='images/jpg/threads.001.jpeg' height="500"/>]
----
-count: false
-# Threads
-.left[<img src='images/jpg/threads.002.jpeg' height="500"/>]
----
-count: false
-# Threads
-.left[<img src='images/jpg/threads.003.jpeg' height="500"/>]
----
-count: false
-# Threads
-.left[<img src='images/jpg/threads.004.jpeg' height="500"/>]
----
-count: false
-# Threads
-.left[<img src='images/jpg/threads.005.jpeg' height="500"/>]
----
-count: false
-# Threads
-.left[<img src='images/jpg/threads.006.jpeg' height="500"/>]
----
-count: false
-# Threads
-.left[<img src='images/jpg/threads.007.jpeg' height="500"/>]
----
-count: false
-# Threads
-.left[<img src='images/jpg/threads.008.jpeg' height="500"/>]
----
-count: false
-# Threads
-.left[<img src='images/jpg/threads.009.jpeg' height="500"/>]
-
 <!--- section:CONCURRENCY_HARD -->
 
 ---
-# What's Hard About Concurrency?
-### Shared Resources
-
-```c++
-int x, y, z = 0;
-
-thread 0                   thread 1
---------                   --------
-
-if (x == 1)                x = 1; 
-{                          z = x + y;
-   y = 1;                  std::cout << z << "\n";                   
-}                                          
-```
-
---
-count: false
-#### Datarace: 
-Two (or more) threads access the same memory location *concurrently* and at least one 
-of them is a *write*
-
----
+exclude: true
 # What's Hard About Concurrency?
 ### Synchronisation
 
-```c++
+```cpp
 array<int,2> nr_meals_eaten = {0, 0};
 mutex fork1, fork2;
 
@@ -352,10 +575,11 @@ unlock(fork1);             unlock(fork2);
 ```
 
 ---
+exclude: true
 # What's Hard About Concurrency?
 ### Synchronisation
 
-```c++
+```cpp
 array<int,2> nr_meals_eaten = {0, 0};
 mutex fork1, fork2;
 
@@ -369,32 +593,6 @@ lock(fork2);
 ++nr_meals_eaten[0];       ++nr_meals_eaten[1];
 unlock(fork2);             unlock(fork1);
 unlock(fork1);             unlock(fork2);
-```
-
---
-count: false
-#### Deadlock: 
-Two or more threads wait for each other indefinitely
-
-???
-- False sharing: Threads running on different processor cores access different variables located in the same cache line frequently. This will slow down the involved threads due to frequent exchange of cache lines
-- Lock contention: One thread blocks the progress of other threads by holding a lock too long
-
----
-# What's Hard About Concurrency?
-### State Space Explosion
---
-count: false
-```c++
-int x, y, z = 0;
-
-thread 0                   thread 1
---------                   --------
-
-if (x == 1)                x = 1; 
-{                          z = x + y;
-   y = 1;                  std::cout << z << "\n";                   
-}                                          
 ```
 
 ---
@@ -556,18 +754,18 @@ class: middle, center
 #### LLVM IR Instumentation Pass
 
 Replace 
-```c++
+```cpp
 pthread_create(pid, attr, start_routine, args)
 pthread_join(pid)
 ``` 
 by 
-```c++ 
+```cpp 
 wrapper_spawn_thread(pid, attr, start_routine, args)
 wrapper_pthread_join()
 ```
 
 #### Scheduler
-```c++
+```cpp
 void wrapper_spawn_thread(pid, attr, start_routine, args)
 {
    semaphores.insert({ pid, semaphore() })
@@ -587,7 +785,7 @@ store i32 %0, i32* %2
 ```
 
 #### Scheduler
-```c++
+```cpp
 void wrapper_post_task(instruction)
 {
    task_pool.insert({ this_thread::id(), instruction });
@@ -604,7 +802,7 @@ count: false
 # Taking Control Over the Thread Interleavings
 #### Scheduler
 
-```c++
+```cpp
 void scheduler_thread(schedule)
 {
    for (thread_id : schedule)
@@ -629,20 +827,6 @@ State space explosion: becomes infeasible for larger programs
 - Explore only a subset of interleavings
 - Provide coverage guarantees: quantify the class / number of interleavings seen
 
----
-# Bounded Search
-```cpp
-bounded_search(program, bound_function, bound)
-{
-   for (interleaving : program.interleavings())
-   {
-      if (bound_function(interleaving) <= bound)
-      {
-         explore(interleaving);
-      }
-   }
-}
-```
 --
 count: zero
 ### Bound Functions
@@ -710,7 +894,7 @@ Ideally explore only a single one of those
 count: false
 #### Dependence Relation
 
-```c++
+```cpp
 bool dependent(memory_instr1, memory_instr2)
 {
    return same_thread(memory_instr1, memory_instr2) || 
@@ -718,7 +902,7 @@ bool dependent(memory_instr1, memory_instr2)
             memory_instr1.is_write() || memory_inst2.is_write() );
 }
 ```
-```c++
+```cpp
 bool dependent(lock_instr1, lock_instr2)
 {
    return same_thread(lock_instr1, lock_instr2) || 
