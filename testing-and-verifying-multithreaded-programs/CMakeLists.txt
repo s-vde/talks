@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5.2)
+cmake_minimum_required(VERSION 3.5.1)
 
 if(DEFINED ${BUILD_DEMOS})
    add_subdirectory(demos/state-space-explorer)
