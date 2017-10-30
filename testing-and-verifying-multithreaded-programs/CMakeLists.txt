@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.5.2)
 
-add_subdirectory(demos/state-space-explorer)
+if(DEFINED ${BUILD_DEMOS})
+   add_subdirectory(demos/state-space-explorer)
+endif(DEFINED ${BUILD_DEMOS})
 
 set(TEST_PROGRAMS    demos/state-space-explorer/libs/record-replay/tests/test_programs)
 
