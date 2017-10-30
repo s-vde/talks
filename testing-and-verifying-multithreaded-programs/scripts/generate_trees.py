@@ -75,7 +75,7 @@ def main(argv):
                 #  ["bounded_search"]),
                 # background_thread
                 os.path.join(test_programs, "background_thread.cpp"):
-                ([], "--opt 3 --c -std=c++14", ["depth_first_search"])
+                (["m", "START"], "--opt 3 --c -std=c++14", ["dpor"])
                }
 
     for program, properties in programs.items():
@@ -98,7 +98,7 @@ def main(argv):
                                                                 output_dir,
                                                                 properties[1])
                 if not os.path.exists(output_dir):
-                        os.system(explore)
+                    os.system(explore)
 
                 output_dirs = [output_dir]
 
