@@ -99,6 +99,16 @@ TEST(BalancesArePositive)
 mallory                                      marvin                                       accounts
 
 balance_from = from.balance.load() = 100;                                                 { 100,  0   }
+to.balance.fetch_add(amount);                                                             { 100,  100 }
+from.balance.fetch_sub(amount);                                                           { 0,    100 }
+                                             balance_from = from.balance.load() = 0;      { 0,    0   }         
+```
+--
+count: false
+```cpp
+mallory                                      marvin                                       accounts
+
+balance_from = from.balance.load() = 100;                                                 { 100,  0   }
                                              balance_from = from.balance.load() = 100;    { 100,  0   }
 to.balance.fetch_add(amount);                                                             { 100,  100 }
 from.balance.fetch_sub(amount);                                                           { 0,    100 }         
@@ -484,19 +494,54 @@ layout: true
 ---
 count: false
 <div class="animation_bs" style="margin-right: 6em;">
-   .right[<img src='./generated_trees/background_thread.cpp/bounded_search/0/trees/animations/pruned/0.png' height="575"/>]
+   .right[<img src='./generated_trees/background_thread.cpp/bounded_search/0/trees/animations/0.png' height="560"/>]
 </div>
 ---
 count: false 
 <div class="animation_bs" style="margin-right: 6em;">
-   .right[<img src='./generated_trees/background_thread.cpp/bounded_search/0/trees/animations/pruned/1.png' height="575"/>]
+   .right[<img src='./generated_trees/background_thread.cpp/bounded_search/0/trees/animations/1.png' height="560"/>]
 </div>
 ---
 count: false 
 <div class="animation_bs" style="margin-right: 6em;">
-   .right[<img src='./generated_trees/background_thread.cpp/bounded_search/0/trees/animations/pruned/2.png' height="575"/>]
+   .right[<img src='./generated_trees/background_thread.cpp/bounded_search/0/trees/animations/2.png' height="560"/>]
 </div>
 
+
+---
+layout: true
+#### Systematic Exploration - Exploration Algorithms
+# Bounded Exploration
+```
+./bounded_search 
+   --i background_thread.cpp 
+   --bound_function preemptions 
+   --bound 1
+``` 
+---
+---
+count: false
+<div class="animation_bs" style="margin-right: 1em;">
+   .right[<img src='./generated_trees/background_thread.cpp/bounded_search/1/trees/full_schedules.png' height="560"/>]
+</div>
+
+
+---
+layout: true
+#### Systematic Exploration - Exploration Algorithms
+# Bounded Exploration
+```
+./bounded_search 
+   --i background_thread.cpp 
+   --bound_function preemptions 
+   --bound 2
+``` 
+---
+---
+count: false
+<div class="animation_bs" style="margin-right: 1em; margin-top: 5em;">
+   .right[<img src='./generated_trees/background_thread.cpp/bounded_search/2/trees/full_schedules.png' width="1100"/>]
+</div>
 
 <!-- subsection:Partial Order Reduction -->
 
@@ -538,23 +583,14 @@ layout: true
 ``` 
 ---
 ---
+count: false
 <div class="animation_dpor">
-   .right[<img src='./generated_trees/background_thread.cpp/dpor/trees/animations/pruned/0.png' height="575"/>]
+   .right[<img src='./generated_trees/background_thread.cpp/dpor/trees/animations/0.png' height="560"/>]
 </div>
 ---
-exclude: true
+count: false
 <div class="animation_dpor">
-   .right[<img src='./generated_trees/background_thread.cpp/dpor/trees/animations/pruned/1.png' height="575"/>]
-</div>
----
-count: false 
-<div class="animation_dpor">
-   .right[<img src='./generated_trees/background_thread.cpp/dpor/trees/animations/pruned/2.png' height="575"/>]
-</div>
----
-exclude: true
-<div class="animation_dpor">
-   .right[<img src='./generated_trees/background_thread.cpp/dpor/trees/animations/pruned/3.png' height="575"/>]
+   .right[<img src='./generated_trees/background_thread.cpp/dpor/trees/animations/1.png' height="560"/>]
 </div>
 
 
