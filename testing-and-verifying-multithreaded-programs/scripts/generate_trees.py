@@ -7,10 +7,11 @@ import sys
 def get_nr_executions(statistics_file):
     file = open(statistics_file, 'r')
     lines = file.readlines()
-    return str(lines[0].split("\t")[1])
+    return int(lines[0].split("\t")[1])
 
 
-def iterate_with_increasing_bound(mode_exe, program, compiler_options):
+def iterate_with_increasing_bound(mode_exe, program, compiler_options,
+                                  max_nr_explorations):
     output_dirs = []
     bound = 0
     previous_nr_executions = 0
@@ -21,8 +22,9 @@ def iterate_with_increasing_bound(mode_exe, program, compiler_options):
                                   "bounded_search",
                                   str(bound))
 
-        explore = "%s --i %s --max 100000 --o %s --bound %d %s" \
-            % (mode_exe, program, output_dir, bound, compiler_options)
+        explore = "%s --i %s --max %d --o %s --bound %d %s" \
+            % (mode_exe, program, max_nr_explorations, output_dir, bound,
+               compiler_options)
 
         if not os.path.exists(output_dir):
             os.system(explore)
@@ -31,7 +33,6 @@ def iterate_with_increasing_bound(mode_exe, program, compiler_options):
 
         nr_executions = get_nr_executions(os.path.join(output_dir,
                                                        "statistics.txt"))
-        print (nr_executions)
         if nr_executions <= previous_nr_executions:
             break
         bound = bound + 1
@@ -75,7 +76,11 @@ def main(argv):
                 #  ["bounded_search"]),
                 # background_thread
                 os.path.join(test_programs, "background_thread.cpp"):
-                (["m", "START"], "--opt 3 --c -std=c++14", ["dpor"])
+                (["m"],                         # 0: name_filter
+                 "--opt 3 --c -std=c++14",      # 1: command line options
+                 ["dpor", "bounded_search"],    # 2: exploration modes
+                 10,                            # 3: max nr exploration
+                 5)                             # 4: nodesep
                }
 
     for program, properties in programs.items():
@@ -87,26 +92,34 @@ def main(argv):
                   % (ntpath.basename(program), mode))
 
             if mode == "bounded_search":
-                output_dirs = iterate_with_increasing_bound(mode_exe, program,
-                                                            properties[1])
+                output_dirs = iterate_with_increasing_bound(mode_exe,
+                                                            program,
+                                                            properties[1],
+                                                            properties[3])
             else:
                 output_dir = os.path.join("generated_trees",
                                           ntpath.basename(program),
                                           mode)
-                explore = "%s --i %s --max 100000 --o %s %s" % (mode_exe,
-                                                                program,
-                                                                output_dir,
-                                                                properties[1])
+                explore = "%s --i %s --max %d --o %s %s" % (mode_exe,
+                                                            program,
+                                                            properties[3],
+                                                            output_dir,
+                                                            properties[1])
+
                 if not os.path.exists(output_dir):
                     os.system(explore)
 
                 output_dirs = [output_dir]
 
             for output_dir in output_dirs:
-                generate = "python3 %s -i %s -o %s -f \'[%s]\'" \
-                    % (search_tree, output_dir, output_dir,
+                generate = "python3 %s -i %s -o %s -f \'[%s]\' -s %d" \
+                    % (search_tree,
+                       output_dir,
+                       os.path.join(output_dir, "trees"),
                        ",".join(list(map(lambda variable: "\"%s\"" % variable,
-                                     properties[0]))))
+                                     properties[0]))),
+                       properties[4])
+                print (generate)
                 os.system(generate)
 
 # ------------------------------------------------------------------------------

@@ -455,8 +455,6 @@ bounded_exploration(program, bound_function, bound_value)
 }
 ```
 
-<!-- TODO: example run -->
-
 ---
 - Empirically, many bugs in concurrent software manifest are exposed by SOME schedule with small number of context
   switches/preemptions (TODO: citation)
@@ -471,6 +469,34 @@ bounded_exploration(program, bound_function, bound_value)
     In TACAS 05: Tools and Algorithms for the Construction and Analysis of Systems,
     volume 3440 of Lecture Notes in Computer Science, pages 93–107. Springer, 2005
 -->
+
+---
+layout: true
+#### Systematic Exploration - Exploration Algorithms
+# Bounded Exploration
+```
+./bounded_search 
+   --i background_thread.cpp 
+   --bound_function preemptions 
+   --bound 0
+``` 
+---
+---
+count: false
+<div class="animation_bs" style="margin-right: 6em;">
+   .right[<img src='./generated_trees/background_thread.cpp/bounded_search/0/trees/animations/pruned/0.png' height="575"/>]
+</div>
+---
+count: false 
+<div class="animation_bs" style="margin-right: 6em;">
+   .right[<img src='./generated_trees/background_thread.cpp/bounded_search/0/trees/animations/pruned/1.png' height="575"/>]
+</div>
+---
+count: false 
+<div class="animation_bs" style="margin-right: 6em;">
+   .right[<img src='./generated_trees/background_thread.cpp/bounded_search/0/trees/animations/pruned/2.png' height="575"/>]
+</div>
+
 
 <!-- subsection:Partial Order Reduction -->
 
@@ -503,6 +529,33 @@ partial_order_reduction(program)
 - Complete: explore at least one schedule per equivalence class;
 - Ideally explore a single trace/schedule per equivalence class
 
+---
+layout: true
+#### Systematic Exploration - Exploration Algorithms
+# Partial Order Reduction
+```
+./dpor --i background_thread.cpp 
+``` 
+---
+---
+<div class="animation_dpor">
+   .right[<img src='./generated_trees/background_thread.cpp/dpor/trees/animations/pruned/0.png' height="575"/>]
+</div>
+---
+exclude: true
+<div class="animation_dpor">
+   .right[<img src='./generated_trees/background_thread.cpp/dpor/trees/animations/pruned/1.png' height="575"/>]
+</div>
+---
+count: false 
+<div class="animation_dpor">
+   .right[<img src='./generated_trees/background_thread.cpp/dpor/trees/animations/pruned/2.png' height="575"/>]
+</div>
+---
+exclude: true
+<div class="animation_dpor">
+   .right[<img src='./generated_trees/background_thread.cpp/dpor/trees/animations/pruned/3.png' height="575"/>]
+</div>
 
 
 <!-- =============================================================================================================== -->
