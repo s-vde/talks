@@ -42,7 +42,7 @@ def iterate_with_increasing_bound(mode_exe, program, compiler_options,
 
 
 def run_with_bounds(mode_exe, program, compiler_options, bounds,
-                    max_nr_explorations):
+                    max_nr_explorations, argv):
     output_dirs = []
 
     for bound in bounds:
@@ -55,7 +55,7 @@ def run_with_bounds(mode_exe, program, compiler_options, bounds,
             % (mode_exe, program, max_nr_explorations, output_dir, bound,
                compiler_options)
 
-        if not os.path.exists(output_dir):
+        if not os.path.exists(output_dir) or argv[0] == "--force-explore":
             os.system(explore)
 
         output_dirs.append(output_dir)
@@ -109,37 +109,37 @@ def main(argv):
                 #  "true",                        # 5: generate animation
                 #  10),                           # 6: nodesep
                 # -----
-                # os.path.join(test_programs, "background_thread.cpp"):
-                # (["m"],                         # 0: name_filter
-                #  "--opt 3 --c -std=c++14",      # 1: command line options
-                #  ["dpor", "bounded_search"],    # 2: exploration modes
-                #  [0],                           # 3: bounds
-                #  1000,                          # 4: max nr explorations
-                #  "true",                        # 5: generate animation
-                #  10),                           # 6: nodesep
-                # # -----
-                # os.path.join(test_programs, "background_thread.cpp"):
-                # (["m"],                         # 0: name_filter
-                #  "--opt 3 --c -std=c++14",      # 1: command line options
-                #  ["bounded_search"],            # 2: exploration modes
-                #  [1, 2],                        # 3: bounds
-                #  1000,                          # 4: max nr explorations
-                #  "false",                       # 5: generate animation
-                #  10),                           # 6: nodesep
+                os.path.join(test_programs, "background_thread.cpp"):
+                (["m"],                         # 0: name_filter
+                 "--opt 3 --c -std=c++14",      # 1: command line options
+                 ["dpor", "bounded_search"],    # 2: exploration modes
+                 [0],                           # 3: bounds
+                 1000,                          # 4: max nr explorations
+                 "true",                        # 5: generate animation
+                 10),                           # 6: nodesep
                 # -----
-                # os.path.join(test_programs, "bank_account.cpp"):
-                # (["from", "to"],                # 0: name_filter
-                #  "--opt 3 --c -std=c++14",      # 1: command line options
-                #  ["dpor", "bounded_search"],    # 2: exploration modes
-                #  [0],                           # 3: bounds
-                #  1000,                          # 4: max nr explorations
-                #  "true",                        # 5: generate animation
-                #  8)                             # 6: nodesep
+                os.path.join(test_programs, "background_thread.cpp"):
+                (["m"],                         # 0: name_filter
+                 "--opt 3 --c -std=c++14",      # 1: command line options
+                 ["bounded_search"],            # 2: exploration modes
+                 [1, 2],                        # 3: bounds
+                 1000,                          # 4: max nr explorations
+                 "false",                       # 5: generate animation
+                 10),                           # 6: nodesep
                 # -----
                 os.path.join(test_programs, "bank_account.cpp"):
                 (["from", "to"],                # 0: name_filter
                  "--opt 3 --c -std=c++14",      # 1: command line options
                  ["dpor", "bounded_search"],    # 2: exploration modes
+                 [0],                           # 3: bounds
+                 1000,                          # 4: max nr explorations
+                 "true",                        # 5: generate animation
+                 8),                            # 6: nodesep
+                # -----
+                os.path.join(test_programs, "bank_account.cpp"):
+                (["from", "to"],                # 0: name_filter
+                 "--opt 3 --c -std=c++14",      # 1: command line options
+                 ["bounded_search"],            # 2: exploration modes
                  [1],                           # 3: bounds
                  1000,                          # 4: max nr explorations
                  "false",                       # 5: generate animation
@@ -159,7 +159,8 @@ def main(argv):
                                               program,
                                               properties[1],
                                               properties[3],
-                                              properties[4])
+                                              properties[4],
+                                              argv)
             else:
                 output_dir = os.path.join("generated_trees",
                                           ntpath.basename(program),
@@ -170,22 +171,25 @@ def main(argv):
                                                             output_dir,
                                                             properties[1])
 
-                if not os.path.exists(output_dir):
+                if not os.path.exists(output_dir) or argv[0] == "--force-explore":
                     os.system(explore)
 
                 output_dirs = [output_dir]
 
             for output_dir in output_dirs:
-                generate = "python3 %s -i %s -o %s -f \'[%s]\' -a %s -s %d" \
-                    % (search_tree,
-                       output_dir,
-                       os.path.join(output_dir, "trees"),
-                       ",".join(list(map(lambda variable: "\"%s\"" % variable,
-                                     properties[0]))),
-                       properties[5],
-                       properties[6])
-                print (generate)
-                os.system(generate)
+                trees_dir = os.path.join(output_dir, "trees")
+                if not os.path.exists(trees_dir) or argv[0] == "--force-generate":
+                    generate = \
+                        "python3 %s -i %s -o %s -f \'[%s]\' -a %s -s %d" \
+                        % (search_tree,
+                           output_dir,
+                           trees_dir,
+                           ",".join(list(map(lambda variable:
+                                             "\"%s\"" % variable,
+                                         properties[0]))),
+                           properties[5],
+                           properties[6])
+                    os.system(generate)
 
 # ------------------------------------------------------------------------------
 
