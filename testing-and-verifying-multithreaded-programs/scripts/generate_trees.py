@@ -126,15 +126,24 @@ def main(argv):
                 #  1000,                          # 4: max nr explorations
                 #  "false",                       # 5: generate animation
                 #  10),                           # 6: nodesep
-                # # -----
+                # -----
+                # os.path.join(test_programs, "bank_account.cpp"):
+                # (["from", "to"],                # 0: name_filter
+                #  "--opt 3 --c -std=c++14",      # 1: command line options
+                #  ["dpor", "bounded_search"],    # 2: exploration modes
+                #  [0],                           # 3: bounds
+                #  1000,                          # 4: max nr explorations
+                #  "true",                        # 5: generate animation
+                #  8)                             # 6: nodesep
+                # -----
                 os.path.join(test_programs, "bank_account.cpp"):
                 (["from", "to"],                # 0: name_filter
                  "--opt 3 --c -std=c++14",      # 1: command line options
-                 ["dpor"],    # 2: exploration modes
-                 [1, 2],                        # 3: bounds
+                 ["dpor", "bounded_search"],    # 2: exploration modes
+                 [1],                           # 3: bounds
                  1000,                          # 4: max nr explorations
                  "false",                       # 5: generate animation
-                 10)                            # 6: nodesep
+                 8)                             # 6: nodesep
                }
 
     for program, properties in programs.items():

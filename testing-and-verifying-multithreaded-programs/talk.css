@@ -1,7 +1,6 @@
 
 @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
 @import url(https://fonts.googleapis.com/css?family=Open+Sans:400,700,400italic);
-@import url(https://fonts.googleapis.com/css?family=Roboto:400,700,400italic);
 @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
 
 @page 
@@ -34,16 +33,10 @@
 body 
 {
    font-family: 'Open Sans';
-   /*font-family: 'Futura';*/
-   /*font-family: 'Gill Sans';*/
-   /*font-family: 'Helvetica';*/
-   /*font-family: 'Roboto';*/
 }
 
 h1, h2, h3, h4
 {
-   /*font-family: 'Open Sans';*/
-   /*font-family: 'Roboto';*/
    font-family: 'Yanone Kaffeesatz';
    font-weight: normal;
    margin-top: 0.2em;
@@ -60,10 +53,24 @@ li { margin: 0.75em 0; }
 
 .animation_bs
 {
-   margin-top: -10em;
+   margin-top: -8em;
 }
 
 .animation_dpor
 {
-   margin-top: -8em;
+}
+
+.h_example
+{
+   font-family: 'Yanone Kaffeesatz';
+   font-size: 1.25em;
+}
+
+.h_link
+{
+   display: inline-block;
+   width: 8em;
+   font-family: 'Yanone Kaffeesatz';
+   font-size: 1.25em;
+   color: #A4A4A4;
 }
