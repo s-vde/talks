@@ -19,5 +19,5 @@ It can be downloaded [here](https://http://font.ubuntu.com/).
 The trees can then be generated using:
 
 ```
-python3 ./scripts/generate_trees.py [--force-explore / --force-generate]
+python3 ./scripts/generate_trees.py [-- / --force-explore / --force-generate]
 ```
