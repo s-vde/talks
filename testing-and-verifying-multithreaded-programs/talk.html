@@ -937,6 +937,37 @@ bool dependent(lock_instr1, lock_instr2)
 - Not incremental
 
 
+---
+```
+
+thread->has_posted()
+   m_status == POSTED
+
+thread->post(task)
+    m_is_enabled = Objects[task.op]->post(task)
+    m_status = POSTED
+    // ... wait for turn ...
+    m_control_handle->wait()
+    // ... perform task ...
+    
+thread->grant_execution_right()
+   m_status == CONTROL
+   m_control_handle.post()
+   
+    
+    
+    
+scheduler::schedule_thread(tid)
+   m_pool.set_current(tid)
+      m_tasks.erase(tid)                              !!!
+
+      
+    
+
+TaskPool -> datarace detection
+TaskPool -> enabledness analysis
+```
+
 
 
 
