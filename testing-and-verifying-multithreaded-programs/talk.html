@@ -753,14 +753,15 @@ https://dl.acm.org/citation.cfm?id=263717&CFID=824726696&CFTOKEN=68367255
 layout: false
 
 ---
-# TODO
-- Comparison with CHESS, Maple
+# TODO Content
+- Comparison with CHESS, Maple 
    * Maple: based on PIN binary instrumentation tool (unmodified x86 binaries)
-   * Framework for building dynamic analysis tools
-   https://github.com/jieyu/maple/tree/master/example
+      * Framework for building dynamic analysis tools
+      https://github.com/jieyu/maple/tree/master/example
+      * AFAIK doens't have the exploration algorithms incorporated
+   * CHESS:
 - Comparison Static Analysis
 - Benchmarking
-- work_stealing_queue
 - Depth-First Search animation
 - How do the libs work
 - Explain POR
@@ -768,9 +769,17 @@ layout: false
 - Combination Bounded Search and POR
 
 ---
+# TODO Examples
+- dining_philosophers instead of background_thread because it requires bounded search with 
+  at least one preemption
+- work_stealing_queue
+- bank_accoutn with deposit/withdraw
+
+---
 # TODO Pictures
 - Move Status to center of branch leaf
 - Figure out the right nodesep
+- Rename variables + get rid of the addresses to make nodesep lower possible
 
 
 <!-- =============================================================================================================== -->
