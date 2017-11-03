@@ -51,6 +51,12 @@ h4
 
 li { margin: 0.75em 0; }
 
+.title_slide 
+{
+   background-color: #75B1C4;
+   color: white;
+}
+
 .animation_bs
 {
    margin-top: -8em;
