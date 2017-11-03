@@ -488,6 +488,7 @@ bounded_exploration(program, bound_function, bound_value)
 
 <!-- example:Bounded Search bank_account.cpp -->
 <!-- { -->
+<!-- preemptions=0 -->
 ---
 layout: true
 #### Systematic Exploration - Exploration Algorithms
@@ -512,12 +513,28 @@ count: false
 </div>
 
 
+<!-- preemptions=1 -->
 ---
 layout: true
 #### Systematic Exploration - Exploration Algorithms
 # Bounded Exploration
 <span class="h_example">bank_account.cpp, preemptions=1</span>
 ---
+---
+count: false
+<div class="animation_bs" style="margin-right: 6em;">
+   .right[<img src='./generated_trees/bank_account.cpp/bounded_search/1/trees/animations/0.png' height="560"/>]
+</div>
+---
+count: false
+<div class="animation_bs" style="margin-right: 6em;">
+   .right[<img src='./generated_trees/bank_account.cpp/bounded_search/1/trees/animations/1.png' height="560"/>]
+</div>
+---
+count: false
+<div class="animation_bs" style="margin-right: 6em;">
+   .right[<img src='./generated_trees/bank_account.cpp/bounded_search/1/trees/animations/2.png' height="560"/>]
+</div>
 ---
 count: false
 <div class="animation_bs" style="margin-right: 1em;">
@@ -734,6 +751,19 @@ https://dl.acm.org/citation.cfm?id=263717&CFID=824726696&CFTOKEN=68367255
 
 ---
 layout: false
+
+---
+# TODO
+- Comparison with CHESS, Maple
+- Comparison Static Analysis
+- Benchmarking
+- work_stealing_queue
+- Depth-First Search animation
+- How do the libs work
+- Explain POR
+- Example of correct program
+- Combination Bounded Search and POR
+
 
 <!-- =============================================================================================================== -->
 <!-- notes:
