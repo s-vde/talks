@@ -214,16 +214,17 @@ end_subsubsection:Tools -->
       {
 -->
 
-<!-- subsection:Nondeterminism -->
-
 ---
 layout: true
 #### Challenges in Testing Multi-Threaded Programs
 # Nondeterminism
 
+<!-- >>> Slide -->
+
 ---
 
 <!--
+TODO:
 NOTE:
 * Nondeterminism itself not specific to mulit-threaded programs
 * Single-threaded programs can have sources of nondeterminism, such as user input or randomization
@@ -236,6 +237,8 @@ NOTE:
    - The total order on which the threads operate on shared data often has an influence the 
    program's outcome
 -->
+
+<!-- <<< -->
 
 ---
 layout: true
@@ -267,6 +270,12 @@ count: false
 - If buggy behavior is observed, the next execution may be under a different schedule
 
 <!-- <<< -->
+
+<!--
+BRIDGE:
+Introduce two small example programs that demonstrate the challenge of nondeterminism for testing.
+These programs will later be used to demonstrate systematic exploration.
+-->
 
 <!-- example:bank_account.cpp
             {
