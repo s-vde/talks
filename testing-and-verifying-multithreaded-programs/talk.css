@@ -106,6 +106,10 @@ color: #003d4d;
    font-size: 1.25em;
    color: #A4A4A4;
 }
+a:visited 
+{
+   color: blue;
+}
 
 .br_link
 {
