@@ -1,18 +1,9 @@
 
 //--------------------------------------------------------------------------------------------------
-/// @file dining-philosophers.cpp
-/// @detail Classic scenario where a number of philosophers are at a dining table. After thinking
-/// for a while each philosopher tries to eat their spaghetti. For that they need two forks: the
-/// one to their left, and the one to their right. Each of the forks can be held by one philosopher
-/// at a time.
-/// @note This program has a potential deadlock.
-/// @author Susanne van den Elsen
-/// @date 2017
+/// @file simple_data_race.cpp
 //--------------------------------------------------------------------------------------------------
 
 #include <thread>
-
-//--------------------------------------------------------------------------------------------------
 
 int main()
 {
@@ -31,5 +22,3 @@ int main()
 
    return 0;
 }
-
-//--------------------------------------------------------------------------------------------------
