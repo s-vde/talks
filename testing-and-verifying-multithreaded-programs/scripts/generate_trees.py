@@ -74,7 +74,7 @@ def main(argv):
 
     search_tree = os.path.join(sse_src, "tools/search_tree.py")
 
-    test_programs = "./build/demos/programs"
+    test_programs = "./examples"
 
     programs = {
                 # # filesystem
