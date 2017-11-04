@@ -3,6 +3,8 @@
 /// @file simple_deadlock.cpp
 //--------------------------------------------------------------------------------------------------
 
+#include <atomic>
+#include <mutex>
 #include <thread>
 
 int main()
