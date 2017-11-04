@@ -73,11 +73,81 @@ layout: true
 #### Challenges in Testing Multi-Threaded Programs
 # Concurrency Bugs
 
+<!-- >>> Slide -->
+
 ---
 
 --
 count: false
-- Arise from multiple threads sharing resources
+##### Race Conditions
+Arise when the program's correctness depends on the relative timing or ordering of thread 
+instructions
+
+--
+count: false
+##### Data Races
+Arise when two threads
+- access the same memory location concurrently; and 
+- at least one of the accesses is a write
+
+--
+count: false
+##### Deadlocks
+Situation where a set of threads is blocked indefinitely because each of them is waiting for 
+one of the others to release a held resource
+
+<!-- <<< -->
+
+<!-- subsubsection:Tools
+         {
+-->
+
+---
+layout: true
+#### Challenges in Testing Multi-Threaded Programs | Concurrency Bugs
+# Specialized Tools For Concurrency Bug Detection
+
+<!-- >>> Slide -->
+
+---
+
+--
+count: false
+##### ThreadSanitizer and Helgrind
+
+--
+count: false
+- Instrument the program (source vs. binary), run it, and observe its execution
+- Deploy algorithms specifically tailored to detect data races (happens-before relation) and deadlocks (cycle detection)
+  at run-time
+
+<!-- <<< -->
+
+<!-- >>> Slide -->
+
+---
+
+<div class="h_example" style="margin-bottom: 2em;">simple_data_race.cpp</div>
+
+```bash
+valgrind --tool=helgrind -v simple_data_race.cpp
+```
+
+```bash
+clang++ -fsanitize=thread -std=c++14 -g simple_data_race.cpp -o simple_data_race
+./simple_data_race
+```
+
+--
+exclude: true
+<br/>
+<img src='./generated_trees/trace_analysis/simple_data_race.png' height="250"/>
+
+<!-- <<< -->
+
+<!--
+         }
+end_subsubsection:Tools -->
 
 <!-- subsubsection:Race Conditions
          {
@@ -89,10 +159,6 @@ layout: true
 # Race Conditions
 
 ---
-Arise when the program's correctness depends on the relative timing or ordering of thread 
-instructions
-- Semantic error!
-
 <!-- example:background_thread.cpp
             {
 -->
@@ -207,9 +273,7 @@ layout: true
 # Data Races
 
 ---
-Arise when two threads 
-- may access the same memory location concurrently; and 
-- at least one of the accesses is a write
+
 
 --
 count: false
@@ -323,22 +387,6 @@ m_thread.joinable() == true                     |
 DEADLOCK:                                       |
 m_thread.join();              m_mutex.lock();   |
 </code></pre></div>
-
----
-layout: true
-#### Challenges in Testing Multi-Threaded Programs | Concurrency Bugs
-# Specialized Tools For Concurrency Bug Detection
-
----
-*State-Of-The-Art Examples:* ThreadSanitizer and Helgrind
-- Instrument the program (source vs. binary), run it, and observe its execution
-- Deploy algorithms specifically tailored to detect data races (happens-before relation) and deadlocks (cycle detection)
-  at run-time
-
-<!-- links
--   https://github.com/google/sanitizers
--   http://valgrind.org/docs/manual/hg-manual.html
--->
 
 <!-- subsection:Nondeterminism -->
 
