@@ -11,6 +11,25 @@ Context for this talk:
 -->
 
 ---
+count: false
+<div class="animation_bs" style="margin-right: 1em;">
+   .right[<img src='./generated_trees/background_thread.cpp/bounded_search/1/trees/full_schedules.png' height="560"/>]
+</div>
+
+
+---
+layout: true
+#### Systematic Exploration - Exploration Algorithms
+# Bounded Exploration
+<span class="h_example">background_thread.cpp, preemptions=2</span>
+---
+---
+count: false
+<div class="animation_bs" style="margin-right: 1em; margin-top: 5em;">
+   .right[<img src='./generated_trees/background_thread.cpp/bounded_search/2/trees/full_schedules.png' width="1100"/>]
+</div>
+
+---
 layout: true
 # Automated Verification
 
@@ -244,3 +263,244 @@ y = 1                               1,    1,    0
 <!--
             }
 end_example: -->
+
+---
+# TODO Content
+- Comparison with CHESS, Maple 
+   * Maple: based on PIN binary instrumentation tool (unmodified x86 binaries)
+      * Framework for building dynamic analysis tools
+      https://github.com/jieyu/maple/tree/master/example
+      * AFAIK doens't have the exploration algorithms incorporated
+   * CHESS:
+- Comparison Static Analysis
+- Benchmarking
+- Depth-First Search animation
+- How do the libs work
+- Explain POR
+- Example of correct program
+- Combination Bounded Search and POR
+
+---
+# TODO Examples
+- dining_philosophers instead of background_thread because it requires bounded search with 
+  at least one preemption
+- work_stealing_queue
+- bank_accoutn with deposit/withdraw
+
+---
+# TODO Pictures
+- Move Status to center of branch leaf
+- Figure out the right nodesep
+- Rename variables + get rid of the addresses to make nodesep lower possible
+
+
+<!-- =============================================================================================================== -->
+<!-- notes:
+* Many tools available for testing / verifying sequential code (that is hard enough already!);
+* Tool still in progress: not full support of C++11 memory model (e.g. visible sequences of side effects, atomics).
+
+* Even though we see a tendency towards more and more high-level concurrency constructs (e.g. futures, coroutines) and 
+programmers are more and more discouraged to use std::thread, and std::mutex, which become implementation details, there 
+are domains where exactly these implementation details still matter (e.g. realtime systems, cyberphysical systems).
+* Other examples such as CppMem (http://svr-pes20-cppmem.cl.cam.ac.uk/cppmem/).
+* Runtime nature of the tool, but can still prove completeness of the exploration tree (e.q. using Coq).
+* Something about the implementation details, i.e. vector clocks?
+
+
+* Difference between software testing and software verification;
+* General limitations of software verification and dynamic verification, e.g. non-halting programs excluded;
+* Verification w.r.t. a *class* of bugs/errors, a specification (e.g. Datarace free);
+* Difference between static analysis and dynamic analysis (e.g. examples from Flanagan/Godefroid).
+
+section:Concurrency and Concurrency Errors 
+- Test input is a program and a schedule, observation is execution/trace and execution result
+- Difficult to reason about the interaction of threads
+
+* Think about examples:
+    - background_thread
+    - workstealing_queue
+    - double_instance
+    - Depth-bounding examples from the paper, showing that empirically, many bugs have small depth
+    - Example with large depth
+    - Example where POR and optimal POR differ a lot
+-->
+
+---
+exclude: true
+# Concurrency Error Detectors
+### ThreadSanitzer
+#### Runtime library
+The `__tsan_` functions are callbacks to a Runtime Library (part of clang-rt)
+
+Maintains a state maschine using shadow state for analysis
+
+---
+exclude: true
+Helgrind
+- Program is run on synthetic CPU provided by Valgrind Core 
+- Threads are fully serialzed (only single CPU used)
+
+---
+exclude: true
+# ThreadSanitizer & Helgrind: Data Races
+Limited information in *single* execution:
+<br/><br/><br/>
+.center[<img src='./images/jpg/tsan_data-race-branch-hb.jpg' height="375"/>]
+
+<!--- section:SYSTEMATIC_EXPLORATION -->
+
+---
+# Taking Control Over the Thread Interleavings
+#### LLVM IR Instumentation Pass
+
+Replace 
+```cpp
+pthread_create(pid, attr, start_routine, args)
+pthread_join(pid)
+``` 
+by 
+```cpp 
+wrapper_spawn_thread(pid, attr, start_routine, args)
+wrapper_pthread_join()
+```
+
+#### Scheduler
+```cpp
+void wrapper_spawn_thread(pid, attr, start_routine, args)
+{
+   semaphores.insert({ pid, semaphore() })
+   pthread_create(pid, attr, start_routine, args)
+}
+```
+
+---
+count: false
+# Taking Control Over the Thread Interleavings
+#### LLVM IR Instumentation Pass
+
+Insert call to potentially *visible* instructions
+```
+wrap_post_task(instruction(store, %2, is_atomic))
+store i32 %0, i32* %2
+```
+
+#### Scheduler
+```cpp
+void wrapper_post_task(instruction)
+{
+   task_pool.insert({ this_thread::id(), instruction });
+   semaphores[this_thread::id()].wait();
+   // wait for turn
+   
+   task_pool.remove(this_thread::id());
+   // perform instructions
+}
+```
+
+---
+count: false
+# Taking Control Over the Thread Interleavings
+#### Scheduler
+
+```cpp
+void scheduler_thread(schedule)
+{
+   for (thread_id : schedule)
+   {
+      wait_until(task_pool.contains_key(thread_id));
+      current_thread_id = thread_id;
+      semaphore[thread_id].post();
+      // notify the waiting thread
+   }
+}
+```
+
+---
+# Bounded Search
+
+### Advantages:
+- Very fast for low bounds
+- Quantifiable coverage
+- Incremental
+
+### Disadvantages:
+- Incomplete
+- For high bounds not better than depth first search
+
+---
+# Partial Order Reduction
+
+Different interleavings may yield *equivalent* executions:
+Ideally explore only a single one of those
+
+--
+count: false
+#### Dependence Relation
+
+```cpp
+bool dependent(memory_instr1, memory_instr2)
+{
+   return same_thread(memory_instr1, memory_instr2) || 
+          ( same_operand(memory_instr1, memory_instr2) &&
+            memory_instr1.is_write() || memory_inst2.is_write() );
+}
+```
+```cpp
+bool dependent(lock_instr1, lock_instr2)
+{
+   return same_thread(lock_instr1, lock_instr2) || 
+          ( same_operand(lock_instr1, lock_instr2) &&
+            lock_instr1.is_lock() && lock_inst2.is_lock() );
+}
+```
+
+---
+# Partial Order Reduction 
+
+<br/>
+<tr>
+    <td><img src='./images/jpg/happens_before_equivalence_class_1.jpg' width="350"/></td>
+    <td><img src="./images/jpg/happens_before_equivalence_class_2.jpg" width="350"/></td>
+</tr>
+
+---
+# Partial Order Reduction
+
+### Advantages:
+- Complete coverage
+
+### Disadvantages:
+- Still infeasible for large state-spaces with many dependencies
+- Not incremental
+
+
+---
+```
+
+thread->has_posted()
+   m_status == POSTED
+
+thread->post(task)
+    m_is_enabled = Objects[task.op]->post(task)
+    m_status = POSTED
+    // ... wait for turn ...
+    m_control_handle->wait()
+    // ... perform task ...
+    
+thread->grant_execution_right()
+   m_status == CONTROL
+   m_control_handle.post()
+   
+    
+    
+    
+scheduler::schedule_thread(tid)
+   m_pool.set_current(tid)
+      m_tasks.erase(tid)                              !!!
+
+      
+    
+
+TaskPool -> datarace detection
+TaskPool -> enabledness analysis
+```
