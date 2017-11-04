@@ -51,9 +51,11 @@ h4
 
 li { margin: 0.75em 0; }
 
-.title_slide 
+.slide_title
 {
-   background-color: #75B1C4;
+   text-align: center;
+   vertical-align: middle;
+   background-color: #008fb3;
    color: white;
 }
 
