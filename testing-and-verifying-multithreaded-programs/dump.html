@@ -1,0 +1,191 @@
+<!-- section:Introduction
+{
+-->
+
+---
+layout: true
+# Automated Verification
+
+---
+
+---
+<img src='https://g.gravizo.com/svg?
+digraph verification {
+   graph [
+      margin=1,
+      fontname="Open Sans",
+      rankdir=LR
+   ];
+   node [
+      shape=rectangle
+      width=1.5,
+      style=filled,
+      color=black,
+      fillcolor=lightblue2
+   ];
+   edge [
+      arrowsize=0.5
+   ];
+   program [color=transparent, fillcolor=transparent, fontcolor=transparent];
+   model [color=transparent, fillcolor=transparent, fontcolor=transparent];
+   specification [color=transparent, fillcolor=transparent, fontcolor=transparent];
+   verification_algorithm [label="verification\nalgorithm"];
+   yes [shape="oval", width=0.75, color=transparent, fillcolor=transparent, fontcolor=transparent];
+   no [shape="oval", width=0.75, color=transparent, fillcolor=transparent, fontcolor=transparent];
+   counter_example [color=transparent, fillcolor=transparent, fontcolor=transparent];
+   program -> model [color=transparent, fillcolor=transparent, fontcolor=transparent];
+   model -> verification_algorithm [color=transparent, fillcolor=transparent, fontcolor=transparent];
+   specification -> verification_algorithm [color=transparent, fillcolor=transparent, fontcolor=transparent];
+   verification_algorithm -> yes [color=transparent, fillcolor=transparent, fontcolor=transparent];
+   verification_algorithm -> no [color=transparent, fillcolor=transparent, fontcolor=transparent];
+   no -> counter_example [dir=none, color=transparent, fillcolor=transparent, fontcolor=transparent];
+ }
+'/>
+
+---
+count:false
+<img src='https://g.gravizo.com/svg?
+digraph verification {
+   graph [
+      margin=1,
+      fontname="Open Sans",
+      rankdir=LR
+   ];
+   node [
+      shape=rectangle
+      width=1.5,
+      style=filled,
+      pencolor=black,
+      fillcolor=lightblue2
+   ];
+   edge [
+      arrowsize=0.5
+   ];
+   program;
+   model;
+   specification [color=transparent, fillcolor=transparent, fontcolor=transparent];
+   verification_algorithm [label="verification\nalgorithm"];
+   yes [shape="oval", width=0.75, color=transparent, fillcolor=transparent, fontcolor=transparent];
+   no [shape="oval", width=0.75, color=transparent, fillcolor=transparent, fontcolor=transparent];
+   counter_example [color=transparent, fillcolor=transparent, fontcolor=transparent];
+   program -> model;
+   model -> verification_algorithm;
+   specification -> verification_algorithm [color=transparent, fillcolor=transparent, fontcolor=transparent];
+   verification_algorithm -> yes [color=transparent, fillcolor=transparent, fontcolor=transparent];
+   verification_algorithm -> no [color=transparent, fillcolor=transparent, fontcolor=transparent];
+   no -> counter_example [dir=none, color=transparent, fillcolor=transparent, fontcolor=transparent];
+ }
+ }
+'/>
+
+---
+count:false
+<img src='https://g.gravizo.com/svg?
+digraph verification {
+   graph [
+      margin=1,
+      fontname="Open Sans",
+      rankdir=LR
+   ];
+   node [
+      shape=rectangle
+      width=1.5,
+      style=filled,
+      pencolor=black,
+      fillcolor=lightblue2
+   ];
+   edge [
+      arrowsize=0.5
+   ];
+   program;
+   model;
+   specification;
+   verification_algorithm [label="verification\nalgorithm"];
+   yes [shape="oval", width=0.75, color=transparent, fillcolor=transparent, fontcolor=transparent];
+   no [shape="oval", width=0.75, color=transparent, fillcolor=transparent, fontcolor=transparent];
+   counter_example [color=transparent, fillcolor=transparent, fontcolor=transparent];
+   program -> model;
+   model -> verification_algorithm;
+   specification -> verification_algorithm;
+   verification_algorithm -> yes [color=transparent, fillcolor=transparent, fontcolor=transparent];
+   verification_algorithm -> no [color=transparent, fillcolor=transparent, fontcolor=transparent];
+   no -> counter_example [dir=none, color=transparent, fillcolor=transparent, fontcolor=transparent];
+ }
+ }
+'/>
+
+---
+count:false
+<img src='https://g.gravizo.com/svg?
+digraph verification {
+   graph [
+      margin=1,
+      fontname="Open Sans",
+      rankdir=LR
+   ];
+   node [
+      shape=rectangle
+      width=1.5,
+      style=filled,
+      pencolor=black,
+      fillcolor=lightblue2
+   ];
+   edge [
+      arrowsize=0.5
+   ];
+   program;
+   model;
+   specification;
+   verification_algorithm [label="verification\nalgorithm"];
+   yes [shape="oval", width=0.75, fillcolor=lightgreen];
+   no [shape="oval", width=0.75, color=transparent, fillcolor=transparent, fontcolor=transparent];
+   counter_example [color=transparent, fillcolor=transparent, fontcolor=transparent];
+   program -> model;
+   model -> verification_algorithm;
+   specification -> verification_algorithm;
+   verification_algorithm -> yes;
+   verification_algorithm -> no [color=transparent, fillcolor=transparent, fontcolor=transparent];
+   no -> counter_example [dir=none, color=transparent, fillcolor=transparent, fontcolor=transparent];
+ }
+ }
+'/>
+
+---
+count:false
+<img src='https://g.gravizo.com/svg?
+digraph verification {
+   graph [
+      margin=1,
+      fontname="Open Sans",
+      rankdir=LR
+   ];
+   node [
+      shape=rectangle
+      width=1.5,
+      style=filled,
+      pencolor=black,
+      fillcolor=lightblue2
+   ];
+   edge [
+      arrowsize=0.5
+   ];
+   program;
+   model;
+   specification;
+   verification_algorithm [label="verification\nalgorithm"];
+   yes [shape="oval", width=0.75, fillcolor=lightgreen];
+   no [shape="oval", width=0.75, fillcolor=red];
+   counter_example [label="counterexample"];
+   program -> model;
+   model -> verification_algorithm;
+   specification -> verification_algorithm;
+   verification_algorithm -> yes;
+   verification_algorithm -> no;
+   no -> counter_example [dir=none];
+ }
+ }
+'/>
+
+<!--
+}
+end_section:section:Introduction -->
