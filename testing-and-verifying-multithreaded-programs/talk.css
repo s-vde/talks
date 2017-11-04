@@ -114,11 +114,13 @@ color: #003d4d;
 
 .code_left
 {
+   margin-top: -2em;
    display: inline-block; 
 }
 
 .code_right
 {
+   margin-top: -2em;
    display: inline-block; 
    vertical-align: top;
 }

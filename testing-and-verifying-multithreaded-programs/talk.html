@@ -9,11 +9,11 @@
       <textarea id="source">
 
 
+class: slide_title
+
 <!-- section:Title
 {
 -->
-         
-class: slide_title
 
 # Automated Verification of Multi-Threaded Programs
 ### Susanne van den Elsen
@@ -127,15 +127,32 @@ count: false
 ---
 
 <div class="h_example" style="margin-bottom: 2em;">simple_data_race.cpp</div>
+<div class="code_left" style="width: 35%;"><pre><code class="language-cpp">
+int main()
+{
+   int x;
+   
+   thread thr1([&x](){
+      x = 1;
+   });
+   
+   thread thr1([&x](){
+      x = 2;
+   });
+   
+   thr1.join();
+   thr2.join();
+}
+</code></pre></div>
 
-```bash
-valgrind --tool=helgrind -v simple_data_race.cpp
-```
+--
+count: false
+<div class="code_right" style="width: 60%;"><pre><code class="language-bash">
+clang++ -fsanitize=thread -std=c++14 -g simple_data_race.cpp \
+   -o simple_data_race
 
-```bash
-clang++ -fsanitize=thread -std=c++14 -g simple_data_race.cpp -o simple_data_race
 ./simple_data_race
-```
+</code></pre></div>
 
 --
 exclude: true
@@ -144,26 +161,120 @@ exclude: true
 
 <!-- <<< -->
 
+<!-- >>> Slide -->
+
+---
+
+<div class="h_example" style="margin-bottom: 2em;">simple_deadlock.cpp</div>
+<div class="code_left" style="width: 35%;"><pre><code class="language-cpp">
+int main()
+{
+   mutex m1, m2;
+   
+   thread thr1([&m1, &m2](){
+      lock_guard<mutex> lock1(m1);
+      lock_guard<mutex> lock2(m2);
+   });
+   
+   thread thr1([&m1, &m2](){
+      lock_guard<mutex> lock2(m2);
+      lock_guard<mutex> lock1(m1);
+   });
+   
+   thr1.join();
+   thr2.join();
+}
+</code></pre></div>
+
+--
+count: false
+<div class="code_right" style="width: 60%;"><pre><code class="language-bash">
+clang++ -std=c++14 -g simple_deadlock.cpp -o simple_deadlock
+
+valgrind --tool=helgrind -v simple_deadlock
+</code></pre></div>
+
+--
+exclude: true
+
+<!-- <<< -->
+
 <!--
          }
 end_subsubsection:Tools -->
 
-<!-- subsubsection:Race Conditions
-         {
+
+<!-- subsection:Nondeterminism
+      {
+-->
+
+<!-- subsection:Nondeterminism -->
+
+---
+layout: true
+#### Challenges in Testing Multi-Threaded Programs
+# Nondeterminism
+
+---
+
+<!--
+NOTE:
+* Nondeterminism itself not specific to mulit-threaded programs
+* Single-threaded programs can have sources of nondeterminism, such as user input or randomization
+* Threads add a different layer of nondeterminism:
+   - The total order in which the threads get scheduled is outsourced to the OS scheduler and not 
+   under the programmer's control
+   - It may depend on e.g.:
+      - load on the maschine 
+      - OS scheduler strategy
+   - The total order on which the threads operate on shared data often has an influence the 
+   program's outcome
 -->
 
 ---
 layout: true
-#### Challenges in Testing Multi-Threaded Programs | Concurrency Bugs
-# Race Conditions
+#### Challenges in Testing Multi-Threaded Programs | Nondeterminism
+# What does this mean for testing?
+
+<!-- >>> Slide -->
 
 ---
-<!-- example:background_thread.cpp
+
+--
+count: false
+##### Hard to get good test coverage:
+- Running tests repeatedly without the guarantee that schedules will be different
+
+--
+count: false
+- Some bugs only occur under very rare schedules
+<!-- Approach of inducing bad schedules by forcing context-switches is not systematic! -->
+
+--
+count: false
+- "Heisenbugs" may even disappear as a result of changes in timing introduced by the debugging tool
+<!-- bugs that tend to disappear when you want to find them -->
+
+--
+count: false
+##### Bugs are hard to reproduce: 
+- If buggy behavior is observed, the next execution may be under a different schedule
+
+<!-- <<< -->
+
+---
+layout: true
+#### Challenges in Testing Multi-Threaded Programs | Nondeterminism
+# Example: bank_account.cpp
+
+<!-- >>> Slide -->
+
+---
+
+<!-- example:bank_account.cpp
             {
 -->
 
----
-<span class="h_example">bank_account.cpp</span>
 ```cpp
 struct bank_account { atomic<int> balance; }
 
@@ -254,9 +365,25 @@ count: false
 ASSERT(all_of(accounts.begin(), accounts.end(), [](auto balance){ positive(balance); }));
 ```
 
+---
+
+```bash
+clang++ -fsanitize=thread -std=c++14 -g bank_account.cpp -o bank_account
+./bank_account
+```
+
 <!--
             }
 end_example:background_thread.cpp -->
+
+<!--
+      }
+end_subsubsection:Nondeterminism -->
+
+---
+
+
+
 
 <!--
          }
@@ -387,36 +514,6 @@ DEADLOCK:                                       |
 m_thread.join();              m_mutex.lock();   |
 </code></pre></div>
 
-<!-- subsection:Nondeterminism -->
-
----
-layout: true
-#### Challenges in Testing Multi-Threaded Programs
-# Nondeterminism
-
----
-
---
-count: false
-- Single-threaded programs have nondeterminism for example from user input or randomization
-- Multi-threaded programs have another level of nondeterminism
-- Program specifies only *partial order* on the instructions performed by different threads (e.g. by atomics
-  and memory order constraints and by locks / condition variables)
-- The total order of instructions becoming visible is outsourced to the OS scheduler and the processor.
-
----
-### What does this mean for testing?
-- Heisenbugs: Bugs that tend to disappear when you want to find them (e.g. does not appear when compiled without
-  optimization, as often done for debuggers, or changes in timing when ran under control of a debugger)
-- Rare schedules: Bugs that only occur under very rare schedules
-- Coverage: Running tests repeatedly without guarantee that schedules will be different
-- Coverage: Inducing bad schedules by forcing context-switches, but not systematic
-- Reproducibility: If buggy behavior is observed, not easy to reproduce
-
-???
-It may depend on 
-- load on the maschine 
-- OS scheduler strategy
 
 <!--
 }
