@@ -2,6 +2,14 @@
 {
 -->
 
+<!--
+NOTE:
+Context for this talk:
+- Software Developer @ NI
+- NI is a leading company in the audio industry 
+- At NI we develop software and hardware for music production and DJing
+-->
+
 ---
 layout: true
 # Automated Verification
@@ -189,3 +197,50 @@ digraph verification {
 <!--
 }
 end_section:section:Introduction -->
+
+<!-- example:
+            {
+-->
+---
+```cpp
+int x, y, z = 0;
+
+int main()
+{
+   thread t1([]{
+      if (x == 1)
+         y = 1;
+   });
+   
+   thread t2([]{
+      x = 1;
+      z = x + y;
+   });
+}                                   
+```
+
+---
+```cpp
+t1                   t2             x,    y,    z
+
+x == 1?                             0,    0,    0
+                     x = 1          1,    0,    0
+                     read y         1,    0,    0 
+                     z = x + y      1,    0,    1
+```
+
+--
+count: false
+```cpp
+t1                   t2             x,    y,    z
+
+                     x = 1          1,    0,    0
+x == 1?                             1,    0,    0
+y = 1                               1,    1,    0
+                     read y         1,    1,    0 
+                     z = x + y      1,    1,    2                                   
+```
+
+<!--
+            }
+end_example: -->

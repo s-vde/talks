@@ -27,32 +27,50 @@ November 10, 2017
 }
 end_section:section:Title -->
 
-<!-- =============================================================================================================== -->
-<!--- section:Multi-Threading at Native Instruments -->
 
----
-exclude: true
-# Multi-Threading at Native Instruments
 
-<!-- links
--   http://www.rossbencina.com/code/real-time-audio-programming-101-time-waits-for-nothing
+<!-- section:Introduction
+{
 -->
 
+<!--
+NOTE: 
+@Timed: 1 min
+Welcome everybody, thank you for coming, 
+my name is Susanne van den Elsen and I will talk about 
+"Automated Verification of Multi-Threaded programs".
+- Software Developer @ NI
+- Before that: doing research @ MPI-SWS
+- Research focus: automated software verification
+- In the context of one of my projects: I developed a tool for verifying
+  multi-threaded programs, which I will present to you today
 
-<!-- =============================================================================================================== -->
-<!-- section:Challenges in Testing and Verifying Multi-Threaded Programs -->
+BRIDGE ==>: Before I do that, let me first provide an insight into why most standard
+testing/debugging tools are insufficient for verifying multi-threaded programs.
+-->
+
+<!--
+}
+end_section:Introduction -->
+
+
+
+<!-- section:Challenges in Testing Multi-Threaded Programs
+   {
+-->
+
+---
+layout: false
+class: slide_section
+# Challenges in Testing Multi-Threaded Programs
+
+<!-- subsection:Concurrency Bugs
+      {
+-->
 
 ---
 layout: true
-# Challenges in Testing and Verifying Multi-Threaded Programs
-
----
-
-<!-- subsection:Concurrency Bugs -->
-
----
-layout: true
-#### Challenges in Testing and Verifying Multi-Threaded Programs
+#### Challenges in Testing Multi-Threaded Programs
 # Concurrency Bugs
 
 ---
@@ -61,32 +79,37 @@ layout: true
 count: false
 - Arise from multiple threads sharing resources
 
-<!-- subsubsection:Race Conditions -->
+<!-- subsubsection:Race Conditions
+         {
+-->
 
 ---
 layout: true
-#### Challenges in Testing and Verifying Multi-Threaded Programs | Concurrency Bugs
+#### Challenges in Testing Multi-Threaded Programs | Concurrency Bugs
 # Race Conditions
 
 ---
 Arise when the program's correctness depends on the relative timing or ordering of thread 
 instructions
+- Semantic error!
+
+<!-- example:background_thread.cpp
+            {
+-->
 
 ---
+<span class="h_example">bank_account.cpp</span>
 ```cpp
-transfer(account& from, int amount, account& to)
-{
-   const auto balance_from = from.balance.load();
-   if (balance_from >= amount)
-   {
-      to.balance.fetch_add(amount);
-      from.balance.fetch_sub(amount);
-   }
-}
+struct bank_account { atomic<int> balance; }
 
+void transfer(bank_account& from, int amount, bank_account& to);
+```
+--
+count: false
+```cpp
 TEST(BalancesArePositive)
 {
-   array<atomic<int>, 2> accounts = {{ 100, 0 }};
+   array<bank_account, 2> accounts = {{ 100, 0 }};
    thread mallory(transfer, ref(accounts[0]), 100, ref(accounts[1]));
    thread marvin(transfer, ref(accounts[0]), 100, ref(accounts[1]));
    
@@ -98,32 +121,89 @@ TEST(BalancesArePositive)
 ```
 
 ---
+count: false
 ```cpp
-mallory                                      marvin                                       accounts
+struct bank_account { atomic<int> balance; }
 
-balance_from = from.balance.load() = 100;                                                 { 100,  0   }
-to.balance.fetch_add(amount);                                                             { 100,  100 }
-from.balance.fetch_sub(amount);                                                           { 0,    100 }
-                                             balance_from = from.balance.load() = 0;      { 0,    0   }         
+void transfer(bank_account& from, int amount, bank_account& to)
+{
+   const auto balance_from = from.balance.load();
+   if (balance_from >= amount)
+   {
+      to.balance.fetch_add(amount);
+      from.balance.fetch_sub(amount);
+   }
+}
 ```
+
 --
 count: false
 ```cpp
 mallory                                      marvin                                       accounts
 
 balance_from = from.balance.load() = 100;                                                 { 100,  0   }
-                                             balance_from = from.balance.load() = 100;    { 100,  0   }
 to.balance.fetch_add(amount);                                                             { 100,  100 }
-from.balance.fetch_sub(amount);                                                           { 0,    100 }         
-                                             to.balance.fetch_add(amount);                { 0,    200 }
-                                             from.balance.fetch_sub(amount);              { -100, 200 }
+from.balance.fetch_sub(amount);                                                           { 0,    100 }
+                                             balance_from = from.balance.load() = 0;      { 0,    100 }
 ```
 
-<!-- subsubsection:Data Races -->
+--
+count: false
+```cpp
+// assertion holds :)
+ASSERT(all_of(accounts.begin(), accounts.end(), [](auto balance){ positive(balance); }));
+```
+
+---
+count: false
+```cpp
+struct bank_account { atomic<int> balance; }
+
+void transfer(bank_account& from, int amount, bank_account& to)
+{
+   const auto balance_from = from.balance.load();
+   if (balance_from >= amount)
+   {
+      to.balance.fetch_add(amount);
+      from.balance.fetch_sub(amount);
+   }
+}
+```
+
+```cpp
+mallory                                      marvin                                       accounts
+
+balance_from = from.balance.load() = 100;                                                 { 100,  0   }
+                                             balance_from = from.balance.load() = 100;    { 100,  0   }
+                                             to.balance.fetch_add(amount);                { 100,  100 }
+                                             from.balance.fetch_sub(amount);              { 0,    100 }
+to.balance.fetch_add(amount);                                                             { 0,    200 }
+from.balance.fetch_sub(amount);                                                           { -100, 200 }         
+
+```
+
+--
+count: false
+```cpp
+// assertion is violated :(!
+ASSERT(all_of(accounts.begin(), accounts.end(), [](auto balance){ positive(balance); }));
+```
+
+<!--
+            }
+end_example:background_thread.cpp -->
+
+<!--
+         }
+end_subsubsection:Race Conditions -->
+
+<!-- subsubsection:Data Races 
+         {
+-->
 
 ---
 layout: true
-#### Challenges in Testing and Verifying Multi-Threaded Programs | Concurrency Bugs
+#### Challenges in Testing Multi-Threaded Programs | Concurrency Bugs
 # Data Races
 
 ---
@@ -143,136 +223,110 @@ count: false
 count: false
 Data races are **Undefined Behaviour!**
 
----
-```cpp
-int x, y, z = 0;
+<!--
+         }
+end_subsubsection:Dataraces -->
 
-int main()
-{
-   thread t1([]{
-      if (x == 1)
-         y = 1;
-   });
-   
-   thread t2([]{
-      x = 1;
-      z = x + y;
-   });
-}                                   
-```
-
----
-```cpp
-t1                   t2             x,    y,    z
-
-x == 1?                             0,    0,    0
-                     x = 1          1,    0,    0
-                     read y         1,    0,    0 
-                     z = x + y      1,    0,    1
-```
-
---
-count: false
-```cpp
-t1                   t2             x,    y,    z
-
-                     x = 1          1,    0,    0
-x == 1?                             1,    0,    0
-y = 1                               1,    1,    0
-                     read y         1,    1,    0 
-                     z = x + y      1,    1,    2                                   
-```
-
-<!-- subsubsection:Deadlocks -->
+<!-- subsubsection:Deadlocks
+         {
+-->
 
 ---
 layout: true
-#### Challenges in Testing and Verifying Multi-Threaded Programs | Concurrency Bugs
+#### Challenges in Testing Multi-Threaded Programs | Concurrency Bugs
 # Deadlocks
 
 ---
 Two or more threads wait for each other indefinitely
 
 ---
-```cpp
+<div class="code_left" style="width: 40%;"><pre><code class="language-cpp">
 struct background_thread_manager
 {
-   void cancel() {
-      if (m_background_thread.joinable())
-         m_background_thread.join();
-   }
-   
    void run_thread() {
-      if (m_mutex.try_lock()) {        // no background_thread already running
-         cancel();
+      if (!m_mutex.try_lock())
+         return;
       
-         m_background_thread([this]() {            
-            m_mutex.lock();
-            // ... perform task ...
-            m_mutex.unlock();
-         });
-      
-         m_mutex.unlock();             // only now m_background_thread can perform task
-      }
-   }
+      join_thread();
    
-   thread m_background_thread;
-   mutex m_mutex;
-};
-```
-
----
-```cpp
-struct background_thread_manager                         int main()
-{                                                        {
-   void cancel() {                                          background_thread_manager m;
-      if (m_background_thread.joinable())                   m.run_thread();
-         m_background_thread.join();                        this_thread::sleep_for(1s);
-   }                                                        m.run_thread();
-                                                            
-   void run_thread() {                                      m.cancel();
-      if (m_mutex.try_lock()) {                          }
-         cancel();
-      
-         m_background_thread([this]() {            
-            m_mutex.lock();
-            // ... perform task ...
-            m_mutex.unlock();
-         });
-      
+      m_thread([this]() {
+         m_mutex.lock();
+         // perform task
          m_mutex.unlock();
-      }
+      });
+   
+      m_mutex.unlock();
    }
    
-   thread m_background_thread;
+   void join_thread() {
+      if (m_thread.joinable())
+         m_thread.join();
+   }
+   
+   thread m_thread;
    mutex m_mutex;
 };
-```
+</code></pre></div>
+
+--
+<div class="code_right" style="width: 59%;"><pre><code class="language-cpp">
+int main()
+{
+   background_thread_manager m;
+   m.run_thread();
+   m.run_thread();
+   
+   m.join_thread();
+}
+</code></pre></div>
 
 ---
-```cpp
-main                                   m_background_thread        m_mutex
-                                 
-run_thread();                                                     unlocked
-   m_mutex.try_lock();                                            locked
-   cancel();            
-      m_background_thread.joinable()?  // not joinable
-   spawn m_background_thread           // becomes joinable
-   m_mutex.unlock();                                              unlocked
-
-this_thread::sleep_for(1s);
-
-run_thread();      
-   m_mutex.try_lock();                                            locked
-   cancel();
-      m_background_thread.joinable()?
-      m_background_thread.join();      // not joinable
-                                       m_mutex.lock(); // blocked
-```
+<div class="code_left" style="width: 40%;"><pre><code class="language-cpp">
+struct background_thread_manager
+{
+   void run_thread() {
+      if (!m_mutex.try_lock())
+         return;
+      
+      join_thread();
+   
+      m_thread([this]() {
+         m_mutex.lock();
+         // perform task
+         m_mutex.unlock();
+      });
+   
+      m_mutex.unlock();
+   }
+   
+   void join_thread() {
+      if (m_thread.joinable())
+         m_thread.join();
+   }
+   
+   thread m_thread;
+   mutex m_mutex;
+};
+</code></pre></div>
+<div class="code_right" style="width: 59%;"><pre><code class="language-cpp">
+main                          m_thread          | m_mutex
+                                                |
+                                                |
+m_mutex.try_lock();                             | locked
+m_thread.joinable() == false                    |
+m_thread.spawn()                                |
+m_mutex.unlock();                               | unlocked
+                                                |
+m_mutex.try_lock();                             | locked
+m_thread.joinable() == true                     |
+                                                |
+DEADLOCK:                                       |
+m_thread.join();              m_mutex.lock();   |
+</code></pre></div>
 
 ---
 layout: true
-#### Challenges in Testing and Verifying Multi-Threaded Programs | Concurrency Bugs
+#### Challenges in Testing Multi-Threaded Programs | Concurrency Bugs
 # Specialized Tools For Concurrency Bug Detection
 
 ---
@@ -290,7 +344,7 @@ layout: true
 
 ---
 layout: true
-#### Challenges in Testing and Verifying Multi-Threaded Programs
+#### Challenges in Testing Multi-Threaded Programs
 # Nondeterminism
 
 ---
@@ -316,6 +370,12 @@ count: false
 It may depend on 
 - load on the maschine 
 - OS scheduler strategy
+
+<!--
+}
+end_section:section:Challenges in Testing Multi-Threaded Programs -->
+
+
 
 <!-- =============================================================================================================== -->
 <!-- section:Systematic Exploration of Program Behavior -->
@@ -1017,6 +1077,22 @@ scheduler::schedule_thread(tid)
 TaskPool -> datarace detection
 TaskPool -> enabledness analysis
 ```
+
+<!-- section:Multi-Threading at Native Instruments
+{
+-->
+
+---
+exclude: true
+# Multi-Threading at Native Instruments
+
+<!-- links
+-   http://www.rossbencina.com/code/real-time-audio-programming-101-time-waits-for-nothing
+-->
+
+<!--
+}
+end_section:Multi-Threading at Native Instruments -->
 
 
 
