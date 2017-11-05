@@ -22,35 +22,25 @@ Software Developer @ Native Instruments
 ### Meeting C++
 November 10, 2017
 
+???
+Welcome everybody, thank you for coming, 
+- My name is Susanne van den Elsen and I am a C++ Software Developer @ Native Instruments
+- Before joining NI I was doing research @ MPI-SWS
+- Research focus: automated software verification
+- In one of my projects I specifically looked at automated verification of multi-threaded software
+  which is also the topic of my talk today
+- In particular, I would like to give an introduction to systematic exploration of multi-threaded
+  programs and demonstrate a systematic exploration tool I developed in the context of my research.
+
+BRIDGE: 
+Before I do that, let me first provide an insight into why most standard
+testing/debugging tools are insufficient for verifying multi-threaded programs.
+
 <!--
 }
 end_section:section:Title -->
 
 
-
-<!-- section:Introduction
-{
--->
-
-<!--
-NOTE: 
-@Timed: 1 min
-Welcome everybody, thank you for coming, 
-my name is Susanne van den Elsen and I will talk about 
-"Automated Verification of Multi-Threaded programs".
-- Software Developer @ NI
-- Before that: doing research @ MPI-SWS
-- Research focus: automated software verification
-- In the context of one of my projects: I developed a tool for verifying
-  multi-threaded programs, which I will present to you today
-
-BRIDGE ==>: Before I do that, let me first provide an insight into why most standard
-testing/debugging tools are insufficient for verifying multi-threaded programs.
--->
-
-<!--
-}
-end_section:Introduction -->
 
 
 
@@ -62,6 +52,11 @@ end_section:Introduction -->
 layout: false
 class: slide_section
 # Challenges in Testing Multi-Threaded Programs
+
+???
+BRIDGE:
+First I would like to give you an insight in the challenges of testing multi-threaded programs and 
+why traditional testing and debugging tools are not sufficient for meeting these challenges
 
 <!-- subsection:Concurrency Bugs
       {
@@ -76,6 +71,12 @@ layout: true
 
 ---
 
+???
+First of all, programming with threads instroduces a whole new class of potential bugs to look for.
+In general these bugs arise from the fact that multiple threads are sharing the same resources.
+In this talk I focus on three types of bugs.
+
+
 --
 count: false
 ##### Race Conditions
@@ -89,11 +90,10 @@ Arise when two threads
 - access the same memory location concurrently; and 
 - at least one of the accesses is a write
 
-<!-- 
-NOTE:
-* memory location: since the c++11 memory model we can reason about memory accesses
-* Data races are **Undefined Behaviour!**
--->
+???
+Data Races:
+Since the C++11 memory model we can reason about memory accesses and dataraces are deemed undefined 
+behaviour (so it is very important to make sure your programs are datarace free)
 
 --
 count: false
@@ -116,15 +116,30 @@ layout: true
 
 ---
 
+???
+BRIDGE:
+- Just like there are tools specifically tailored to detect typical memory errors, concurrency bugs
+ask for tools that specialize in detecting them. 
+- Luckily there are such tools available, the most well-known ones probably being ThreadSanitizer 
+and Helgrind.
+
 --
 count: false
 ##### ThreadSanitizer and Helgrind
+
+???
+- These tools are very successful and have uncovered many concurrency bugs, particularly dataraces, 
+in large applications.
+
+<!-- TODO: Am I going to branch off TSan/Helgrind here and explain high-level how they work? -->
 
 --
 count: false
 - Instrument the program (source vs. binary), run it, and observe its execution
 - Deploy algorithms specifically tailored to detect data races (happens-before relation) and deadlocks (cycle detection)
   at run-time
+  
+<!-- TODO: NOTES -->
 
 <!-- <<< -->
 
@@ -151,6 +166,8 @@ int main()
 }
 </code></pre></div>
 
+<!-- TODO: NOTES -->
+
 --
 count: false
 <div class="code_right" style="width: 60%;"><pre><code class="language-bash">
@@ -160,10 +177,16 @@ clang++ -fsanitize=thread -std=c++14 -g data_race.cpp \
 ./data_race
 </code></pre></div>
 
+???
+Compiling the program to be analyzed with the -fsanitize flag will instrument the program with calls
+to the TSan runtime library and link the runtime library to the final executable.
+
 --
 exclude: true
 <br/>
 <img src='./generated_trees/trace_analysis/data_race.png' height="250"/>
+
+<!-- TODO: Explain how the happens-before data race detection works? -->
 
 <!-- <<< -->
 
@@ -192,16 +215,24 @@ int main()
 }
 </code></pre></div>
 
+???
+In this example, two threads lock the same two locks, but in reversed order. Lock order inversion
+is a recipe for deadlock.
+
 --
 count: false
 <div class="code_right" style="width: 60%;"><pre><code class="language-bash">
 clang++ -std=c++14 -g deadlock.cpp -o deadlock
 
-valgrind --tool=helgrind -v deadlock
+valgrind --tool=helgrind ./deadlock
 </code></pre></div>
 
---
-exclude: true
+???
+The program to be analysed is compiled as usual but with debug symbols.
+Then the binary is run on Valgrind's synthetic CPU, after the Helgrind tool has added 
+instrumentation code to the it.
+
+<!-- TODO: Explain how lock inversion analysis works? -->
 
 <!-- <<< -->
 
@@ -223,10 +254,44 @@ layout: true
 
 ---
 
-<!--
-TODO:
-NOTE:
-* Nondeterminism itself not specific to mulit-threaded programs
+--
+count: false
+##### OS Scheduler Policy
+The order in which threads get to execute at runtime is under the control of the OS scheduler.
+
+???
+The scheduler in turn can make its choices based on execution enviroment
+
+--
+count: false
+##### Execution Environment
+e.g.
+
+--
+count: false
+- Current CPU load
+
+--
+count: false
+- Priorities of other threads on the CPU
+
+--
+count: false
+- State of the cache
+
+???
+E.g. is the current thread slowed down by cache misses
+
+
+???
+BRIDGE:
+We've seen program analysis tools that are specifically tailored to detect potential concurrency 
+errors in multi-threaded software. However, these tools depend on the error actually being 
+detectable in the execution they happended to monitor. These tools do not meet the second challenge
+that multi-threading poses for testing: nondeterminism.
+
+<!-- TODO: slide -->
+* Nondeterminism itself not specific to multi-threaded programs
 * Single-threaded programs can have sources of nondeterminism, such as user input or randomization
 * Threads add a different layer of nondeterminism:
    - The total order in which the threads get scheduled is outsourced to the OS scheduler and not 
