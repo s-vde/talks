@@ -111,7 +111,7 @@ def main(argv):
                 #  10),                           # 6: nodesep
                 # -----
                 # NOTE: Just to generate the instrumented.txt
-                os.path.join(test_programs, "simple_data_race.cpp"):
+                os.path.join(test_programs, "data_race.cpp"):
                 # 0: name_filter
                 ([],
                  # 1: command line options
@@ -126,7 +126,7 @@ def main(argv):
                  10),
                 # -----
                 # NOTE: Just to generate full_schedules.png
-                os.path.join(test_programs, "simple_deadlock_pthread.cpp"):
+                os.path.join(test_programs, "deadlock_pthread.cpp"):
                 # 0: name_filter
                 ([],
                  # 1: command line options

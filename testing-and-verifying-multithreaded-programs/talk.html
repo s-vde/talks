@@ -132,7 +132,7 @@ count: false
 
 ---
 
-<div class="h_example" style="margin-bottom: 2em;">simple_data_race.cpp</div>
+<div class="h_example" style="margin-bottom: 2em;">data_race.cpp</div>
 <div class="code_left" style="width: 35%;"><pre><code class="language-cpp">
 int main()
 {
@@ -154,16 +154,16 @@ int main()
 --
 count: false
 <div class="code_right" style="width: 60%;"><pre><code class="language-bash">
-clang++ -fsanitize=thread -std=c++14 -g simple_data_race.cpp \
-   -o simple_data_race
+clang++ -fsanitize=thread -std=c++14 -g data_race.cpp \
+   -o data_race
 
-./simple_data_race
+./data_race
 </code></pre></div>
 
 --
 exclude: true
 <br/>
-<img src='./generated_trees/trace_analysis/simple_data_race.png' height="250"/>
+<img src='./generated_trees/trace_analysis/data_race.png' height="250"/>
 
 <!-- <<< -->
 
@@ -171,7 +171,7 @@ exclude: true
 
 ---
 
-<div class="h_example" style="margin-bottom: 2em;">simple_deadlock.cpp</div>
+<div class="h_example" style="margin-bottom: 2em;">deadlock.cpp</div>
 <div class="code_left" style="width: 35%;"><pre><code class="language-cpp">
 int main()
 {
@@ -195,9 +195,9 @@ int main()
 --
 count: false
 <div class="code_right" style="width: 60%;"><pre><code class="language-bash">
-clang++ -std=c++14 -g simple_deadlock.cpp -o simple_deadlock
+clang++ -std=c++14 -g deadlock.cpp -o deadlock
 
-valgrind --tool=helgrind -v simple_deadlock
+valgrind --tool=helgrind -v deadlock
 </code></pre></div>
 
 --
@@ -664,19 +664,19 @@ langauges can be mapped to it;
      call void @wrapper_enter_function(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @_recrep_function_name_main, i32 0, i32 0)), !dbg !479
      %call = tail call i32 @pthread_mutex_init(%struct._opaque_pthread_mutex_t* nonnull @m1, %struct._opaque_pthread_mutexattr_t* null), !dbg !479
      %call1 = tail call i32 @pthread_mutex_init(%struct._opaque_pthread_mutex_t* nonnull @m2, %struct._opaque_pthread_mutexattr_t* null), !dbg !480
-     %0 = call i32 @wrapper_post_spawn_instruction(%struct._opaque_pthread_t** @thr1, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/simple_deadlock_pthread.cpp", i32 0, i32 0), i32 35)
+     %0 = call i32 @wrapper_post_spawn_instruction(%struct._opaque_pthread_t** @thr1, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/deadlock_pthread.cpp", i32 0, i32 0), i32 35)
      %call2 = tail call i32 @pthread_create(%struct._opaque_pthread_t** nonnull @thr1, %struct._opaque_pthread_attr_t* null, i8* (i8*)* nonnull @_Z7thread1Pv, i8* null), !dbg !481
      call void @wrapper_register_thread(%struct._opaque_pthread_t** @thr1, i32 %0)
-     %1 = call i32 @wrapper_post_spawn_instruction(%struct._opaque_pthread_t** @thr2, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/simple_deadlock_pthread.cpp", i32 0, i32 0), i32 36)
+     %1 = call i32 @wrapper_post_spawn_instruction(%struct._opaque_pthread_t** @thr2, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/deadlock_pthread.cpp", i32 0, i32 0), i32 36)
      %call3 = tail call i32 @pthread_create(%struct._opaque_pthread_t** nonnull @thr2, %struct._opaque_pthread_attr_t* null, i8* (i8*)* nonnull @_Z7thread2Pv, i8* null), !dbg !482
      call void @wrapper_register_thread(%struct._opaque_pthread_t** @thr2, i32 %1)
-     call void @wrapper_post_memory_instruction(i32 0, i8* bitcast (%struct._opaque_pthread_t** @thr1 to i8*), i8* getelementptr inbounds ([5 x i8], [5 x i8]* @_mem_loc_name_thr1, i32 0, i32 0), i8 0, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/simple_deadlock_pthread.cpp", i32 0, i32 0), i32 38)
+     call void @wrapper_post_memory_instruction(i32 0, i8* bitcast (%struct._opaque_pthread_t** @thr1 to i8*), i8* getelementptr inbounds ([5 x i8], [5 x i8]* @_mem_loc_name_thr1, i32 0, i32 0), i8 0, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/deadlock_pthread.cpp", i32 0, i32 0), i32 38)
      %2 = load %struct._opaque_pthread_t*, %struct._opaque_pthread_t** @thr1, align 8, !dbg !483, !tbaa !484
-     call void @wrapper_post_pthread_join_instruction(%struct._opaque_pthread_t* %2, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/simple_deadlock_pthread.cpp", i32 0, i32 0), i32 38)
+     call void @wrapper_post_pthread_join_instruction(%struct._opaque_pthread_t* %2, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/deadlock_pthread.cpp", i32 0, i32 0), i32 38)
      %call4 = tail call i32 @"\01_pthread_join"(%struct._opaque_pthread_t* %2, i8** null), !dbg !488
-     call void @wrapper_post_memory_instruction(i32 0, i8* bitcast (%struct._opaque_pthread_t** @thr2 to i8*), i8* getelementptr inbounds ([5 x i8], [5 x i8]* @_mem_loc_name_thr2, i32 0, i32 0), i8 0, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/simple_deadlock_pthread.cpp", i32 0, i32 0), i32 39)
+     call void @wrapper_post_memory_instruction(i32 0, i8* bitcast (%struct._opaque_pthread_t** @thr2 to i8*), i8* getelementptr inbounds ([5 x i8], [5 x i8]* @_mem_loc_name_thr2, i32 0, i32 0), i8 0, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/deadlock_pthread.cpp", i32 0, i32 0), i32 39)
      %3 = load %struct._opaque_pthread_t*, %struct._opaque_pthread_t** @thr2, align 8, !dbg !489, !tbaa !484
-     call void @wrapper_post_pthread_join_instruction(%struct._opaque_pthread_t* %3, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/simple_deadlock_pthread.cpp", i32 0, i32 0), i32 39)
+     call void @wrapper_post_pthread_join_instruction(%struct._opaque_pthread_t* %3, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/deadlock_pthread.cpp", i32 0, i32 0), i32 39)
      %call5 = tail call i32 @"\01_pthread_join"(%struct._opaque_pthread_t* %3, i8** null), !dbg !490
      call void @wrapper_exit_function(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @_recrep_function_name_main, i32 0, i32 0)), !dbg !491
      ret i32 0, !dbg !491
@@ -695,13 +695,13 @@ langauges can be mapped to it;
    entry:
      call void @wrapper_enter_function(i8* getelementptr inbounds ([13 x i8], [13 x i8]* @_recrep_function_name__Z7thread1Pv, i32 0, i32 0)), !dbg !462
      tail call void @llvm.dbg.value(metadata i8* %arg, i64 0, metadata !461, metadata !463), !dbg !462
-     call void @wrapper_post_lock_instruction(i32 0, i8* bitcast (%struct._opaque_pthread_mutex_t* @m1 to i8*), i8* getelementptr inbounds ([3 x i8], [3 x i8]* @_mem_loc_name_m1, i32 0, i32 0), i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/simple_deadlock_pthread.cpp", i32 0, i32 0), i32 14)
+     call void @wrapper_post_lock_instruction(i32 0, i8* bitcast (%struct._opaque_pthread_mutex_t* @m1 to i8*), i8* getelementptr inbounds ([3 x i8], [3 x i8]* @_mem_loc_name_m1, i32 0, i32 0), i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/deadlock_pthread.cpp", i32 0, i32 0), i32 14)
      %call = tail call i32 @pthread_mutex_lock(%struct._opaque_pthread_mutex_t* nonnull @m1), !dbg !464
-     call void @wrapper_post_lock_instruction(i32 0, i8* bitcast (%struct._opaque_pthread_mutex_t* @m2 to i8*), i8* getelementptr inbounds ([3 x i8], [3 x i8]* @_mem_loc_name_m2, i32 0, i32 0), i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/simple_deadlock_pthread.cpp", i32 0, i32 0), i32 15)
+     call void @wrapper_post_lock_instruction(i32 0, i8* bitcast (%struct._opaque_pthread_mutex_t* @m2 to i8*), i8* getelementptr inbounds ([3 x i8], [3 x i8]* @_mem_loc_name_m2, i32 0, i32 0), i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/deadlock_pthread.cpp", i32 0, i32 0), i32 15)
      %call1 = tail call i32 @pthread_mutex_lock(%struct._opaque_pthread_mutex_t* nonnull @m2), !dbg !465
-     call void @wrapper_post_lock_instruction(i32 1, i8* bitcast (%struct._opaque_pthread_mutex_t* @m2 to i8*), i8* getelementptr inbounds ([3 x i8], [3 x i8]* @_mem_loc_name_m2, i32 0, i32 0), i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/simple_deadlock_pthread.cpp", i32 0, i32 0), i32 16)
+     call void @wrapper_post_lock_instruction(i32 1, i8* bitcast (%struct._opaque_pthread_mutex_t* @m2 to i8*), i8* getelementptr inbounds ([3 x i8], [3 x i8]* @_mem_loc_name_m2, i32 0, i32 0), i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/deadlock_pthread.cpp", i32 0, i32 0), i32 16)
      %call2 = tail call i32 @pthread_mutex_unlock(%struct._opaque_pthread_mutex_t* nonnull @m2), !dbg !466
-     call void @wrapper_post_lock_instruction(i32 1, i8* bitcast (%struct._opaque_pthread_mutex_t* @m1 to i8*), i8* getelementptr inbounds ([3 x i8], [3 x i8]* @_mem_loc_name_m1, i32 0, i32 0), i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/simple_deadlock_pthread.cpp", i32 0, i32 0), i32 17)
+     call void @wrapper_post_lock_instruction(i32 1, i8* bitcast (%struct._opaque_pthread_mutex_t* @m1 to i8*), i8* getelementptr inbounds ([3 x i8], [3 x i8]* @_mem_loc_name_m1, i32 0, i32 0), i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/deadlock_pthread.cpp", i32 0, i32 0), i32 17)
      %call3 = tail call i32 @pthread_mutex_unlock(%struct._opaque_pthread_mutex_t* nonnull @m1), !dbg !467
      call void @wrapper_exit_function(i8* getelementptr inbounds ([13 x i8], [13 x i8]* @_recrep_function_name__Z7thread1Pv, i32 0, i32 0)), !dbg !468
      tail call void @pthread_exit(i8* null) #6, !dbg !468
@@ -845,8 +845,8 @@ depth_first_exploration(program)
 
 ---
 # Combinatorial Explosion!
-<div class="h_example">simple_data_race.cpp</div>
-.center[<img src='./generated_trees/simple_data_race.cpp/depth_first_search/trees/full_schedules.png' width="1100"/>]
+<div class="h_example">data_race.cpp</div>
+.center[<img src='./generated_trees/data_race.cpp/depth_first_search/trees/full_schedules.png' width="1100"/>]
 
 <!-- 
 NOTE:

@@ -1,0 +1,635 @@
+; ModuleID = 'generated_trees/simple_deadlock_pthread.cpp/dpor/instrumented/simple_deadlock_pthread.cpp.instrumented.bc'
+source_filename = "./examples/simple_deadlock_pthread.cpp"
+target datalayout = "e-m:o-i64:64-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-apple-macosx10.12.0"
+
+%struct._opaque_pthread_t = type { i64, %struct.__darwin_pthread_handler_rec*, [8176 x i8] }
+%struct.__darwin_pthread_handler_rec = type { void (i8*)*, i8*, %struct.__darwin_pthread_handler_rec* }
+%struct._opaque_pthread_mutex_t = type { i64, [56 x i8] }
+%struct._opaque_pthread_mutexattr_t = type { i64, [8 x i8] }
+%struct._opaque_pthread_attr_t = type { i64, [56 x i8] }
+
+@thr1 = global %struct._opaque_pthread_t* null, align 8, !dbg !0
+@thr2 = global %struct._opaque_pthread_t* null, align 8, !dbg !6
+@m1 = global %struct._opaque_pthread_mutex_t zeroinitializer, align 8, !dbg !33
+@m2 = global %struct._opaque_pthread_mutex_t zeroinitializer, align 8, !dbg !45
+@_recrep_function_name__Z7thread1Pv = private unnamed_addr constant [13 x i8] c"_Z7thread1Pv\00"
+@_mem_loc_name_m1 = private unnamed_addr constant [3 x i8] c"m1\00"
+@"_recrep_file_name_./examples/simple_deadlock_pthread.cpp" = private unnamed_addr constant [39 x i8] c"./examples/simple_deadlock_pthread.cpp\00"
+@_mem_loc_name_m2 = private unnamed_addr constant [3 x i8] c"m2\00"
+@_recrep_function_name__Z7thread2Pv = private unnamed_addr constant [13 x i8] c"_Z7thread2Pv\00"
+@_recrep_function_name_main = private unnamed_addr constant [5 x i8] c"main\00"
+@_mem_loc_name_thr1 = private unnamed_addr constant [5 x i8] c"thr1\00"
+@_mem_loc_name_thr2 = private unnamed_addr constant [5 x i8] c"thr2\00"
+
+; Function Attrs: noreturn ssp uwtable
+define noalias nonnull i8* @_Z7thread1Pv(i8* nocapture readnone %arg) #0 !dbg !457 {
+entry:
+  call void @wrapper_enter_function(i8* getelementptr inbounds ([13 x i8], [13 x i8]* @_recrep_function_name__Z7thread1Pv, i32 0, i32 0)), !dbg !462
+  tail call void @llvm.dbg.value(metadata i8* %arg, i64 0, metadata !461, metadata !463), !dbg !462
+  call void @wrapper_post_lock_instruction(i32 0, i8* bitcast (%struct._opaque_pthread_mutex_t* @m1 to i8*), i8* getelementptr inbounds ([3 x i8], [3 x i8]* @_mem_loc_name_m1, i32 0, i32 0), i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/simple_deadlock_pthread.cpp", i32 0, i32 0), i32 14)
+  %call = tail call i32 @pthread_mutex_lock(%struct._opaque_pthread_mutex_t* nonnull @m1), !dbg !464
+  call void @wrapper_post_lock_instruction(i32 0, i8* bitcast (%struct._opaque_pthread_mutex_t* @m2 to i8*), i8* getelementptr inbounds ([3 x i8], [3 x i8]* @_mem_loc_name_m2, i32 0, i32 0), i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/simple_deadlock_pthread.cpp", i32 0, i32 0), i32 15)
+  %call1 = tail call i32 @pthread_mutex_lock(%struct._opaque_pthread_mutex_t* nonnull @m2), !dbg !465
+  call void @wrapper_post_lock_instruction(i32 1, i8* bitcast (%struct._opaque_pthread_mutex_t* @m2 to i8*), i8* getelementptr inbounds ([3 x i8], [3 x i8]* @_mem_loc_name_m2, i32 0, i32 0), i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/simple_deadlock_pthread.cpp", i32 0, i32 0), i32 16)
+  %call2 = tail call i32 @pthread_mutex_unlock(%struct._opaque_pthread_mutex_t* nonnull @m2), !dbg !466
+  call void @wrapper_post_lock_instruction(i32 1, i8* bitcast (%struct._opaque_pthread_mutex_t* @m1 to i8*), i8* getelementptr inbounds ([3 x i8], [3 x i8]* @_mem_loc_name_m1, i32 0, i32 0), i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/simple_deadlock_pthread.cpp", i32 0, i32 0), i32 17)
+  %call3 = tail call i32 @pthread_mutex_unlock(%struct._opaque_pthread_mutex_t* nonnull @m1), !dbg !467
+  call void @wrapper_exit_function(i8* getelementptr inbounds ([13 x i8], [13 x i8]* @_recrep_function_name__Z7thread1Pv, i32 0, i32 0)), !dbg !468
+  tail call void @pthread_exit(i8* null) #6, !dbg !468
+  unreachable, !dbg !468
+}
+
+declare i32 @pthread_mutex_lock(%struct._opaque_pthread_mutex_t*) local_unnamed_addr #1
+
+declare i32 @pthread_mutex_unlock(%struct._opaque_pthread_mutex_t*) local_unnamed_addr #1
+
+; Function Attrs: noreturn
+declare void @pthread_exit(i8*) local_unnamed_addr #2
+
+; Function Attrs: noreturn ssp uwtable
+define noalias nonnull i8* @_Z7thread2Pv(i8* nocapture readnone %arg) #0 !dbg !469 {
+entry:
+  call void @wrapper_enter_function(i8* getelementptr inbounds ([13 x i8], [13 x i8]* @_recrep_function_name__Z7thread2Pv, i32 0, i32 0)), !dbg !472
+  tail call void @llvm.dbg.value(metadata i8* %arg, i64 0, metadata !471, metadata !463), !dbg !472
+  call void @wrapper_post_lock_instruction(i32 0, i8* bitcast (%struct._opaque_pthread_mutex_t* @m2 to i8*), i8* getelementptr inbounds ([3 x i8], [3 x i8]* @_mem_loc_name_m2, i32 0, i32 0), i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/simple_deadlock_pthread.cpp", i32 0, i32 0), i32 23)
+  %call = tail call i32 @pthread_mutex_lock(%struct._opaque_pthread_mutex_t* nonnull @m2), !dbg !473
+  call void @wrapper_post_lock_instruction(i32 0, i8* bitcast (%struct._opaque_pthread_mutex_t* @m1 to i8*), i8* getelementptr inbounds ([3 x i8], [3 x i8]* @_mem_loc_name_m1, i32 0, i32 0), i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/simple_deadlock_pthread.cpp", i32 0, i32 0), i32 24)
+  %call1 = tail call i32 @pthread_mutex_lock(%struct._opaque_pthread_mutex_t* nonnull @m1), !dbg !474
+  call void @wrapper_post_lock_instruction(i32 1, i8* bitcast (%struct._opaque_pthread_mutex_t* @m1 to i8*), i8* getelementptr inbounds ([3 x i8], [3 x i8]* @_mem_loc_name_m1, i32 0, i32 0), i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/simple_deadlock_pthread.cpp", i32 0, i32 0), i32 25)
+  %call2 = tail call i32 @pthread_mutex_unlock(%struct._opaque_pthread_mutex_t* nonnull @m1), !dbg !475
+  call void @wrapper_post_lock_instruction(i32 1, i8* bitcast (%struct._opaque_pthread_mutex_t* @m2 to i8*), i8* getelementptr inbounds ([3 x i8], [3 x i8]* @_mem_loc_name_m2, i32 0, i32 0), i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/simple_deadlock_pthread.cpp", i32 0, i32 0), i32 26)
+  %call3 = tail call i32 @pthread_mutex_unlock(%struct._opaque_pthread_mutex_t* nonnull @m2), !dbg !476
+  call void @wrapper_exit_function(i8* getelementptr inbounds ([13 x i8], [13 x i8]* @_recrep_function_name__Z7thread2Pv, i32 0, i32 0)), !dbg !477
+  tail call void @pthread_exit(i8* null) #6, !dbg !477
+  unreachable, !dbg !477
+}
+
+; Function Attrs: norecurse ssp uwtable
+define i32 @main() local_unnamed_addr #3 !dbg !478 {
+entry:
+  call void @wrapper_register_main_thread(), !dbg !479
+  call void @wrapper_enter_function(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @_recrep_function_name_main, i32 0, i32 0)), !dbg !479
+  %call = tail call i32 @pthread_mutex_init(%struct._opaque_pthread_mutex_t* nonnull @m1, %struct._opaque_pthread_mutexattr_t* null), !dbg !479
+  %call1 = tail call i32 @pthread_mutex_init(%struct._opaque_pthread_mutex_t* nonnull @m2, %struct._opaque_pthread_mutexattr_t* null), !dbg !480
+  %0 = call i32 @wrapper_post_spawn_instruction(%struct._opaque_pthread_t** @thr1, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/simple_deadlock_pthread.cpp", i32 0, i32 0), i32 35)
+  %call2 = tail call i32 @pthread_create(%struct._opaque_pthread_t** nonnull @thr1, %struct._opaque_pthread_attr_t* null, i8* (i8*)* nonnull @_Z7thread1Pv, i8* null), !dbg !481
+  call void @wrapper_register_thread(%struct._opaque_pthread_t** @thr1, i32 %0)
+  %1 = call i32 @wrapper_post_spawn_instruction(%struct._opaque_pthread_t** @thr2, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/simple_deadlock_pthread.cpp", i32 0, i32 0), i32 36)
+  %call3 = tail call i32 @pthread_create(%struct._opaque_pthread_t** nonnull @thr2, %struct._opaque_pthread_attr_t* null, i8* (i8*)* nonnull @_Z7thread2Pv, i8* null), !dbg !482
+  call void @wrapper_register_thread(%struct._opaque_pthread_t** @thr2, i32 %1)
+  call void @wrapper_post_memory_instruction(i32 0, i8* bitcast (%struct._opaque_pthread_t** @thr1 to i8*), i8* getelementptr inbounds ([5 x i8], [5 x i8]* @_mem_loc_name_thr1, i32 0, i32 0), i8 0, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/simple_deadlock_pthread.cpp", i32 0, i32 0), i32 38)
+  %2 = load %struct._opaque_pthread_t*, %struct._opaque_pthread_t** @thr1, align 8, !dbg !483, !tbaa !484
+  call void @wrapper_post_pthread_join_instruction(%struct._opaque_pthread_t* %2, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/simple_deadlock_pthread.cpp", i32 0, i32 0), i32 38)
+  %call4 = tail call i32 @"\01_pthread_join"(%struct._opaque_pthread_t* %2, i8** null), !dbg !488
+  call void @wrapper_post_memory_instruction(i32 0, i8* bitcast (%struct._opaque_pthread_t** @thr2 to i8*), i8* getelementptr inbounds ([5 x i8], [5 x i8]* @_mem_loc_name_thr2, i32 0, i32 0), i8 0, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/simple_deadlock_pthread.cpp", i32 0, i32 0), i32 39)
+  %3 = load %struct._opaque_pthread_t*, %struct._opaque_pthread_t** @thr2, align 8, !dbg !489, !tbaa !484
+  call void @wrapper_post_pthread_join_instruction(%struct._opaque_pthread_t* %3, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/simple_deadlock_pthread.cpp", i32 0, i32 0), i32 39)
+  %call5 = tail call i32 @"\01_pthread_join"(%struct._opaque_pthread_t* %3, i8** null), !dbg !490
+  call void @wrapper_exit_function(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @_recrep_function_name_main, i32 0, i32 0)), !dbg !491
+  ret i32 0, !dbg !491
+}
+
+declare i32 @pthread_mutex_init(%struct._opaque_pthread_mutex_t*, %struct._opaque_pthread_mutexattr_t*) local_unnamed_addr #1
+
+declare i32 @pthread_create(%struct._opaque_pthread_t**, %struct._opaque_pthread_attr_t*, i8* (i8*)*, i8*) local_unnamed_addr #1
+
+declare i32 @"\01_pthread_join"(%struct._opaque_pthread_t*, i8**) local_unnamed_addr #1
+
+; Function Attrs: nounwind readnone
+declare void @llvm.dbg.value(metadata, i64, metadata, metadata) #4
+
+; Function Attrs: nounwind
+declare void @wrapper_register_main_thread() #5
+
+; Function Attrs: nounwind
+declare void @wrapper_register_thread(%struct._opaque_pthread_t**, i32) #5
+
+; Function Attrs: nounwind
+declare i32 @wrapper_post_spawn_instruction(%struct._opaque_pthread_t**, i8*, i32) #5
+
+; Function Attrs: nounwind
+declare void @wrapper_post_pthread_join_instruction(%struct._opaque_pthread_t*, i8*, i32) #5
+
+; Function Attrs: nounwind
+declare void @wrapper_post_lock_instruction(i32, i8*, i8*, i8*, i32) #5
+
+; Function Attrs: nounwind
+declare void @wrapper_post_memory_instruction(i32, i8*, i8*, i8, i8*, i32) #5
+
+; Function Attrs: nounwind
+declare void @wrapper_enter_function(i8*) #5
+
+; Function Attrs: nounwind
+declare void @wrapper_exit_function(i8*) #5
+
+; Function Attrs: nounwind
+declare void @wrapper_notify_assertion_failure(i8*, i8*, i32, i8*) #5
+
+; Function Attrs: nounwind
+declare i8* @helper_create_operand_name(i8*, i64*, i64) #5
+
+attributes #0 = { noreturn ssp uwtable "correctly-rounded-divide-sqrt-fp-math"="false" "disable-tail-calls"="false" "less-precise-fpmad"="false" "no-frame-pointer-elim"="true" "no-frame-pointer-elim-non-leaf" "no-infs-fp-math"="false" "no-jump-tables"="false" "no-nans-fp-math"="false" "no-signed-zeros-fp-math"="false" "no-trapping-math"="false" "stack-protector-buffer-size"="8" "target-cpu"="penryn" "target-features"="+cx16,+fxsr,+mmx,+sse,+sse2,+sse3,+sse4.1,+ssse3,+x87" "unsafe-fp-math"="false" "use-soft-float"="false" }
+attributes #1 = { "correctly-rounded-divide-sqrt-fp-math"="false" "disable-tail-calls"="false" "less-precise-fpmad"="false" "no-frame-pointer-elim"="true" "no-frame-pointer-elim-non-leaf" "no-infs-fp-math"="false" "no-nans-fp-math"="false" "no-signed-zeros-fp-math"="false" "no-trapping-math"="false" "stack-protector-buffer-size"="8" "target-cpu"="penryn" "target-features"="+cx16,+fxsr,+mmx,+sse,+sse2,+sse3,+sse4.1,+ssse3,+x87" "unsafe-fp-math"="false" "use-soft-float"="false" }
+attributes #2 = { noreturn "correctly-rounded-divide-sqrt-fp-math"="false" "disable-tail-calls"="false" "less-precise-fpmad"="false" "no-frame-pointer-elim"="true" "no-frame-pointer-elim-non-leaf" "no-infs-fp-math"="false" "no-nans-fp-math"="false" "no-signed-zeros-fp-math"="false" "no-trapping-math"="false" "stack-protector-buffer-size"="8" "target-cpu"="penryn" "target-features"="+cx16,+fxsr,+mmx,+sse,+sse2,+sse3,+sse4.1,+ssse3,+x87" "unsafe-fp-math"="false" "use-soft-float"="false" }
+attributes #3 = { norecurse ssp uwtable "correctly-rounded-divide-sqrt-fp-math"="false" "disable-tail-calls"="false" "less-precise-fpmad"="false" "no-frame-pointer-elim"="true" "no-frame-pointer-elim-non-leaf" "no-infs-fp-math"="false" "no-jump-tables"="false" "no-nans-fp-math"="false" "no-signed-zeros-fp-math"="false" "no-trapping-math"="false" "stack-protector-buffer-size"="8" "target-cpu"="penryn" "target-features"="+cx16,+fxsr,+mmx,+sse,+sse2,+sse3,+sse4.1,+ssse3,+x87" "unsafe-fp-math"="false" "use-soft-float"="false" }
+attributes #4 = { nounwind readnone }
+attributes #5 = { nounwind }
+attributes #6 = { noreturn }
+
+!llvm.dbg.cu = !{!2}
+!llvm.module.flags = !{!453, !454, !455}
+!llvm.ident = !{!456}
+
+!0 = !DIGlobalVariableExpression(var: !1)
+!1 = distinct !DIGlobalVariable(name: "thr1", scope: !2, file: !3, line: 9, type: !8, isLocal: false, isDefinition: true)
+!2 = distinct !DICompileUnit(language: DW_LANG_C_plus_plus, file: !3, producer: "clang version 4.0.0 (http://llvm.org/git/clang a6a1d3f3aa6c1d0018d84c3d6c26a552075982ab) (http://llvm.org/git/llvm 6a630d742074be775ca242c52071f5dcc5538b5b)", isOptimized: true, runtimeVersion: 0, emissionKind: FullDebug, enums: !4, globals: !5, imports: !47)
+!3 = !DIFile(filename: "./examples/simple_deadlock_pthread.cpp", directory: "/Volumes/Repositories/projects/talks/testing-and-verifying-multithreaded-programs")
+!4 = !{}
+!5 = !{!0, !6, !33, !45}
+!6 = !DIGlobalVariableExpression(var: !7)
+!7 = distinct !DIGlobalVariable(name: "thr2", scope: !2, file: !3, line: 9, type: !8, isLocal: false, isDefinition: true)
+!8 = !DIDerivedType(tag: DW_TAG_typedef, name: "pthread_t", file: !9, line: 30, baseType: !10)
+!9 = !DIFile(filename: "/usr/include/sys/_pthread/_pthread_t.h", directory: "/Volumes/Repositories/projects/talks/testing-and-verifying-multithreaded-programs")
+!10 = !DIDerivedType(tag: DW_TAG_typedef, name: "__darwin_pthread_t", file: !11, line: 118, baseType: !12)
+!11 = !DIFile(filename: "/usr/include/sys/_pthread/_pthread_types.h", directory: "/Volumes/Repositories/projects/talks/testing-and-verifying-multithreaded-programs")
+!12 = !DIDerivedType(tag: DW_TAG_pointer_type, baseType: !13, size: 64)
+!13 = distinct !DICompositeType(tag: DW_TAG_structure_type, name: "_opaque_pthread_t", file: !11, line: 103, size: 65536, elements: !14, identifier: "_ZTS17_opaque_pthread_t")
+!14 = !{!15, !17, !28}
+!15 = !DIDerivedType(tag: DW_TAG_member, name: "__sig", scope: !13, file: !11, line: 104, baseType: !16, size: 64)
+!16 = !DIBasicType(name: "long int", size: 64, encoding: DW_ATE_signed)
+!17 = !DIDerivedType(tag: DW_TAG_member, name: "__cleanup_stack", scope: !13, file: !11, line: 105, baseType: !18, size: 64, offset: 64)
+!18 = !DIDerivedType(tag: DW_TAG_pointer_type, baseType: !19, size: 64)
+!19 = distinct !DICompositeType(tag: DW_TAG_structure_type, name: "__darwin_pthread_handler_rec", file: !11, line: 57, size: 192, elements: !20, identifier: "_ZTS28__darwin_pthread_handler_rec")
+!20 = !{!21, !26, !27}
+!21 = !DIDerivedType(tag: DW_TAG_member, name: "__routine", scope: !19, file: !11, line: 58, baseType: !22, size: 64)
+!22 = !DIDerivedType(tag: DW_TAG_pointer_type, baseType: !23, size: 64)
+!23 = !DISubroutineType(types: !24)
+!24 = !{null, !25}
+!25 = !DIDerivedType(tag: DW_TAG_pointer_type, baseType: null, size: 64)
+!26 = !DIDerivedType(tag: DW_TAG_member, name: "__arg", scope: !19, file: !11, line: 59, baseType: !25, size: 64, offset: 64)
+!27 = !DIDerivedType(tag: DW_TAG_member, name: "__next", scope: !19, file: !11, line: 60, baseType: !18, size: 64, offset: 128)
+!28 = !DIDerivedType(tag: DW_TAG_member, name: "__opaque", scope: !13, file: !11, line: 106, baseType: !29, size: 65408, offset: 128)
+!29 = !DICompositeType(tag: DW_TAG_array_type, baseType: !30, size: 65408, elements: !31)
+!30 = !DIBasicType(name: "char", size: 8, encoding: DW_ATE_signed_char)
+!31 = !{!32}
+!32 = !DISubrange(count: 8176)
+!33 = !DIGlobalVariableExpression(var: !34)
+!34 = distinct !DIGlobalVariable(name: "m1", scope: !2, file: !3, line: 10, type: !35, isLocal: false, isDefinition: true)
+!35 = !DIDerivedType(tag: DW_TAG_typedef, name: "pthread_mutex_t", file: !36, line: 30, baseType: !37)
+!36 = !DIFile(filename: "/usr/include/sys/_pthread/_pthread_mutex_t.h", directory: "/Volumes/Repositories/projects/talks/testing-and-verifying-multithreaded-programs")
+!37 = !DIDerivedType(tag: DW_TAG_typedef, name: "__darwin_pthread_mutex_t", file: !11, line: 113, baseType: !38)
+!38 = distinct !DICompositeType(tag: DW_TAG_structure_type, name: "_opaque_pthread_mutex_t", file: !11, line: 78, size: 512, elements: !39, identifier: "_ZTS23_opaque_pthread_mutex_t")
+!39 = !{!40, !41}
+!40 = !DIDerivedType(tag: DW_TAG_member, name: "__sig", scope: !38, file: !11, line: 79, baseType: !16, size: 64)
+!41 = !DIDerivedType(tag: DW_TAG_member, name: "__opaque", scope: !38, file: !11, line: 80, baseType: !42, size: 448, offset: 64)
+!42 = !DICompositeType(tag: DW_TAG_array_type, baseType: !30, size: 448, elements: !43)
+!43 = !{!44}
+!44 = !DISubrange(count: 56)
+!45 = !DIGlobalVariableExpression(var: !46)
+!46 = distinct !DIGlobalVariable(name: "m2", scope: !2, file: !3, line: 10, type: !35, isLocal: false, isDefinition: true)
+!47 = !{!48, !54, !60, !64, !65, !73, !79, !86, !93, !97, !101, !105, !111, !116, !120, !124, !128, !132, !137, !141, !146, !150, !152, !156, !160, !164, !169, !173, !175, !179, !181, !190, !194, !199, !203, !205, !209, !213, !215, !219, !225, !229, !233, !239, !243, !247, !250, !253, !257, !261, !264, !267, !270, !272, !274, !276, !278, !280, !282, !284, !286, !288, !290, !292, !294, !296, !298, !300, !304, !307, !310, !313, !314, !319, !321, !325, !329, !331, !333, !337, !341, !345, !347, !351, !356, !360, !364, !366, !368, !370, !372, !374, !376, !380, !384, !388, !389, !393, !408, !412, !416, !421, !426, !432, !438, !442, !444, !448}
+!48 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !52, line: 48)
+!49 = !DINamespace(name: "__1", scope: !51, file: !50, line: 393, exportSymbols: true)
+!50 = !DIFile(filename: "/Users/sanne/Desktop/tools/llvm-repo/build/bin/../include/c++/v1/__config", directory: "/Volumes/Repositories/projects/talks/testing-and-verifying-multithreaded-programs")
+!51 = !DINamespace(name: "std", scope: null, file: !50, line: 392)
+!52 = !DIDerivedType(tag: DW_TAG_typedef, name: "ptrdiff_t", file: !53, line: 51, baseType: !16)
+!53 = !DIFile(filename: "/Users/sanne/Desktop/tools/llvm-repo/build/bin/../lib/clang/4.0.0/include/stddef.h", directory: "/Volumes/Repositories/projects/talks/testing-and-verifying-multithreaded-programs")
+!54 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !55, line: 49)
+!55 = !DIDerivedType(tag: DW_TAG_typedef, name: "size_t", file: !56, line: 30, baseType: !57)
+!56 = !DIFile(filename: "/usr/include/sys/_types/_size_t.h", directory: "/Volumes/Repositories/projects/talks/testing-and-verifying-multithreaded-programs")
+!57 = !DIDerivedType(tag: DW_TAG_typedef, name: "__darwin_size_t", file: !58, line: 92, baseType: !59)
+!58 = !DIFile(filename: "/usr/include/i386/_types.h", directory: "/Volumes/Repositories/projects/talks/testing-and-verifying-multithreaded-programs")
+!59 = !DIBasicType(name: "long unsigned int", size: 64, encoding: DW_ATE_unsigned)
+!60 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !61, line: 53)
+!61 = !DIDerivedType(tag: DW_TAG_typedef, name: "max_align_t", file: !62, line: 32, baseType: !63)
+!62 = !DIFile(filename: "/Users/sanne/Desktop/tools/llvm-repo/build/bin/../lib/clang/4.0.0/include/__stddef_max_align_t.h", directory: "/Volumes/Repositories/projects/talks/testing-and-verifying-multithreaded-programs")
+!63 = !DIBasicType(name: "long double", size: 128, encoding: DW_ATE_float)
+!64 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !55, line: 100)
+!65 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !66, line: 101)
+!66 = !DIDerivedType(tag: DW_TAG_typedef, name: "div_t", file: !67, line: 85, baseType: !68)
+!67 = !DIFile(filename: "/usr/include/stdlib.h", directory: "/Volumes/Repositories/projects/talks/testing-and-verifying-multithreaded-programs")
+!68 = distinct !DICompositeType(tag: DW_TAG_structure_type, file: !67, line: 82, size: 64, elements: !69, identifier: "_ZTS5div_t")
+!69 = !{!70, !72}
+!70 = !DIDerivedType(tag: DW_TAG_member, name: "quot", scope: !68, file: !67, line: 83, baseType: !71, size: 32)
+!71 = !DIBasicType(name: "int", size: 32, encoding: DW_ATE_signed)
+!72 = !DIDerivedType(tag: DW_TAG_member, name: "rem", scope: !68, file: !67, line: 84, baseType: !71, size: 32, offset: 32)
+!73 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !74, line: 102)
+!74 = !DIDerivedType(tag: DW_TAG_typedef, name: "ldiv_t", file: !67, line: 90, baseType: !75)
+!75 = distinct !DICompositeType(tag: DW_TAG_structure_type, file: !67, line: 87, size: 128, elements: !76, identifier: "_ZTS6ldiv_t")
+!76 = !{!77, !78}
+!77 = !DIDerivedType(tag: DW_TAG_member, name: "quot", scope: !75, file: !67, line: 88, baseType: !16, size: 64)
+!78 = !DIDerivedType(tag: DW_TAG_member, name: "rem", scope: !75, file: !67, line: 89, baseType: !16, size: 64, offset: 64)
+!79 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !80, line: 104)
+!80 = !DIDerivedType(tag: DW_TAG_typedef, name: "lldiv_t", file: !67, line: 96, baseType: !81)
+!81 = distinct !DICompositeType(tag: DW_TAG_structure_type, file: !67, line: 93, size: 128, elements: !82, identifier: "_ZTS7lldiv_t")
+!82 = !{!83, !85}
+!83 = !DIDerivedType(tag: DW_TAG_member, name: "quot", scope: !81, file: !67, line: 94, baseType: !84, size: 64)
+!84 = !DIBasicType(name: "long long int", size: 64, encoding: DW_ATE_signed)
+!85 = !DIDerivedType(tag: DW_TAG_member, name: "rem", scope: !81, file: !67, line: 95, baseType: !84, size: 64, offset: 64)
+!86 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !87, line: 106)
+!87 = !DISubprogram(name: "atof", scope: !67, file: !67, line: 131, type: !88, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!88 = !DISubroutineType(types: !89)
+!89 = !{!90, !91}
+!90 = !DIBasicType(name: "double", size: 64, encoding: DW_ATE_float)
+!91 = !DIDerivedType(tag: DW_TAG_pointer_type, baseType: !92, size: 64)
+!92 = !DIDerivedType(tag: DW_TAG_const_type, baseType: !30)
+!93 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !94, line: 107)
+!94 = !DISubprogram(name: "atoi", scope: !67, file: !67, line: 132, type: !95, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!95 = !DISubroutineType(types: !96)
+!96 = !{!71, !91}
+!97 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !98, line: 108)
+!98 = !DISubprogram(name: "atol", scope: !67, file: !67, line: 133, type: !99, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!99 = !DISubroutineType(types: !100)
+!100 = !{!16, !91}
+!101 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !102, line: 110)
+!102 = !DISubprogram(name: "atoll", scope: !67, file: !67, line: 136, type: !103, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!103 = !DISubroutineType(types: !104)
+!104 = !{!84, !91}
+!105 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !106, line: 112)
+!106 = !DISubprogram(name: "strtod", linkageName: "\01_strtod", scope: !67, file: !67, line: 162, type: !107, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!107 = !DISubroutineType(types: !108)
+!108 = !{!90, !91, !109}
+!109 = !DIDerivedType(tag: DW_TAG_pointer_type, baseType: !110, size: 64)
+!110 = !DIDerivedType(tag: DW_TAG_pointer_type, baseType: !30, size: 64)
+!111 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !112, line: 113)
+!112 = !DISubprogram(name: "strtof", linkageName: "\01_strtof", scope: !67, file: !67, line: 163, type: !113, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!113 = !DISubroutineType(types: !114)
+!114 = !{!115, !91, !109}
+!115 = !DIBasicType(name: "float", size: 32, encoding: DW_ATE_float)
+!116 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !117, line: 114)
+!117 = !DISubprogram(name: "strtold", scope: !67, file: !67, line: 166, type: !118, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!118 = !DISubroutineType(types: !119)
+!119 = !{!63, !91, !109}
+!120 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !121, line: 115)
+!121 = !DISubprogram(name: "strtol", scope: !67, file: !67, line: 164, type: !122, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!122 = !DISubroutineType(types: !123)
+!123 = !{!16, !91, !109, !71}
+!124 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !125, line: 117)
+!125 = !DISubprogram(name: "strtoll", scope: !67, file: !67, line: 169, type: !126, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!126 = !DISubroutineType(types: !127)
+!127 = !{!84, !91, !109, !71}
+!128 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !129, line: 119)
+!129 = !DISubprogram(name: "strtoul", scope: !67, file: !67, line: 172, type: !130, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!130 = !DISubroutineType(types: !131)
+!131 = !{!59, !91, !109, !71}
+!132 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !133, line: 121)
+!133 = !DISubprogram(name: "strtoull", scope: !67, file: !67, line: 175, type: !134, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!134 = !DISubroutineType(types: !135)
+!135 = !{!136, !91, !109, !71}
+!136 = !DIBasicType(name: "long long unsigned int", size: 64, encoding: DW_ATE_unsigned)
+!137 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !138, line: 123)
+!138 = !DISubprogram(name: "rand", scope: !67, file: !67, line: 159, type: !139, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!139 = !DISubroutineType(types: !140)
+!140 = !{!71}
+!141 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !142, line: 124)
+!142 = !DISubprogram(name: "srand", scope: !67, file: !67, line: 161, type: !143, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!143 = !DISubroutineType(types: !144)
+!144 = !{null, !145}
+!145 = !DIBasicType(name: "unsigned int", size: 32, encoding: DW_ATE_unsigned)
+!146 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !147, line: 125)
+!147 = !DISubprogram(name: "calloc", scope: !67, file: !67, line: 140, type: !148, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!148 = !DISubroutineType(types: !149)
+!149 = !{!25, !55, !55}
+!150 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !151, line: 126)
+!151 = !DISubprogram(name: "free", scope: !67, file: !67, line: 143, type: !23, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!152 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !153, line: 127)
+!153 = !DISubprogram(name: "malloc", scope: !67, file: !67, line: 152, type: !154, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!154 = !DISubroutineType(types: !155)
+!155 = !{!25, !55}
+!156 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !157, line: 128)
+!157 = !DISubprogram(name: "realloc", scope: !67, file: !67, line: 160, type: !158, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!158 = !DISubroutineType(types: !159)
+!159 = !{!25, !25, !55}
+!160 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !161, line: 129)
+!161 = !DISubprogram(name: "abort", scope: !67, file: !67, line: 128, type: !162, isLocal: false, isDefinition: false, flags: DIFlagPrototyped | DIFlagNoReturn, isOptimized: true)
+!162 = !DISubroutineType(types: !163)
+!163 = !{null}
+!164 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !165, line: 130)
+!165 = !DISubprogram(name: "atexit", scope: !67, file: !67, line: 130, type: !166, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!166 = !DISubroutineType(types: !167)
+!167 = !{!71, !168}
+!168 = !DIDerivedType(tag: DW_TAG_pointer_type, baseType: !162, size: 64)
+!169 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !170, line: 131)
+!170 = !DISubprogram(name: "exit", scope: !67, file: !67, line: 142, type: !171, isLocal: false, isDefinition: false, flags: DIFlagPrototyped | DIFlagNoReturn, isOptimized: true)
+!171 = !DISubroutineType(types: !172)
+!172 = !{null, !71}
+!173 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !174, line: 132)
+!174 = !DISubprogram(name: "_Exit", scope: !67, file: !67, line: 195, type: !171, isLocal: false, isDefinition: false, flags: DIFlagPrototyped | DIFlagNoReturn, isOptimized: true)
+!175 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !176, line: 133)
+!176 = !DISubprogram(name: "getenv", scope: !67, file: !67, line: 144, type: !177, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!177 = !DISubroutineType(types: !178)
+!178 = !{!110, !91}
+!179 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !180, line: 134)
+!180 = !DISubprogram(name: "system", linkageName: "\01_system", scope: !67, file: !67, line: 187, type: !95, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!181 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !182, line: 135)
+!182 = !DISubprogram(name: "bsearch", scope: !67, file: !67, line: 138, type: !183, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!183 = !DISubroutineType(types: !184)
+!184 = !{!25, !185, !185, !55, !55, !187}
+!185 = !DIDerivedType(tag: DW_TAG_pointer_type, baseType: !186, size: 64)
+!186 = !DIDerivedType(tag: DW_TAG_const_type, baseType: null)
+!187 = !DIDerivedType(tag: DW_TAG_pointer_type, baseType: !188, size: 64)
+!188 = !DISubroutineType(types: !189)
+!189 = !{!71, !185, !185}
+!190 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !191, line: 136)
+!191 = !DISubprogram(name: "qsort", scope: !67, file: !67, line: 157, type: !192, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!192 = !DISubroutineType(types: !193)
+!193 = !{null, !25, !55, !55, !187}
+!194 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !195, line: 137)
+!195 = !DISubprogram(name: "abs", linkageName: "_Z3absx", scope: !196, file: !196, line: 117, type: !197, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!196 = !DIFile(filename: "/Users/sanne/Desktop/tools/llvm-repo/build/bin/../include/c++/v1/stdlib.h", directory: "/Volumes/Repositories/projects/talks/testing-and-verifying-multithreaded-programs")
+!197 = !DISubroutineType(types: !198)
+!198 = !{!84, !84}
+!199 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !200, line: 138)
+!200 = !DISubprogram(name: "labs", scope: !67, file: !67, line: 145, type: !201, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!201 = !DISubroutineType(types: !202)
+!202 = !{!16, !16}
+!203 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !204, line: 140)
+!204 = !DISubprogram(name: "llabs", scope: !67, file: !67, line: 149, type: !197, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!205 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !206, line: 142)
+!206 = !DISubprogram(name: "div", linkageName: "_Z3divxx", scope: !196, file: !196, line: 122, type: !207, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!207 = !DISubroutineType(types: !208)
+!208 = !{!80, !84, !84}
+!209 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !210, line: 143)
+!210 = !DISubprogram(name: "ldiv", scope: !67, file: !67, line: 146, type: !211, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!211 = !DISubroutineType(types: !212)
+!212 = !{!74, !16, !16}
+!213 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !214, line: 145)
+!214 = !DISubprogram(name: "lldiv", scope: !67, file: !67, line: 150, type: !207, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!215 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !216, line: 147)
+!216 = !DISubprogram(name: "mblen", scope: !67, file: !67, line: 153, type: !217, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!217 = !DISubroutineType(types: !218)
+!218 = !{!71, !91, !55}
+!219 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !220, line: 148)
+!220 = !DISubprogram(name: "mbtowc", scope: !67, file: !67, line: 155, type: !221, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!221 = !DISubroutineType(types: !222)
+!222 = !{!71, !223, !91, !55}
+!223 = !DIDerivedType(tag: DW_TAG_pointer_type, baseType: !224, size: 64)
+!224 = !DIBasicType(name: "wchar_t", size: 32, encoding: DW_ATE_signed)
+!225 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !226, line: 149)
+!226 = !DISubprogram(name: "wctomb", scope: !67, file: !67, line: 192, type: !227, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!227 = !DISubroutineType(types: !228)
+!228 = !{!71, !110, !224}
+!229 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !230, line: 150)
+!230 = !DISubprogram(name: "mbstowcs", scope: !67, file: !67, line: 154, type: !231, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!231 = !DISubroutineType(types: !232)
+!232 = !{!55, !223, !91, !55}
+!233 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !234, line: 151)
+!234 = !DISubprogram(name: "wcstombs", scope: !67, file: !67, line: 191, type: !235, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!235 = !DISubroutineType(types: !236)
+!236 = !{!55, !110, !237, !55}
+!237 = !DIDerivedType(tag: DW_TAG_pointer_type, baseType: !238, size: 64)
+!238 = !DIDerivedType(tag: DW_TAG_const_type, baseType: !224)
+!239 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !240, line: 153)
+!240 = !DIDerivedType(tag: DW_TAG_typedef, name: "int8_t", file: !241, line: 30, baseType: !242)
+!241 = !DIFile(filename: "/usr/include/sys/_types/_int8_t.h", directory: "/Volumes/Repositories/projects/talks/testing-and-verifying-multithreaded-programs")
+!242 = !DIBasicType(name: "signed char", size: 8, encoding: DW_ATE_signed_char)
+!243 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !244, line: 154)
+!244 = !DIDerivedType(tag: DW_TAG_typedef, name: "int16_t", file: !245, line: 30, baseType: !246)
+!245 = !DIFile(filename: "/usr/include/sys/_types/_int16_t.h", directory: "/Volumes/Repositories/projects/talks/testing-and-verifying-multithreaded-programs")
+!246 = !DIBasicType(name: "short", size: 16, encoding: DW_ATE_signed)
+!247 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !248, line: 155)
+!248 = !DIDerivedType(tag: DW_TAG_typedef, name: "int32_t", file: !249, line: 30, baseType: !71)
+!249 = !DIFile(filename: "/usr/include/sys/_types/_int32_t.h", directory: "/Volumes/Repositories/projects/talks/testing-and-verifying-multithreaded-programs")
+!250 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !251, line: 156)
+!251 = !DIDerivedType(tag: DW_TAG_typedef, name: "int64_t", file: !252, line: 30, baseType: !84)
+!252 = !DIFile(filename: "/usr/include/sys/_types/_int64_t.h", directory: "/Volumes/Repositories/projects/talks/testing-and-verifying-multithreaded-programs")
+!253 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !254, line: 158)
+!254 = !DIDerivedType(tag: DW_TAG_typedef, name: "uint8_t", file: !255, line: 31, baseType: !256)
+!255 = !DIFile(filename: "/usr/include/_types/_uint8_t.h", directory: "/Volumes/Repositories/projects/talks/testing-and-verifying-multithreaded-programs")
+!256 = !DIBasicType(name: "unsigned char", size: 8, encoding: DW_ATE_unsigned_char)
+!257 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !258, line: 159)
+!258 = !DIDerivedType(tag: DW_TAG_typedef, name: "uint16_t", file: !259, line: 31, baseType: !260)
+!259 = !DIFile(filename: "/usr/include/_types/_uint16_t.h", directory: "/Volumes/Repositories/projects/talks/testing-and-verifying-multithreaded-programs")
+!260 = !DIBasicType(name: "unsigned short", size: 16, encoding: DW_ATE_unsigned)
+!261 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !262, line: 160)
+!262 = !DIDerivedType(tag: DW_TAG_typedef, name: "uint32_t", file: !263, line: 31, baseType: !145)
+!263 = !DIFile(filename: "/usr/include/_types/_uint32_t.h", directory: "/Volumes/Repositories/projects/talks/testing-and-verifying-multithreaded-programs")
+!264 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !265, line: 161)
+!265 = !DIDerivedType(tag: DW_TAG_typedef, name: "uint64_t", file: !266, line: 31, baseType: !136)
+!266 = !DIFile(filename: "/usr/include/_types/_uint64_t.h", directory: "/Volumes/Repositories/projects/talks/testing-and-verifying-multithreaded-programs")
+!267 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !268, line: 163)
+!268 = !DIDerivedType(tag: DW_TAG_typedef, name: "int_least8_t", file: !269, line: 29, baseType: !240)
+!269 = !DIFile(filename: "/usr/include/stdint.h", directory: "/Volumes/Repositories/projects/talks/testing-and-verifying-multithreaded-programs")
+!270 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !271, line: 164)
+!271 = !DIDerivedType(tag: DW_TAG_typedef, name: "int_least16_t", file: !269, line: 30, baseType: !244)
+!272 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !273, line: 165)
+!273 = !DIDerivedType(tag: DW_TAG_typedef, name: "int_least32_t", file: !269, line: 31, baseType: !248)
+!274 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !275, line: 166)
+!275 = !DIDerivedType(tag: DW_TAG_typedef, name: "int_least64_t", file: !269, line: 32, baseType: !251)
+!276 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !277, line: 168)
+!277 = !DIDerivedType(tag: DW_TAG_typedef, name: "uint_least8_t", file: !269, line: 33, baseType: !254)
+!278 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !279, line: 169)
+!279 = !DIDerivedType(tag: DW_TAG_typedef, name: "uint_least16_t", file: !269, line: 34, baseType: !258)
+!280 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !281, line: 170)
+!281 = !DIDerivedType(tag: DW_TAG_typedef, name: "uint_least32_t", file: !269, line: 35, baseType: !262)
+!282 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !283, line: 171)
+!283 = !DIDerivedType(tag: DW_TAG_typedef, name: "uint_least64_t", file: !269, line: 36, baseType: !265)
+!284 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !285, line: 173)
+!285 = !DIDerivedType(tag: DW_TAG_typedef, name: "int_fast8_t", file: !269, line: 40, baseType: !240)
+!286 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !287, line: 174)
+!287 = !DIDerivedType(tag: DW_TAG_typedef, name: "int_fast16_t", file: !269, line: 41, baseType: !244)
+!288 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !289, line: 175)
+!289 = !DIDerivedType(tag: DW_TAG_typedef, name: "int_fast32_t", file: !269, line: 42, baseType: !248)
+!290 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !291, line: 176)
+!291 = !DIDerivedType(tag: DW_TAG_typedef, name: "int_fast64_t", file: !269, line: 43, baseType: !251)
+!292 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !293, line: 178)
+!293 = !DIDerivedType(tag: DW_TAG_typedef, name: "uint_fast8_t", file: !269, line: 44, baseType: !254)
+!294 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !295, line: 179)
+!295 = !DIDerivedType(tag: DW_TAG_typedef, name: "uint_fast16_t", file: !269, line: 45, baseType: !258)
+!296 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !297, line: 180)
+!297 = !DIDerivedType(tag: DW_TAG_typedef, name: "uint_fast32_t", file: !269, line: 46, baseType: !262)
+!298 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !299, line: 181)
+!299 = !DIDerivedType(tag: DW_TAG_typedef, name: "uint_fast64_t", file: !269, line: 47, baseType: !265)
+!300 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !301, line: 183)
+!301 = !DIDerivedType(tag: DW_TAG_typedef, name: "intptr_t", file: !302, line: 30, baseType: !303)
+!302 = !DIFile(filename: "/usr/include/sys/_types/_intptr_t.h", directory: "/Volumes/Repositories/projects/talks/testing-and-verifying-multithreaded-programs")
+!303 = !DIDerivedType(tag: DW_TAG_typedef, name: "__darwin_intptr_t", file: !58, line: 49, baseType: !16)
+!304 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !305, line: 184)
+!305 = !DIDerivedType(tag: DW_TAG_typedef, name: "uintptr_t", file: !306, line: 30, baseType: !59)
+!306 = !DIFile(filename: "/usr/include/sys/_types/_uintptr_t.h", directory: "/Volumes/Repositories/projects/talks/testing-and-verifying-multithreaded-programs")
+!307 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !308, line: 186)
+!308 = !DIDerivedType(tag: DW_TAG_typedef, name: "intmax_t", file: !309, line: 32, baseType: !16)
+!309 = !DIFile(filename: "/usr/include/_types/_intmax_t.h", directory: "/Volumes/Repositories/projects/talks/testing-and-verifying-multithreaded-programs")
+!310 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !311, line: 187)
+!311 = !DIDerivedType(tag: DW_TAG_typedef, name: "uintmax_t", file: !312, line: 32, baseType: !59)
+!312 = !DIFile(filename: "/usr/include/_types/_uintmax_t.h", directory: "/Volumes/Repositories/projects/talks/testing-and-verifying-multithreaded-programs")
+!313 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !55, line: 69)
+!314 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !315, line: 70)
+!315 = !DISubprogram(name: "memcpy", scope: !316, file: !316, line: 72, type: !317, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!316 = !DIFile(filename: "/usr/include/string.h", directory: "/Volumes/Repositories/projects/talks/testing-and-verifying-multithreaded-programs")
+!317 = !DISubroutineType(types: !318)
+!318 = !{!25, !25, !185, !55}
+!319 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !320, line: 71)
+!320 = !DISubprogram(name: "memmove", scope: !316, file: !316, line: 73, type: !317, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!321 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !322, line: 72)
+!322 = !DISubprogram(name: "strcpy", scope: !316, file: !316, line: 79, type: !323, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!323 = !DISubroutineType(types: !324)
+!324 = !{!110, !110, !91}
+!325 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !326, line: 73)
+!326 = !DISubprogram(name: "strncpy", scope: !316, file: !316, line: 85, type: !327, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!327 = !DISubroutineType(types: !328)
+!328 = !{!110, !110, !91, !55}
+!329 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !330, line: 74)
+!330 = !DISubprogram(name: "strcat", scope: !316, file: !316, line: 75, type: !323, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!331 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !332, line: 75)
+!332 = !DISubprogram(name: "strncat", scope: !316, file: !316, line: 83, type: !327, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!333 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !334, line: 76)
+!334 = !DISubprogram(name: "memcmp", scope: !316, file: !316, line: 71, type: !335, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!335 = !DISubroutineType(types: !336)
+!336 = !{!71, !185, !185, !55}
+!337 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !338, line: 77)
+!338 = !DISubprogram(name: "strcmp", scope: !316, file: !316, line: 77, type: !339, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!339 = !DISubroutineType(types: !340)
+!340 = !{!71, !91, !91}
+!341 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !342, line: 78)
+!342 = !DISubprogram(name: "strncmp", scope: !316, file: !316, line: 84, type: !343, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!343 = !DISubroutineType(types: !344)
+!344 = !{!71, !91, !91, !55}
+!345 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !346, line: 79)
+!346 = !DISubprogram(name: "strcoll", scope: !316, file: !316, line: 78, type: !339, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!347 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !348, line: 80)
+!348 = !DISubprogram(name: "strxfrm", scope: !316, file: !316, line: 91, type: !349, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!349 = !DISubroutineType(types: !350)
+!350 = !{!55, !110, !91, !55}
+!351 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !352, line: 81)
+!352 = !DISubprogram(name: "memchr", linkageName: "_Z6memchrUa9enable_ifIXLb1EEEPvim", scope: !353, file: !353, line: 99, type: !354, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!353 = !DIFile(filename: "/Users/sanne/Desktop/tools/llvm-repo/build/bin/../include/c++/v1/string.h", directory: "/Volumes/Repositories/projects/talks/testing-and-verifying-multithreaded-programs")
+!354 = !DISubroutineType(types: !355)
+!355 = !{!25, !25, !71, !55}
+!356 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !357, line: 82)
+!357 = !DISubprogram(name: "strchr", linkageName: "_Z6strchrUa9enable_ifIXLb1EEEPci", scope: !353, file: !353, line: 78, type: !358, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!358 = !DISubroutineType(types: !359)
+!359 = !{!110, !110, !71}
+!360 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !361, line: 83)
+!361 = !DISubprogram(name: "strcspn", scope: !316, file: !316, line: 80, type: !362, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!362 = !DISubroutineType(types: !363)
+!363 = !{!55, !91, !91}
+!364 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !365, line: 84)
+!365 = !DISubprogram(name: "strpbrk", linkageName: "_Z7strpbrkUa9enable_ifIXLb1EEEPcPKc", scope: !353, file: !353, line: 85, type: !323, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!366 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !367, line: 85)
+!367 = !DISubprogram(name: "strrchr", linkageName: "_Z7strrchrUa9enable_ifIXLb1EEEPci", scope: !353, file: !353, line: 92, type: !358, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!368 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !369, line: 86)
+!369 = !DISubprogram(name: "strspn", scope: !316, file: !316, line: 88, type: !362, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!370 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !371, line: 87)
+!371 = !DISubprogram(name: "strstr", linkageName: "_Z6strstrUa9enable_ifIXLb1EEEPcPKc", scope: !353, file: !353, line: 106, type: !323, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!372 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !373, line: 89)
+!373 = !DISubprogram(name: "strtok", scope: !316, file: !316, line: 90, type: !323, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!374 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !375, line: 91)
+!375 = !DISubprogram(name: "memset", scope: !316, file: !316, line: 74, type: !354, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!376 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !377, line: 92)
+!377 = !DISubprogram(name: "strerror", linkageName: "\01_strerror", scope: !316, file: !316, line: 81, type: !378, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!378 = !DISubroutineType(types: !379)
+!379 = !{!110, !71}
+!380 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !381, line: 93)
+!381 = !DISubprogram(name: "strlen", scope: !316, file: !316, line: 82, type: !382, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!382 = !DISubroutineType(types: !383)
+!383 = !{!55, !91}
+!384 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !385, line: 56)
+!385 = !DIDerivedType(tag: DW_TAG_typedef, name: "clock_t", file: !386, line: 30, baseType: !387)
+!386 = !DIFile(filename: "/usr/include/sys/_types/_clock_t.h", directory: "/Volumes/Repositories/projects/talks/testing-and-verifying-multithreaded-programs")
+!387 = !DIDerivedType(tag: DW_TAG_typedef, name: "__darwin_clock_t", file: !58, line: 117, baseType: !59)
+!388 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !55, line: 57)
+!389 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !390, line: 58)
+!390 = !DIDerivedType(tag: DW_TAG_typedef, name: "time_t", file: !391, line: 30, baseType: !392)
+!391 = !DIFile(filename: "/usr/include/sys/_types/_time_t.h", directory: "/Volumes/Repositories/projects/talks/testing-and-verifying-multithreaded-programs")
+!392 = !DIDerivedType(tag: DW_TAG_typedef, name: "__darwin_time_t", file: !58, line: 120, baseType: !16)
+!393 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !394, line: 59)
+!394 = distinct !DICompositeType(tag: DW_TAG_structure_type, name: "tm", file: !395, line: 74, size: 448, elements: !396, identifier: "_ZTS2tm")
+!395 = !DIFile(filename: "/usr/include/time.h", directory: "/Volumes/Repositories/projects/talks/testing-and-verifying-multithreaded-programs")
+!396 = !{!397, !398, !399, !400, !401, !402, !403, !404, !405, !406, !407}
+!397 = !DIDerivedType(tag: DW_TAG_member, name: "tm_sec", scope: !394, file: !395, line: 75, baseType: !71, size: 32)
+!398 = !DIDerivedType(tag: DW_TAG_member, name: "tm_min", scope: !394, file: !395, line: 76, baseType: !71, size: 32, offset: 32)
+!399 = !DIDerivedType(tag: DW_TAG_member, name: "tm_hour", scope: !394, file: !395, line: 77, baseType: !71, size: 32, offset: 64)
+!400 = !DIDerivedType(tag: DW_TAG_member, name: "tm_mday", scope: !394, file: !395, line: 78, baseType: !71, size: 32, offset: 96)
+!401 = !DIDerivedType(tag: DW_TAG_member, name: "tm_mon", scope: !394, file: !395, line: 79, baseType: !71, size: 32, offset: 128)
+!402 = !DIDerivedType(tag: DW_TAG_member, name: "tm_year", scope: !394, file: !395, line: 80, baseType: !71, size: 32, offset: 160)
+!403 = !DIDerivedType(tag: DW_TAG_member, name: "tm_wday", scope: !394, file: !395, line: 81, baseType: !71, size: 32, offset: 192)
+!404 = !DIDerivedType(tag: DW_TAG_member, name: "tm_yday", scope: !394, file: !395, line: 82, baseType: !71, size: 32, offset: 224)
+!405 = !DIDerivedType(tag: DW_TAG_member, name: "tm_isdst", scope: !394, file: !395, line: 83, baseType: !71, size: 32, offset: 256)
+!406 = !DIDerivedType(tag: DW_TAG_member, name: "tm_gmtoff", scope: !394, file: !395, line: 84, baseType: !16, size: 64, offset: 320)
+!407 = !DIDerivedType(tag: DW_TAG_member, name: "tm_zone", scope: !394, file: !395, line: 85, baseType: !110, size: 64, offset: 384)
+!408 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !409, line: 60)
+!409 = !DISubprogram(name: "clock", linkageName: "\01_clock", scope: !395, file: !395, line: 108, type: !410, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!410 = !DISubroutineType(types: !411)
+!411 = !{!385}
+!412 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !413, line: 61)
+!413 = !DISubprogram(name: "difftime", scope: !395, file: !395, line: 110, type: !414, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!414 = !DISubroutineType(types: !415)
+!415 = !{!90, !390, !390}
+!416 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !417, line: 62)
+!417 = !DISubprogram(name: "mktime", linkageName: "\01_mktime", scope: !395, file: !395, line: 114, type: !418, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!418 = !DISubroutineType(types: !419)
+!419 = !{!390, !420}
+!420 = !DIDerivedType(tag: DW_TAG_pointer_type, baseType: !394, size: 64)
+!421 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !422, line: 63)
+!422 = !DISubprogram(name: "time", scope: !395, file: !395, line: 117, type: !423, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!423 = !DISubroutineType(types: !424)
+!424 = !{!390, !425}
+!425 = !DIDerivedType(tag: DW_TAG_pointer_type, baseType: !390, size: 64)
+!426 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !427, line: 65)
+!427 = !DISubprogram(name: "asctime", scope: !395, file: !395, line: 107, type: !428, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!428 = !DISubroutineType(types: !429)
+!429 = !{!110, !430}
+!430 = !DIDerivedType(tag: DW_TAG_pointer_type, baseType: !431, size: 64)
+!431 = !DIDerivedType(tag: DW_TAG_const_type, baseType: !394)
+!432 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !433, line: 66)
+!433 = !DISubprogram(name: "ctime", scope: !395, file: !395, line: 109, type: !434, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!434 = !DISubroutineType(types: !435)
+!435 = !{!110, !436}
+!436 = !DIDerivedType(tag: DW_TAG_pointer_type, baseType: !437, size: 64)
+!437 = !DIDerivedType(tag: DW_TAG_const_type, baseType: !390)
+!438 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !439, line: 67)
+!439 = !DISubprogram(name: "gmtime", scope: !395, file: !395, line: 112, type: !440, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!440 = !DISubroutineType(types: !441)
+!441 = !{!420, !436}
+!442 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !443, line: 68)
+!443 = !DISubprogram(name: "localtime", scope: !395, file: !395, line: 113, type: !440, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!444 = !DIImportedEntity(tag: DW_TAG_imported_declaration, scope: !49, entity: !445, line: 70)
+!445 = !DISubprogram(name: "strftime", linkageName: "\01_strftime", scope: !395, file: !395, line: 115, type: !446, isLocal: false, isDefinition: false, flags: DIFlagPrototyped, isOptimized: true)
+!446 = !DISubroutineType(types: !447)
+!447 = !{!55, !110, !55, !91, !430}
+!448 = !DIImportedEntity(tag: DW_TAG_imported_module, scope: !449, entity: !451, line: 1156)
+!449 = !DINamespace(name: "chrono", scope: !49, file: !450, line: 316)
+!450 = !DIFile(filename: "/Users/sanne/Desktop/tools/llvm-repo/build/bin/../include/c++/v1/chrono", directory: "/Volumes/Repositories/projects/talks/testing-and-verifying-multithreaded-programs")
+!451 = !DINamespace(name: "chrono_literals", scope: !452, file: !450, line: 1085, exportSymbols: true)
+!452 = !DINamespace(name: "literals", scope: !49, file: !450, line: 1083, exportSymbols: true)
+!453 = !{i32 2, !"Dwarf Version", i32 4}
+!454 = !{i32 2, !"Debug Info Version", i32 3}
+!455 = !{i32 1, !"PIC Level", i32 2}
+!456 = !{!"clang version 4.0.0 (http://llvm.org/git/clang a6a1d3f3aa6c1d0018d84c3d6c26a552075982ab) (http://llvm.org/git/llvm 6a630d742074be775ca242c52071f5dcc5538b5b)"}
+!457 = distinct !DISubprogram(name: "thread1", linkageName: "_Z7thread1Pv", scope: !3, file: !3, line: 12, type: !458, isLocal: false, isDefinition: true, scopeLine: 13, flags: DIFlagPrototyped, isOptimized: true, unit: !2, variables: !460)
+!458 = !DISubroutineType(types: !459)
+!459 = !{!25, !25}
+!460 = !{!461}
+!461 = !DILocalVariable(name: "arg", arg: 1, scope: !457, file: !3, line: 12, type: !25)
+!462 = !DILocation(line: 12, column: 21, scope: !457)
+!463 = !DIExpression()
+!464 = !DILocation(line: 14, column: 4, scope: !457)
+!465 = !DILocation(line: 15, column: 4, scope: !457)
+!466 = !DILocation(line: 16, column: 4, scope: !457)
+!467 = !DILocation(line: 17, column: 4, scope: !457)
+!468 = !DILocation(line: 18, column: 4, scope: !457)
+!469 = distinct !DISubprogram(name: "thread2", linkageName: "_Z7thread2Pv", scope: !3, file: !3, line: 21, type: !458, isLocal: false, isDefinition: true, scopeLine: 22, flags: DIFlagPrototyped, isOptimized: true, unit: !2, variables: !470)
+!470 = !{!471}
+!471 = !DILocalVariable(name: "arg", arg: 1, scope: !469, file: !3, line: 21, type: !25)
+!472 = !DILocation(line: 21, column: 21, scope: !469)
+!473 = !DILocation(line: 23, column: 4, scope: !469)
+!474 = !DILocation(line: 24, column: 4, scope: !469)
+!475 = !DILocation(line: 25, column: 4, scope: !469)
+!476 = !DILocation(line: 26, column: 4, scope: !469)
+!477 = !DILocation(line: 27, column: 4, scope: !469)
+!478 = distinct !DISubprogram(name: "main", scope: !3, file: !3, line: 30, type: !139, isLocal: false, isDefinition: true, scopeLine: 31, flags: DIFlagPrototyped, isOptimized: true, unit: !2, variables: !4)
+!479 = !DILocation(line: 32, column: 4, scope: !478)
+!480 = !DILocation(line: 33, column: 4, scope: !478)
+!481 = !DILocation(line: 35, column: 4, scope: !478)
+!482 = !DILocation(line: 36, column: 4, scope: !478)
+!483 = !DILocation(line: 38, column: 17, scope: !478)
+!484 = !{!485, !485, i64 0}
+!485 = !{!"any pointer", !486, i64 0}
+!486 = !{!"omnipotent char", !487, i64 0}
+!487 = !{!"Simple C++ TBAA"}
+!488 = !DILocation(line: 38, column: 4, scope: !478)
+!489 = !DILocation(line: 39, column: 17, scope: !478)
+!490 = !DILocation(line: 39, column: 4, scope: !478)
+!491 = !DILocation(line: 41, column: 4, scope: !478)
