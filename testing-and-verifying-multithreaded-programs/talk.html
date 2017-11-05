@@ -9,11 +9,13 @@
       <textarea id="source">
 
 
-class: slide_title
 
-<!-- section:Title
-{
--->
+
+
+<!-- section:Title -->
+
+class: slide_title, no_number
+count: false
 
 # Automated Verification of Multi-Threaded Programs
 ### Susanne van den Elsen
@@ -23,7 +25,7 @@ Software Developer @ Native Instruments
 November 10, 2017
 
 ???
-Welcome everybody, thank you for coming, 
+Good afternoon, welcome everybody and thank you for coming,
 - My name is Susanne van den Elsen and I am a C++ Software Developer @ Native Instruments
 - Before joining NI I was doing research @ MPI-SWS
 - Research focus: automated software verification
@@ -31,10 +33,6 @@ Welcome everybody, thank you for coming,
   which is also the topic of my talk today
 - In particular, I would like to give an introduction to systematic exploration of multi-threaded
   programs and demonstrate a systematic exploration tool I developed in the context of my research.
-
-BRIDGE: 
-Before I do that, let me first provide an insight into why most standard
-testing/debugging tools are insufficient for verifying multi-threaded programs.
 
 <!--
 }
@@ -49,14 +47,16 @@ end_section:section:Title -->
 -->
 
 ---
+class: slide_section, no_number
+count: false
 layout: false
-class: slide_section
 # Challenges in Testing Multi-Threaded Programs
 
 ???
-BRIDGE:
-First I would like to give you an insight in the challenges of testing multi-threaded programs and 
-why traditional testing and debugging tools are not sufficient for meeting these challenges
+BRIDGE: 
+Before I do that, let me first give you an insight in the challenges of testing multi-threaded 
+programs and why traditional testing and debugging tools are not sufficient for meeting these 
+challenges
 
 <!-- subsection:Concurrency Bugs
       {
@@ -126,10 +126,6 @@ and Helgrind.
 --
 count: false
 ##### ThreadSanitizer and Helgrind
-
-???
-- These tools are very successful and have uncovered many concurrency bugs, particularly dataraces, 
-in large applications.
 
 <!-- TODO: Am I going to branch off TSan/Helgrind here and explain high-level how they work? -->
 
@@ -232,6 +228,13 @@ The program to be analysed is compiled as usual but with debug symbols.
 Then the binary is run on Valgrind's synthetic CPU, after the Helgrind tool has added 
 instrumentation code to the it.
 
+BRIDGE:
+- ThreadSanitizer and Helgrind are very successful and have uncovered many concurrency bugs, 
+particularly dataraces, in large applications. 
+- However, these tools depend on the error actually being detectable in the execution they 
+happended to monitor. These tools do not meet the second challenge that multi-threading poses for 
+testing: nondeterminism.
+
 <!-- TODO: Explain how lock inversion analysis works? -->
 
 <!-- <<< -->
@@ -239,7 +242,6 @@ instrumentation code to the it.
 <!--
          }
 end_subsubsection:Tools -->
-
 
 <!-- subsection:Nondeterminism
       {
@@ -253,6 +255,9 @@ layout: true
 <!-- >>> Slide -->
 
 ---
+
+???
+Multi-threading introduces a very specific layer of nondeterminism to a program.
 
 --
 count: false
@@ -282,25 +287,9 @@ count: false
 ???
 E.g. is the current thread slowed down by cache misses
 
-
-???
-BRIDGE:
-We've seen program analysis tools that are specifically tailored to detect potential concurrency 
-errors in multi-threaded software. However, these tools depend on the error actually being 
-detectable in the execution they happended to monitor. These tools do not meet the second challenge
-that multi-threading poses for testing: nondeterminism.
-
 <!-- TODO: slide -->
-* Nondeterminism itself not specific to multi-threaded programs
-* Single-threaded programs can have sources of nondeterminism, such as user input or randomization
-* Threads add a different layer of nondeterminism:
-   - The total order in which the threads get scheduled is outsourced to the OS scheduler and not 
-   under the programmer's control
-   - It may depend on e.g.:
-      - load on the maschine 
-      - OS scheduler strategy
-   - The total order on which the threads operate on shared data often has an influence the 
-   program's outcome
+- The total order on which the threads operate on shared data often has an influence the program's 
+outcome
 -->
 
 <!-- <<< -->
@@ -336,10 +325,10 @@ count: false
 
 <!-- <<< -->
 
-<!--
+???
 BRIDGE:
-Introduce two small example programs that demonstrate the challenge of nondeterminism for testing.
-These programs will later be used to demonstrate systematic exploration.
+Let's look at two small example programs that demonstrate the challenge of nondeterminism for 
+testing. These programs will later be used to demonstrate systematic exploration.
 -->
 
 <!-- example:bank_account.cpp
@@ -361,6 +350,12 @@ struct bank_account { atomic<int> balance; }
 
 void transfer(bank_account& from, int amount, bank_account& to);
 ```
+
+???
+A bank account has a balance and there is a function for transferring a given amount of money from
+one bank account to the other.
+Specification of the program is that after every transfer, a balance is positive.
+
 --
 count: false
 ```cpp
@@ -376,6 +371,14 @@ TEST(BalancesArePositive)
    ASSERT(all_of(accounts.begin(), accounts.end(), [](auto balance){ positive(balance); }));
 }
 ```
+
+???
+This is the test case that check this assertion.
+- There are two accounts, one with an initial balance of 100, and one with an initial balance of 0
+- Two adversary threads, Mallory and Marvin both try to transfer 100 euros from the first to the 
+  second account.
+- Obviously, if the program meets the specification, at least one of them should not succeed
+- The assertion states that after both threads are joined, both accounts have positive balance.
 
 <!-- <<< -->
 
@@ -396,6 +399,13 @@ void transfer(bank_account& from, int amount, bank_account& to)
    }
 }
 ```
+
+???
+Here is an *attempt* at an implementation of the bank account.
+1. atomically read the balance of the sender's account1
+2. check if the balance is sufficient for transfering the given amount of money out of it 
+3. if so, atomically add the amount to the receiver's account and subsequently subtract the same 
+amount from the sender's account.
 
 --
 count: false
@@ -654,194 +664,13 @@ end_section:section:Challenges in Testing Multi-Threaded Programs -->
 
 
 
-<!-- section:Systematic Exploration
-   {
--->
+<!-- section:Systematic Exploration -->
 
 ---
-layout: false
-class: slide_section
-# Systematic Exploration
-
----
-layout: true
-#### Systematic Exploration
-
-<!-- >>> Slide -->
-
----
-
-# The Idea
-
---
-count: false
-- Take control over the interleaving of the threads' "visible instructions"
-
---
-count: false
-- Systematically drive the program under test through a set of relevant schedules
-<!-- NOTE: schedules are the test-cases -->
-
---
-count: false
-   - Relevant schedules are computed on-the-fly, based on the recording of the previous execution
 
 --
 count: false
 - Buggy schedules are stored so that the bug can be reproduced
-
-<!-- <<< -->
-
----
-layout: true
-#### Systematic Exploration
-# RecordReplay library: Taking "Control" over the Scheduler
-
-<!-- >>> Slide -->
-
----
-
-<div class="mermaid" style="align: center; width: 60%; margin: 0px auto;">
-   graph TD
-      sut[Souce Code] --> |Clang| ir[LLVM IR]
-      ir --> |RecordReplay Instrumentation Pass| instr_ir[Instrumented IR]
-      scheduler[Run Time Scheduler Library]
-      instr_exe[Instrumented Executable]
-      instr_ir --> instr_exe
-      scheduler --> instr_exe
-</div>
-
-<!-- NOTE: LLVM IR: low-level assembly-like language that is designed so that many higher level 
-langauges can be mapped to it;
--->
-
-<!-- <<< -->
-
-<!-- >>> Slide -->
-
----
-
-<div class="code_right" style="width: 100%;"><pre><code class="language-cpp">
-   ; Function Attrs: norecurse ssp uwtable
-   define i32 @main() local_unnamed_addr #3 !dbg !478 {
-   entry:
-     call void @wrapper_register_main_thread(), !dbg !479
-     call void @wrapper_enter_function(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @_recrep_function_name_main, i32 0, i32 0)), !dbg !479
-     %call = tail call i32 @pthread_mutex_init(%struct._opaque_pthread_mutex_t* nonnull @m1, %struct._opaque_pthread_mutexattr_t* null), !dbg !479
-     %call1 = tail call i32 @pthread_mutex_init(%struct._opaque_pthread_mutex_t* nonnull @m2, %struct._opaque_pthread_mutexattr_t* null), !dbg !480
-     %0 = call i32 @wrapper_post_spawn_instruction(%struct._opaque_pthread_t** @thr1, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/deadlock_pthread.cpp", i32 0, i32 0), i32 35)
-     %call2 = tail call i32 @pthread_create(%struct._opaque_pthread_t** nonnull @thr1, %struct._opaque_pthread_attr_t* null, i8* (i8*)* nonnull @_Z7thread1Pv, i8* null), !dbg !481
-     call void @wrapper_register_thread(%struct._opaque_pthread_t** @thr1, i32 %0)
-     %1 = call i32 @wrapper_post_spawn_instruction(%struct._opaque_pthread_t** @thr2, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/deadlock_pthread.cpp", i32 0, i32 0), i32 36)
-     %call3 = tail call i32 @pthread_create(%struct._opaque_pthread_t** nonnull @thr2, %struct._opaque_pthread_attr_t* null, i8* (i8*)* nonnull @_Z7thread2Pv, i8* null), !dbg !482
-     call void @wrapper_register_thread(%struct._opaque_pthread_t** @thr2, i32 %1)
-     call void @wrapper_post_memory_instruction(i32 0, i8* bitcast (%struct._opaque_pthread_t** @thr1 to i8*), i8* getelementptr inbounds ([5 x i8], [5 x i8]* @_mem_loc_name_thr1, i32 0, i32 0), i8 0, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/deadlock_pthread.cpp", i32 0, i32 0), i32 38)
-     %2 = load %struct._opaque_pthread_t*, %struct._opaque_pthread_t** @thr1, align 8, !dbg !483, !tbaa !484
-     call void @wrapper_post_pthread_join_instruction(%struct._opaque_pthread_t* %2, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/deadlock_pthread.cpp", i32 0, i32 0), i32 38)
-     %call4 = tail call i32 @"\01_pthread_join"(%struct._opaque_pthread_t* %2, i8** null), !dbg !488
-     call void @wrapper_post_memory_instruction(i32 0, i8* bitcast (%struct._opaque_pthread_t** @thr2 to i8*), i8* getelementptr inbounds ([5 x i8], [5 x i8]* @_mem_loc_name_thr2, i32 0, i32 0), i8 0, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/deadlock_pthread.cpp", i32 0, i32 0), i32 39)
-     %3 = load %struct._opaque_pthread_t*, %struct._opaque_pthread_t** @thr2, align 8, !dbg !489, !tbaa !484
-     call void @wrapper_post_pthread_join_instruction(%struct._opaque_pthread_t* %3, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/deadlock_pthread.cpp", i32 0, i32 0), i32 39)
-     %call5 = tail call i32 @"\01_pthread_join"(%struct._opaque_pthread_t* %3, i8** null), !dbg !490
-     call void @wrapper_exit_function(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @_recrep_function_name_main, i32 0, i32 0)), !dbg !491
-     ret i32 0, !dbg !491
-   }
-</code></pre></div>
-
-<!-- <<< -->
-
-<!-- >>> Slide -->
-
----
-
-<div class="code_right" style="width: 100%;"><pre><code class="language-cpp">
-   ; Function Attrs: noreturn ssp uwtable
-   define noalias nonnull i8* @_Z7thread1Pv(i8* nocapture readnone %arg) #0 !dbg !457 {
-   entry:
-     call void @wrapper_enter_function(i8* getelementptr inbounds ([13 x i8], [13 x i8]* @_recrep_function_name__Z7thread1Pv, i32 0, i32 0)), !dbg !462
-     tail call void @llvm.dbg.value(metadata i8* %arg, i64 0, metadata !461, metadata !463), !dbg !462
-     call void @wrapper_post_lock_instruction(i32 0, i8* bitcast (%struct._opaque_pthread_mutex_t* @m1 to i8*), i8* getelementptr inbounds ([3 x i8], [3 x i8]* @_mem_loc_name_m1, i32 0, i32 0), i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/deadlock_pthread.cpp", i32 0, i32 0), i32 14)
-     %call = tail call i32 @pthread_mutex_lock(%struct._opaque_pthread_mutex_t* nonnull @m1), !dbg !464
-     call void @wrapper_post_lock_instruction(i32 0, i8* bitcast (%struct._opaque_pthread_mutex_t* @m2 to i8*), i8* getelementptr inbounds ([3 x i8], [3 x i8]* @_mem_loc_name_m2, i32 0, i32 0), i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/deadlock_pthread.cpp", i32 0, i32 0), i32 15)
-     %call1 = tail call i32 @pthread_mutex_lock(%struct._opaque_pthread_mutex_t* nonnull @m2), !dbg !465
-     call void @wrapper_post_lock_instruction(i32 1, i8* bitcast (%struct._opaque_pthread_mutex_t* @m2 to i8*), i8* getelementptr inbounds ([3 x i8], [3 x i8]* @_mem_loc_name_m2, i32 0, i32 0), i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/deadlock_pthread.cpp", i32 0, i32 0), i32 16)
-     %call2 = tail call i32 @pthread_mutex_unlock(%struct._opaque_pthread_mutex_t* nonnull @m2), !dbg !466
-     call void @wrapper_post_lock_instruction(i32 1, i8* bitcast (%struct._opaque_pthread_mutex_t* @m1 to i8*), i8* getelementptr inbounds ([3 x i8], [3 x i8]* @_mem_loc_name_m1, i32 0, i32 0), i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/deadlock_pthread.cpp", i32 0, i32 0), i32 17)
-     %call3 = tail call i32 @pthread_mutex_unlock(%struct._opaque_pthread_mutex_t* nonnull @m1), !dbg !467
-     call void @wrapper_exit_function(i8* getelementptr inbounds ([13 x i8], [13 x i8]* @_recrep_function_name__Z7thread1Pv, i32 0, i32 0)), !dbg !468
-     tail call void @pthread_exit(i8* null) #6, !dbg !468
-     unreachable, !dbg !468
-   }
-</code></pre></div>
-
-<!-- <<< -->
-
-<!-- >>> Slide -->
-
----
-
-<div class="code_left" style="width: 45%;">
-<pre><code class="language-cpp">
-scheduler::_spawn_thread(pthread_t pid)
-{
-   return next_thread_id();
-}
-</code></pre>
-
-<pre><code class="language-cpp">
-scheduler::_register_thread(pthread_t pid, int tid)
-{
-   m_thread_ids[pid] = tid;
-   m_controllable_threads[tid] = semaphore();
-}
-</code></pre>
-
-<!-- NOTE: associate with newly created thread a semaphore -->
-
-<pre><code class="language-cpp">
-scheduler::_post_instruction(instr_t instruction)
-{
-   m_task_pool[pthread_self()] = instruction;
-   m_controllable_threads[tid].wait();
-   
-   // perform the posted instruction
-   // and execute until the next wrapper call
-}
-</code></pre>
-</div>
-
---
-count: false
-<div class="code_right" style="width:54%;">
-<pre><code class="language-cpp">
-scheduler::scheduler_thread(schedule_t schedule)
-{
-   while (true)
-   {
-      execution_t execution;
-      
-      // wait until all active threads posted an instruction
-      
-      // compute the next thread to be scheduled
-      int next_tid = 
-         selection_strategy(m_task_pool, schedule);
-      
-      // record the task_pool and the next instruction
-      execution.push_back(m_task_pool, m_task_pool[next_tid]);
-      
-      // allow the next thread to progress until its next 
-      // wrapper call
-      m_controllable_threads[next_tid].post();
-   }
-}
-</code></pre>
-</div>
-
-<!-- 
-NOTE: 
-- at any point in time at most a single thread not blocked on their semaphore
-- underlying OS scheduler is forced to schedule the thread that particular thread
--->
 
 <!-- <<< -->
 
@@ -879,321 +708,9 @@ layout: true
       instr_exen --> |trace| exploration
 </div>
 
-<!-- <<< -->
-
----
-layout: true
-#### Systematic Exploration | Exploration Algorithms
-
----
-
 <!-- >>> Slide -->
 
----
-# Depth-First Exploration
 
---
-count: false
-```cpp
-depth_first_exploration(program)
-{
-   for (schedule : possible_schedules(program))
-   {
-      run(program, schedule);
-   }
-}
-```
-
-<!-- <<< -->
-
-<!-- >>> Slide -->
-
----
-# Combinatorial Explosion!
-<div class="h_example">data_race.cpp</div>
-.center[<img src='./generated_trees/data_race.cpp/depth_first_search/trees/full_schedules.png' width="1100"/>]
-
-<!-- 
-NOTE:
-Problem:    The number of possible thread interleavings grows exponentially with the size of the program!
-Solution:   Prune the tree of schedules to consider
-Challenge:  Coverage Guaranteees: quantify the class / number of interleavings seen
--->
-
-<!-- <<< -->
-
----
-layout: true
-#### Systematic Exploration | Exploration Algorithms
-# Bounded Exploration
-
-<!-- >>> Slide -->
-
----
-
-```cpp
-bounded_exploration(program, bound_function, bound_value)
-{
-   for (schedule : possible_schedules(program))
-   {
-      if (bound_function(schedule) <= bound_value)
-      {
-         run(program, schedule);
-      }
-   }
-}
-```
-
-<!-- 
-NOTE:
-bound function:  a function on schedules (e.g. length, number of context-switches, 
-                 number of preemptions)
--->
-
-<!-- <<< -->
-
-<!-- >>> Slide -->
-
----
-
-##### :( Incomplete
-With low bound value, not all program behaviors may be covered
-
---
-count: false
-
-##### :) Often sufficient (with right bound functions)
-[Musuvathi and Qadeer]: Empirically, many bugs in multi-threaded programs are exposed by *some* schedule with small number 
-of preemptions
-
---
-count: false
-
-##### :) Iterative
-[Musuvathi and Qadeer]: Start with low bound value and iteratively increase it to gain better coverage
-
---
-count: false
-
-##### :( Redundant
-- May still explore many schedules that lead to program executions with the same *behavior*
-- In the limit: same as depth first search
-
-<!-- NOTE: 
-This point has already has a notion of different schedules leading to the same behaviour,
-some with high and some with low preemption number
-
-Program with n threads that each execute at most k steps and a context-bound of c:
-O(n^(2c)k^c) schedules with c context-switches.
-Polynomial in k for fixed context-bound
--->
-
-<!-- <<< -->
-
----
-layout: true
-#### Systematic Exploration | Exploration Algorithms
-# Bounded Exploration
-<span class="h_example">background_thread.cpp, preemptions=0</span>
-
-<!-- >>> Slide -->
-
----
-
----
-count: false
-<div class="animation_bs" style="margin-right: 6em;">
-   .right[<img src='./generated_trees/background_thread.cpp/bounded_search/0/trees/animations/0.png' height="560"/>]
-</div>
----
-count: false 
-<div class="animation_bs" style="margin-right: 6em;">
-   .right[<img src='./generated_trees/background_thread.cpp/bounded_search/0/trees/animations/1.png' height="560"/>]
-</div>
----
-count: false 
-<div class="animation_bs" style="margin-right: 6em;">
-   .right[<img src='./generated_trees/background_thread.cpp/bounded_search/0/trees/animations/2.png' height="560"/>]
-</div>
-
-<!-- <<< -->
-
----
-layout: true
-#### Systematic Exploration | Exploration Algorithms
-# Bounded Exploration
-<span class="h_example">bank_account.cpp, preemptions=0</span>
-
-<!-- >>> Slide -->
-
----
-
----
-count: false
-<div class="animation_bs" style="margin-right: 6em;">
-   .right[<img src='./generated_trees/bank_account.cpp/bounded_search/0/trees/animations/0.png' height="560"/>]
-</div>
----
-count: false 
-<div class="animation_bs" style="margin-right: 6em;">
-   .right[<img src='./generated_trees/bank_account.cpp/bounded_search/0/trees/animations/1.png' height="560"/>]
-</div>
----
-count: false 
-<div class="animation_bs" style="margin-right: 6em;">
-   .right[<img src='./generated_trees/bank_account.cpp/bounded_search/0/trees/animations/2.png' height="560"/>]
-</div>
-
-<!-- <<< -->
-
----
-layout: true
-#### Systematic Exploration | Exploration Algorithms
-# Bounded Exploration
-<span class="h_example">bank_account.cpp, preemptions=1</span>
-
-<!-- >>> Slide -->
-
----
-
----
-count: false
-<div class="animation_bs" style="margin-right: 6em;">
-   .right[<img src='./generated_trees/bank_account.cpp/bounded_search/1/trees/animations/0.png' height="560"/>]
-</div>
----
-count: false
-<div class="animation_bs" style="margin-right: 6em;">
-   .right[<img src='./generated_trees/bank_account.cpp/bounded_search/1/trees/animations/1.png' height="560"/>]
-</div>
----
-count: false
-<div class="animation_bs" style="margin-right: 6em;">
-   .right[<img src='./generated_trees/bank_account.cpp/bounded_search/1/trees/animations/2.png' height="560"/>]
-</div>
----
-count: false
-<div class="animation_bs" style="margin-right: 1em;">
-   .right[<img src='./generated_trees/bank_account.cpp/bounded_search/1/trees/full_schedules.png' height="560"/>]
-</div>
-
-<!-- <<< -->
-
----
-layout: true
-#### Systematic Exploration | Exploration Algorithms
-# Partial Order Reduction
-
-<!-- >>> Slide -->
-
----
-
---
-count: false
-```cpp
-partial_order_reduction(program, equivalence_relation)
-{
-   for (equivalence_class : equivalence_classes(program, equivalence_relation))
-   {
-      schedule = representative(equivalence_class);
-      run(program, schedule);
-   }
-}
-```
-
-<!-- 
-NOTE: 
-equivalence relation: groups schedules that lead to the same observable program behaviour 
--->
-
-<!-- <<< -->
-
----
-
-<!-- TODO: dependence, happens-before -->
-
-<!-- >>> Slide -->
-
----
-
-##### :) Complete
-Explores at least one schedule per equivalence class
-
---
-count: false
-##### :) Ideally non-redundant
-Ideally explores exactly one schedule per equivalence class
-
---
-count: false
-##### :( No obvious coverage versus resources trade-off 
-- For large programs with many dependencies between threads, partial order reduction may still be 
-infeasible
-- No iterative approach with incomplete but quantifiable coverage guarantees
-
-<!-- <<< -->
-
-<!-- >>> Slide -->
-
----
-layout: true
-#### Systematic Exploration - Exploration Algorithms
-# Partial Order Reduction
-<span class="h_example">background_thread.cpp</span>
----
----
-count: false
-<div class="animation_dpor" style="margin-top: -7em">
-   .right[<img src='./generated_trees/background_thread.cpp/dpor/trees/animations/0.png' height="560"/>]
-</div>
----
-count: false
-<div class="animation_dpor" style="margin-top: -7em">
-   .right[<img src='./generated_trees/background_thread.cpp/dpor/trees/animations/1.png' height="560"/>]
-</div>
-
-<!-- <<< -->
-
-<!-- >>> Slide -->
-
----
-layout: true
-#### Systematic Exploration - Exploration Algorithms
-# Partial Order Reduction
-<span class="h_example">bank_account.cpp</span>
----
----
-count: false
-<div class="animation_dpor">
-   .right[<img src='./generated_trees/bank_account.cpp/dpor/trees/animations/0.png' width="1150"/>]
-</div>
----
-count: false
-<div class="animation_dpor">
-   .right[<img src='./generated_trees/bank_account.cpp/dpor/trees/animations/1.png' width="1150"/>]
-</div>
----
-count: false
-<div class="animation_dpor">
-   .right[<img src='./generated_trees/bank_account.cpp/dpor/trees/animations/2.png' width="1150"/>]
-</div>
----
-count: false
-<div class="animation_dpor">
-   .right[<img src='./generated_trees/bank_account.cpp/dpor/trees/animations/3.png' width="1150"/>]
-</div>
----
-count: false
-<div class="animation_dpor">
-   .right[<img src='./generated_trees/bank_account.cpp/dpor/trees/animations/4.png' width="1150"/>]
-</div>
----
-count: false
-<div class="animation_dpor">
-   .right[<img src='./generated_trees/bank_account.cpp/dpor/trees/animations/5.png' width="1150"/>]
-</div>
-
-<!-- <<< -->
 
 
 
@@ -1282,7 +799,10 @@ https://dl.acm.org/citation.cfm?id=1855760
       <script src="https://gnab.github.io/remark/downloads/remark-latest.min.js"></script>
       <script>
          var slideshow = remark.create({ 
-            ratio: '16:9' 
+            ratio: '16:9',
+            highlightLanguage: 'cpp',
+            highlightStyle: 'github',
+            highlightLines: true
          });
          mermaid.initialize({ 
             startOnLoad: false,

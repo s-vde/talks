@@ -67,6 +67,10 @@ background-color: #e6faff;
 color: #003d4d;
 */
 
+.no_number .remark-slide-number {
+  display: none;
+}
+
 .slide_title
 {
    text-align: center;
@@ -81,6 +85,10 @@ color: #003d4d;
    vertical-align: middle;
    background-color: #e6faff;
    color: #003d4d;
+}
+
+.animation_no_shift_up
+{
 }
 
 .animation_bs

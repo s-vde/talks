@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <title>Testing and Verifying Multi-Threaded Programs</title>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+      <link rel="stylesheet" type="text/css" href="talk.css"/>
+   </head>
+   <body>
+      <textarea id="source">
+
+
+
+
+
+<!-- section:Title -->
+
+class: slide_title, no_number
+count: false
+
+# Automated Verification of Multi-Threaded Programs
+### Susanne van den Elsen
+Software Developer @ Native Instruments
+
+### Meeting C++
+November 10, 2017
+
+
+
+
+
+<!-- section:Systematic Exploration -->
+
+<!-- >>> Slide -->
+
+---
+class: slide_section, no_number
+count: false
+layout: false
+# Systematic Exploration
+
+???
+Systematic exploration is a dynamic program analysis technique to overcome the challenge that
+nondeterminism poses for testing an verifying multi-threaded programs.
+
+<!-- <<< -->
+
+---
+layout: true
+#### Systematic Exploration
+
+<!-- >>> Slide -->
+
+---
+
+# The Idea
+- Take control over the interleaving of the program's threads at runtime
+- Systematically drive the program through a set of relevant schedules
+
+<!-- <<< -->
+
+---
+layout: true
+#### Systematic Exploration
+# RecordReplay library: Taking "Control" over the Scheduler
+
+<!-- >>> Slide -->
+
+---
+
+<div class="mermaid" style="align: center; width: 60%; margin: 0px auto;">
+   graph TD
+      sut[Souce Code] --> |Clang| ir[LLVM IR]
+      ir --> |RecordReplay Instrumentation Pass| ir_instr[Instrumented IR]
+      scheduler[Run Time Scheduler Library]
+      exe_instr[Instrumented Executable]
+      ir_instr --> exe_instr
+      scheduler --> exe_instr
+</div>
+
+???
+- The instrumentation process starts with the program's source code.
+- This source code is compiled to LLVM Intermediate Representation using Clang
+- The RecordReplay compiler instrumentation pass is build on top op the LLVM compiler infrastructure
+- It instruments the program's intermediate representation with calls to a Scheduler library
+- This allows the Scheduler to control the program's threads at runtime
+- Then the instrumented source code is linked to the Scheduler library into an executable.
+
+BRIDGE:
+Let's look in more detail at how the instrumentation allows the Scheduler to take control over the 
+thread interleaving.
+
+<!-- 
+NOTE: 
+LLVM IR: low-level assembly-like language that is designed so that many higher level langauges can 
+be mapped to it;
+Choice for LLVM route makes it possible to apply the tool to other languages that have a compiler
+frontend that translated to LLVM IR;
+-->
+
+<!-- <<< -->
+
+<!-- >>> Slide -->
+
+---
+
+<div class="code_right" style="width: 100%;"><pre><code class="language-cpp">
+define i32 @main() local_unnamed_addr #3 !dbg !78 {
+  call void @wrapper_register_main_thread(), !dbg !81
+  call void @wrapper_enter_function(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @_recrep_function_name_main, i32 0, i32 0)), !dbg !81
+  %0 = call i32 @wrapper_post_spawn_instruction(%struct._opaque_pthread_t** @thread1, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/data_race_fixed_pthread.cpp", i32 0, i32 0), i32 28)
+  %call1 = tail call i32 @pthread_create(%struct._opaque_pthread_t** nonnull @thread1, %struct._opaque_pthread_attr_t* null, i8* (i8*)* nonnull @_Z14thread_routinePv, i8* bitcast ([2 x i32]* @values to i8*)), !dbg !82
+  call void @wrapper_register_thread(%struct._opaque_pthread_t** @thread1, i32 %0)
+  %1 = call i32 @wrapper_post_spawn_instruction(%struct._opaque_pthread_t** @thread2, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/data_race_fixed_pthread.cpp", i32 0, i32 0), i32 29)
+  %call2 = tail call i32 @pthread_create(%struct._opaque_pthread_t** nonnull @thread2, %struct._opaque_pthread_attr_t* null, i8* (i8*)* nonnull @_Z14thread_routinePv, i8* bitcast (i32* getelementptr inbounds ([2 x i32], [2 x i32]* @values, i64 0, i64 1) to i8*)), !dbg !83
+  call void @wrapper_register_thread(%struct._opaque_pthread_t** @thread2, i32 %1)
+  call void @wrapper_post_memory_instruction(i32 0, i8* bitcast (%struct._opaque_pthread_t** @thread1 to i8*), i8* getelementptr inbounds ([8 x i8], [8 x i8]* @_mem_loc_name_thread1, i32 0, i32 0), i8 0, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/data_race_fixed_pthread.cpp", i32 0, i32 0), i32 31)
+  %2 = load %struct._opaque_pthread_t*, %struct._opaque_pthread_t** @thread1, align 8, !dbg !84, !tbaa !85
+  call void @wrapper_post_pthread_join_instruction(%struct._opaque_pthread_t* %2, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/data_race_fixed_pthread.cpp", i32 0, i32 0), i32 31)
+  %call3 = tail call i32 @"\01_pthread_join"(%struct._opaque_pthread_t* %2, i8** null), !dbg !87
+  call void @wrapper_post_memory_instruction(i32 0, i8* bitcast (%struct._opaque_pthread_t** @thread2 to i8*), i8* getelementptr inbounds ([8 x i8], [8 x i8]* @_mem_loc_name_thread2, i32 0, i32 0), i8 0, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/data_race_fixed_pthread.cpp", i32 0, i32 0), i32 32)
+  %3 = load %struct._opaque_pthread_t*, %struct._opaque_pthread_t** @thread2, align 8, !dbg !88, !tbaa !85
+  call void @wrapper_post_pthread_join_instruction(%struct._opaque_pthread_t* %3, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/data_race_fixed_pthread.cpp", i32 0, i32 0), i32 32)
+  %call4 = tail call i32 @"\01_pthread_join"(%struct._opaque_pthread_t* %3, i8** null), !dbg !89
+  call void @wrapper_exit_function(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @_recrep_function_name_main, i32 0, i32 0)), !dbg !90
+  ret i32 0, !dbg !90
+}
+</code></pre></div>
+
+---
+count: false
+<div class="code_right" style="width: 100%;"><pre><code class="language-cpp">
+define i32 @main() local_unnamed_addr #3 !dbg !78 {
+* call void @wrapper_register_main_thread(), !dbg !81
+  call void @wrapper_enter_function(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @_recrep_function_name_main, i32 0, i32 0)), !dbg !81
+  %0 = call i32 @wrapper_post_spawn_instruction(%struct._opaque_pthread_t** @thread1, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/data_race_fixed_pthread.cpp", i32 0, i32 0), i32 28)
+  %call1 = tail call i32 @pthread_create(%struct._opaque_pthread_t** nonnull @thread1, %struct._opaque_pthread_attr_t* null, i8* (i8*)* nonnull @_Z14thread_routinePv, i8* bitcast ([2 x i32]* @values to i8*)), !dbg !82
+  call void @wrapper_register_thread(%struct._opaque_pthread_t** @thread1, i32 %0)
+  %1 = call i32 @wrapper_post_spawn_instruction(%struct._opaque_pthread_t** @thread2, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/data_race_fixed_pthread.cpp", i32 0, i32 0), i32 29)
+  %call2 = tail call i32 @pthread_create(%struct._opaque_pthread_t** nonnull @thread2, %struct._opaque_pthread_attr_t* null, i8* (i8*)* nonnull @_Z14thread_routinePv, i8* bitcast (i32* getelementptr inbounds ([2 x i32], [2 x i32]* @values, i64 0, i64 1) to i8*)), !dbg !83
+  call void @wrapper_register_thread(%struct._opaque_pthread_t** @thread2, i32 %1)
+  call void @wrapper_post_memory_instruction(i32 0, i8* bitcast (%struct._opaque_pthread_t** @thread1 to i8*), i8* getelementptr inbounds ([8 x i8], [8 x i8]* @_mem_loc_name_thread1, i32 0, i32 0), i8 0, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/data_race_fixed_pthread.cpp", i32 0, i32 0), i32 31)
+  %2 = load %struct._opaque_pthread_t*, %struct._opaque_pthread_t** @thread1, align 8, !dbg !84, !tbaa !85
+  call void @wrapper_post_pthread_join_instruction(%struct._opaque_pthread_t* %2, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/data_race_fixed_pthread.cpp", i32 0, i32 0), i32 31)
+  %call3 = tail call i32 @"\01_pthread_join"(%struct._opaque_pthread_t* %2, i8** null), !dbg !87
+  call void @wrapper_post_memory_instruction(i32 0, i8* bitcast (%struct._opaque_pthread_t** @thread2 to i8*), i8* getelementptr inbounds ([8 x i8], [8 x i8]* @_mem_loc_name_thread2, i32 0, i32 0), i8 0, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/data_race_fixed_pthread.cpp", i32 0, i32 0), i32 32)
+  %3 = load %struct._opaque_pthread_t*, %struct._opaque_pthread_t** @thread2, align 8, !dbg !88, !tbaa !85
+  call void @wrapper_post_pthread_join_instruction(%struct._opaque_pthread_t* %3, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/data_race_fixed_pthread.cpp", i32 0, i32 0), i32 32)
+  %call4 = tail call i32 @"\01_pthread_join"(%struct._opaque_pthread_t* %3, i8** null), !dbg !89
+  call void @wrapper_exit_function(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @_recrep_function_name_main, i32 0, i32 0)), !dbg !90
+  ret i32 0, !dbg !90
+}
+</code></pre></div>
+
+???
+wrapper_register_main_thread registers the main thread with its thread id with the Scheduler.
+This allows the Scheduler to know for example when the main thread is finished.
+
+---
+count: false
+<div class="code_right" style="width: 100%;"><pre><code class="language-cpp">
+define i32 @main() local_unnamed_addr #3 !dbg !78 {
+  call void @wrapper_register_main_thread(), !dbg !81
+* call void @wrapper_enter_function(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @_recrep_function_name_main, i32 0, i32 0)), !dbg !81
+  %0 = call i32 @wrapper_post_spawn_instruction(%struct._opaque_pthread_t** @thread1, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/data_race_fixed_pthread.cpp", i32 0, i32 0), i32 28)
+  %call1 = tail call i32 @pthread_create(%struct._opaque_pthread_t** nonnull @thread1, %struct._opaque_pthread_attr_t* null, i8* (i8*)* nonnull @_Z14thread_routinePv, i8* bitcast ([2 x i32]* @values to i8*)), !dbg !82
+  call void @wrapper_register_thread(%struct._opaque_pthread_t** @thread1, i32 %0)
+  %1 = call i32 @wrapper_post_spawn_instruction(%struct._opaque_pthread_t** @thread2, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/data_race_fixed_pthread.cpp", i32 0, i32 0), i32 29)
+  %call2 = tail call i32 @pthread_create(%struct._opaque_pthread_t** nonnull @thread2, %struct._opaque_pthread_attr_t* null, i8* (i8*)* nonnull @_Z14thread_routinePv, i8* bitcast (i32* getelementptr inbounds ([2 x i32], [2 x i32]* @values, i64 0, i64 1) to i8*)), !dbg !83
+  call void @wrapper_register_thread(%struct._opaque_pthread_t** @thread2, i32 %1)
+  call void @wrapper_post_memory_instruction(i32 0, i8* bitcast (%struct._opaque_pthread_t** @thread1 to i8*), i8* getelementptr inbounds ([8 x i8], [8 x i8]* @_mem_loc_name_thread1, i32 0, i32 0), i8 0, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/data_race_fixed_pthread.cpp", i32 0, i32 0), i32 31)
+  %2 = load %struct._opaque_pthread_t*, %struct._opaque_pthread_t** @thread1, align 8, !dbg !84, !tbaa !85
+  call void @wrapper_post_pthread_join_instruction(%struct._opaque_pthread_t* %2, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/data_race_fixed_pthread.cpp", i32 0, i32 0), i32 31)
+  %call3 = tail call i32 @"\01_pthread_join"(%struct._opaque_pthread_t* %2, i8** null), !dbg !87
+  call void @wrapper_post_memory_instruction(i32 0, i8* bitcast (%struct._opaque_pthread_t** @thread2 to i8*), i8* getelementptr inbounds ([8 x i8], [8 x i8]* @_mem_loc_name_thread2, i32 0, i32 0), i8 0, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/data_race_fixed_pthread.cpp", i32 0, i32 0), i32 32)
+  %3 = load %struct._opaque_pthread_t*, %struct._opaque_pthread_t** @thread2, align 8, !dbg !88, !tbaa !85
+  call void @wrapper_post_pthread_join_instruction(%struct._opaque_pthread_t* %3, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/data_race_fixed_pthread.cpp", i32 0, i32 0), i32 32)
+  %call4 = tail call i32 @"\01_pthread_join"(%struct._opaque_pthread_t* %3, i8** null), !dbg !89
+* call void @wrapper_exit_function(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @_recrep_function_name_main, i32 0, i32 0)), !dbg !90
+  ret i32 0, !dbg !90
+}
+</code></pre></div>
+
+???
+The enter/exit function wrappers allow the Scheduler to keep track of the call stack of a thread.
+This is useful for bug reports, but also for knowing when a thread is finished executing and may 
+be joined.
+
+---
+count: false
+<div class="code_right" style="width: 100%;"><pre><code class="language-cpp">
+define i32 @main() local_unnamed_addr #3 !dbg !78 {
+  call void @wrapper_register_main_thread(), !dbg !81
+  call void @wrapper_enter_function(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @_recrep_function_name_main, i32 0, i32 0)), !dbg !81
+* %0 = call i32 @wrapper_post_spawn_instruction(%struct._opaque_pthread_t** @thread1, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/data_race_fixed_pthread.cpp", i32 0, i32 0), i32 28)
+* %call1 = tail call i32 @pthread_create(%struct._opaque_pthread_t** nonnull @thread1, %struct._opaque_pthread_attr_t* null, i8* (i8*)* nonnull @_Z14thread_routinePv, i8* bitcast ([2 x i32]* @values to i8*)), !dbg !82
+* call void @wrapper_register_thread(%struct._opaque_pthread_t** @thread1, i32 %0)
+  %1 = call i32 @wrapper_post_spawn_instruction(%struct._opaque_pthread_t** @thread2, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/data_race_fixed_pthread.cpp", i32 0, i32 0), i32 29)
+  %call2 = tail call i32 @pthread_create(%struct._opaque_pthread_t** nonnull @thread2, %struct._opaque_pthread_attr_t* null, i8* (i8*)* nonnull @_Z14thread_routinePv, i8* bitcast (i32* getelementptr inbounds ([2 x i32], [2 x i32]* @values, i64 0, i64 1) to i8*)), !dbg !83
+  call void @wrapper_register_thread(%struct._opaque_pthread_t** @thread2, i32 %1)
+  call void @wrapper_post_memory_instruction(i32 0, i8* bitcast (%struct._opaque_pthread_t** @thread1 to i8*), i8* getelementptr inbounds ([8 x i8], [8 x i8]* @_mem_loc_name_thread1, i32 0, i32 0), i8 0, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/data_race_fixed_pthread.cpp", i32 0, i32 0), i32 31)
+  %2 = load %struct._opaque_pthread_t*, %struct._opaque_pthread_t** @thread1, align 8, !dbg !84, !tbaa !85
+  call void @wrapper_post_pthread_join_instruction(%struct._opaque_pthread_t* %2, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/data_race_fixed_pthread.cpp", i32 0, i32 0), i32 31)
+  %call3 = tail call i32 @"\01_pthread_join"(%struct._opaque_pthread_t* %2, i8** null), !dbg !87
+  call void @wrapper_post_memory_instruction(i32 0, i8* bitcast (%struct._opaque_pthread_t** @thread2 to i8*), i8* getelementptr inbounds ([8 x i8], [8 x i8]* @_mem_loc_name_thread2, i32 0, i32 0), i8 0, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/data_race_fixed_pthread.cpp", i32 0, i32 0), i32 32)
+  %3 = load %struct._opaque_pthread_t*, %struct._opaque_pthread_t** @thread2, align 8, !dbg !88, !tbaa !85
+  call void @wrapper_post_pthread_join_instruction(%struct._opaque_pthread_t* %3, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/data_race_fixed_pthread.cpp", i32 0, i32 0), i32 32)
+  %call4 = tail call i32 @"\01_pthread_join"(%struct._opaque_pthread_t* %3, i8** null), !dbg !89
+  call void @wrapper_exit_function(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @_recrep_function_name_main, i32 0, i32 0)), !dbg !90
+  ret i32 0, !dbg !90
+}
+</code></pre></div>
+
+???
+pthread_create calls in the original program are wrapped between two calls to Scheduler functions,
+which register the thread to be created.
+
+---
+count: false
+<div class="code_right" style="width: 100%;"><pre><code class="language-cpp">
+define noalias nonnull i8* @_Z14thread_routinePv(i8* nocapture readonly %arg) #0 !dbg !59 {
+  call void @wrapper_enter_function(i8* getelementptr inbounds ([21 x i8], [21 x i8]* @_recrep_function_name__Z14thread_routinePv, i32 0, i32 0)), !dbg !65
+  tail call void @llvm.dbg.value(metadata i8* %arg, i64 0, metadata !63, metadata !66), !dbg !65
+  %0 = bitcast i8* %arg to i32*, !dbg !67
+  %1 = bitcast i32* %0 to i8*, !dbg !68
+  call void @wrapper_post_memory_instruction(i32 0, i8* %1, i8* getelementptr inbounds ([1 x i8], [1 x i8]* @_mem_loc_name_, i32 0, i32 0), i8 0, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/data_race_fixed_pthread.cpp", i32 0, i32 0), i32 16)
+  %2 = load i32, i32* %0, align 4, !dbg !68, !tbaa !69
+  tail call void @llvm.dbg.value(metadata i32 %2, i64 0, metadata !64, metadata !66), !dbg !73
+  call void @wrapper_post_lock_instruction(i32 0, i8* bitcast (%struct._opaque_pthread_mutex_t* @mutex to i8*), i8* getelementptr inbounds ([6 x i8], [6 x i8]* @_mem_loc_name_mutex, i32 0, i32 0), i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/data_race_fixed_pthread.cpp", i32 0, i32 0), i32 18)
+  %call = tail call i32 @pthread_mutex_lock(%struct._opaque_pthread_mutex_t* nonnull @mutex), !dbg !74
+  call void @wrapper_post_memory_instruction(i32 1, i8* bitcast (i32* @x to i8*), i8* getelementptr inbounds ([2 x i8], [2 x i8]* @_mem_loc_name_x, i32 0, i32 0), i8 0, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/data_race_fixed_pthread.cpp", i32 0, i32 0), i32 19)
+  store i32 %2, i32* @x, align 4, !dbg !75, !tbaa !69
+  call void @wrapper_post_lock_instruction(i32 1, i8* bitcast (%struct._opaque_pthread_mutex_t* @mutex to i8*), i8* getelementptr inbounds ([6 x i8], [6 x i8]* @_mem_loc_name_mutex, i32 0, i32 0), i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/data_race_fixed_pthread.cpp", i32 0, i32 0), i32 20)
+  %call1 = tail call i32 @pthread_mutex_unlock(%struct._opaque_pthread_mutex_t* nonnull @mutex), !dbg !76
+  call void @wrapper_exit_function(i8* getelementptr inbounds ([21 x i8], [21 x i8]* @_recrep_function_name__Z14thread_routinePv, i32 0, i32 0)), !dbg !77
+  tail call void @pthread_exit(i8* null) #6, !dbg !77
+}
+</code></pre></div>
+
+---
+count: false
+<div class="code_right" style="width: 100%;"><pre><code class="language-cpp">
+define noalias nonnull i8* @_Z14thread_routinePv(i8* nocapture readonly %arg) #0 !dbg !59 {
+  call void @wrapper_enter_function(i8* getelementptr inbounds ([21 x i8], [21 x i8]* @_recrep_function_name__Z14thread_routinePv, i32 0, i32 0)), !dbg !65
+  tail call void @llvm.dbg.value(metadata i8* %arg, i64 0, metadata !63, metadata !66), !dbg !65
+  %0 = bitcast i8* %arg to i32*, !dbg !67
+  %1 = bitcast i32* %0 to i8*, !dbg !68
+* call void @wrapper_post_memory_instruction(i32 0, i8* %1, i8* getelementptr inbounds ([1 x i8], [1 x i8]* @_mem_loc_name_, i32 0, i32 0), i8 0, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/data_race_fixed_pthread.cpp", i32 0, i32 0), i32 16)
+* %2 = load i32, i32* %0, align 4, !dbg !68, !tbaa !69
+  tail call void @llvm.dbg.value(metadata i32 %2, i64 0, metadata !64, metadata !66), !dbg !73
+  call void @wrapper_post_lock_instruction(i32 0, i8* bitcast (%struct._opaque_pthread_mutex_t* @mutex to i8*), i8* getelementptr inbounds ([6 x i8], [6 x i8]* @_mem_loc_name_mutex, i32 0, i32 0), i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/data_race_fixed_pthread.cpp", i32 0, i32 0), i32 18)
+  %call = tail call i32 @pthread_mutex_lock(%struct._opaque_pthread_mutex_t* nonnull @mutex), !dbg !74
+* call void @wrapper_post_memory_instruction(i32 1, i8* bitcast (i32* @x to i8*), i8* getelementptr inbounds ([2 x i8], [2 x i8]* @_mem_loc_name_x, i32 0, i32 0), i8 0, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/data_race_fixed_pthread.cpp", i32 0, i32 0), i32 19)
+* store i32 %2, i32* @x, align 4, !dbg !75, !tbaa !69
+  call void @wrapper_post_lock_instruction(i32 1, i8* bitcast (%struct._opaque_pthread_mutex_t* @mutex to i8*), i8* getelementptr inbounds ([6 x i8], [6 x i8]* @_mem_loc_name_mutex, i32 0, i32 0), i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/data_race_fixed_pthread.cpp", i32 0, i32 0), i32 20)
+  %call1 = tail call i32 @pthread_mutex_unlock(%struct._opaque_pthread_mutex_t* nonnull @mutex), !dbg !76
+  call void @wrapper_exit_function(i8* getelementptr inbounds ([21 x i8], [21 x i8]* @_recrep_function_name__Z14thread_routinePv, i32 0, i32 0)), !dbg !77
+  tail call void @pthread_exit(i8* null) #6, !dbg !77
+}
+</code></pre></div>
+
+???
+Before each memory access, threads call wrapper_post_memory_instruction and pass relevant data 
+as arguments, such as the address of the operand, whether the access is a load or a store and 
+debug information such as the filename and line number of the instruction in the original source 
+code.
+
+---
+count: false
+<div class="code_right" style="width: 100%;"><pre><code class="language-cpp">
+define noalias nonnull i8* @_Z14thread_routinePv(i8* nocapture readonly %arg) #0 !dbg !59 {
+  call void @wrapper_enter_function(i8* getelementptr inbounds ([21 x i8], [21 x i8]* @_recrep_function_name__Z14thread_routinePv, i32 0, i32 0)), !dbg !65
+  tail call void @llvm.dbg.value(metadata i8* %arg, i64 0, metadata !63, metadata !66), !dbg !65
+  %0 = bitcast i8* %arg to i32*, !dbg !67
+  %1 = bitcast i32* %0 to i8*, !dbg !68
+  call void @wrapper_post_memory_instruction(i32 0, i8* %1, i8* getelementptr inbounds ([1 x i8], [1 x i8]* @_mem_loc_name_, i32 0, i32 0), i8 0, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/data_race_fixed_pthread.cpp", i32 0, i32 0), i32 16)
+  %2 = load i32, i32* %0, align 4, !dbg !68, !tbaa !69
+  tail call void @llvm.dbg.value(metadata i32 %2, i64 0, metadata !64, metadata !66), !dbg !73
+* call void @wrapper_post_lock_instruction(i32 0, i8* bitcast (%struct._opaque_pthread_mutex_t* @mutex to i8*), i8* getelementptr inbounds ([6 x i8], [6 x i8]* @_mem_loc_name_mutex, i32 0, i32 0), i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/data_race_fixed_pthread.cpp", i32 0, i32 0), i32 18)
+* %call = tail call i32 @pthread_mutex_lock(%struct._opaque_pthread_mutex_t* nonnull @mutex), !dbg !74
+  call void @wrapper_post_memory_instruction(i32 1, i8* bitcast (i32* @x to i8*), i8* getelementptr inbounds ([2 x i8], [2 x i8]* @_mem_loc_name_x, i32 0, i32 0), i8 0, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/data_race_fixed_pthread.cpp", i32 0, i32 0), i32 19)
+  store i32 %2, i32* @x, align 4, !dbg !75, !tbaa !69
+* call void @wrapper_post_lock_instruction(i32 1, i8* bitcast (%struct._opaque_pthread_mutex_t* @mutex to i8*), i8* getelementptr inbounds ([6 x i8], [6 x i8]* @_mem_loc_name_mutex, i32 0, i32 0), i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/data_race_fixed_pthread.cpp", i32 0, i32 0), i32 20)
+* %call1 = tail call i32 @pthread_mutex_unlock(%struct._opaque_pthread_mutex_t* nonnull @mutex), !dbg !76
+  call void @wrapper_exit_function(i8* getelementptr inbounds ([21 x i8], [21 x i8]* @_recrep_function_name__Z14thread_routinePv, i32 0, i32 0)), !dbg !77
+  tail call void @pthread_exit(i8* null) #6, !dbg !77
+}
+</code></pre></div>
+
+???
+Similar calls are inserted before instructions operating on locks.
+
+BRIDGE:
+Now I showed you what the instrumented program looks like, let's look at the Scheduler's side.
+
+<!-- <<< -->
+
+<!-- >>> Slide -->
+
+---
+
+<div class="code_left" style="width: 45%;">
+<pre><code class="language-cpp">
+scheduler::_register_thread(pthread_t pid)
+{
+   m_thread_ids[pid] = next_thread_id();
+   m_controllable_threads[tid] = semaphore();
+}
+</code></pre>
+</div>
+
+???
+The thread registration associates with each newly created thread a semaphore that allows the 
+Scheduler to control that thread.
+
+---
+count: false
+
+<div class="code_left" style="width: 45%;">
+<pre><code class="language-cpp">
+scheduler::_register_thread(pthread_t pid)
+{
+   m_thread_ids[pid] = next_thread_id();
+   m_controllable_threads[tid] = semaphore();
+}
+</code></pre>
+
+<pre><code class="language-cpp">
+scheduler::_post_instruction(instr_t instruction)
+{
+   tid = m_thread_ids[pthread_self()];
+   m_task_pool[tid] = instruction;
+   m_controllable_threads[tid].wait();
+   
+   // perform the posted instruction
+   // and execute until the next wrapper call
+}
+</code></pre>
+</div>
+
+???
+When a thread posts an instruction (thread creation or joining, memory or lock instruction) to the 
+Scheduler the calling thread:
+- First adds its instruction to the Scheduler's task pool, which is a map from thread ids to the 
+  next instruction of the corresponding thread.
+- Then the calling thread blocks on its semaphore until the Scheduler posts the semaphore.
+- Then the thread can continue execution until it calls a Scheduler function again.
+
+---
+count: false
+
+<div class="code_left" style="width: 45%;">
+<pre><code class="language-cpp">
+scheduler::_register_thread(pthread_t pid)
+{
+   m_thread_ids[pid] = next_thread_id();
+   m_controllable_threads[tid] = semaphore();
+}
+</code></pre>
+
+<pre><code class="language-cpp">
+scheduler::_post_instruction(instr_t instruction)
+{
+   tid = m_thread_ids[pthread_self()];
+   m_task_pool[tid] = instruction;
+   m_controllable_threads[tid].wait();
+   
+   // perform the posted instruction
+   // and execute until the next wrapper call
+}
+</code></pre>
+</div>
+
+<div class="code_right" style="width: 54%;">
+<pre><code class="language-cpp">
+scheduler::scheduler_thread(schedule_t schedule,
+                            selection_strategy)
+{
+   trace_t trace;
+   unsigned int round = 0;
+   
+   while (!done)
+   {
+      // wait until all active threads posted an instruction
+      
+      // compute the next thread to be scheduled
+      if (round < schedule.size())
+         int next_id = schedule[round];
+      else
+         int next_tid = 
+            selection_strategy(m_task_pool, trace);
+      
+      // record the task_pool and the next instruction
+      trace.push_back(m_task_pool, m_task_pool[next_tid]);
+      
+      // allow the next thread to progress until its next 
+      // wrapper call
+      m_controllable_threads[next_tid].post();
+   }
+}
+</code></pre>
+</div>
+
+???
+- The scheduling routine runs in the scheduler thread, which has access to all the Scheduler 
+  datastructures.
+- At every scheduling round, the scheduler thread first waits until all the registered and 
+  unfinished threads have posted their next instruction
+- Then it determines the next thread to execute
+   - First it looks whether the next thread is dictated by the given schedule
+   - Otherwise it applies the given selection strategy which computes the next thread based on the 
+     current taskpool and the thread interleaving up to this round
+   - Possible strategies include a random selection from the enabled threads, or a selection that 
+     always picks the thread that was scheduled last, if it is enabled.
+- After choosing the next thread, the scheduler thread records the state of the taskpool and the 
+  next instruction to the execution trace.
+- Then it enables the next thread to continue execution by posting that thread's semaphore and 
+  sending a notification.
+- Since at each time at most one thread is not blocked on its sempahore, the underlying OS 
+  scheduler is forced to schedule that particular thread.
+  
+Since the program threads and the scheduler thread operate on shared data structures, these 
+accesses are coordinated very carefully in order not to actually introduce deadlocks and dataraces.
+
+<!-- <<< -->
+
+<!-- >>> Slide -->
+
+---
+layout: false
+#### Systematic Exploration
+# The Idea
+- Take control over the interleaving of the program's threads at runtime
+- Systematically drive the program through a set of relevant schedules
+
+???
+BRIDGE FROM:
+Now that I've showed you how the RecordReplay library allows to take control over a program's 
+thread interleaving at runtime, let's take a first look at algorithms that compute a set of 
+relevant schedules to drive the program through.
+
+--
+count: false
+   - The discussed algorithms are implemeted in the StateSpaceExplorer library
+   
+???
+These algorithms all compute the set of schedules to consider on-the-fly, based on the trace of the 
+previous execution.
+
+--
+count: false
+   - Relevant schedules are computed on-the-fly, based on the recorded trace of the previous 
+     execution
+   
+<!-- <<< -->
+
+---
+layout: true
+#### Systematic Exploration | Exploration Algorithms
+# Depth-First Exploration
+
+<!-- >>> Slide -->
+
+---
+
+```cpp
+depth_first_exploration(program)
+{
+   for (schedule : possible_schedules(program))
+   {
+      run(program, schedule);
+   }
+}
+```
+
+???
+The first algorithm is a simple depth-first exploration.
+
+<!-- <<< -->
+
+<!-- >>> Slide -->
+
+---
+layout: true
+#### Systematic Exploration | Exploration Algorithms
+# Depth-First Exploration
+<span class="h_example">data_race.cpp</span>
+
+---
+
+---
+count: false
+<div class="animation_no_shift_up" style="margin-right: 6em;">
+   .right[<img src='./generated_trees/data_race.cpp/depth_first_search/trees/animations/0.png' height="400"/>]
+</div>
+
+???
+- The exploration starts with a certain schedule, in this case a non-preemptive one that prioritizes
+  threads in the order in which they were created.
+- It annotates each state in the branch with the set of threads that are enabled in that state as 
+  well as the set of threads that it has already scheduled in that state.
+- Then it backtracks the annotated trace until it finds a state in which there is an enabled thread 
+  that has not been scheduled from that state yet.
+- It appends that thread's id to the schedule up to that state and runs the program under the 
+  resulting schedule.
+
+---
+count: false 
+<div class="animation_no_shift_up" style="margin-right: 6em;">
+   .right[<img src='./generated_trees/data_race.cpp/depth_first_search/trees/animations/1.png' height="400"/>]
+</div>
+
+???
+This process continues, until eventually it reaches the root node of the tree again and all 
+enabled threads have been scheduled from that root.
+
+---
+count: false 
+<div class="animation_no_shift_up" style="margin-right: 6em;">
+   .right[<img src='./generated_trees/data_race.cpp/depth_first_search/trees/animations/2.png' height="400"/>]
+</div>
+---
+count: false 
+<div class="animation_no_shift_up" style="margin-right: 6em;">
+   .right[<img src='./generated_trees/data_race.cpp/depth_first_search/trees/animations/3.png' height="400"/>]
+</div>
+
+???
+Although this algorithm is very straightforward and, because it executes the program under all 
+possible thread interleavings is guaranteed to find concurrency bugs if they are present, 
+it suffers from a major problem: combinatorial explosion.
+
+<!-- <<< -->
+
+---
+layout: true
+#### Systematic Exploration | Exploration Algorithms
+# Combinatorial Explosion!
+<div class="h_example">data_race.cpp</div>
+
+<!-- >>> Slide -->
+
+---
+.center[<img src='./generated_trees/data_race.cpp/depth_first_search/trees/full_schedules.png' width="1100"/>]
+
+<!-- <<< -->
+
+<!-- >>> Slide -->
+
+---
+##### Problem
+The number of possible thread interleavings grows exponentially with the size of the program!
+
+--
+count: false
+##### Solution
+Prune the tree of schedules considered by depth-first exploration
+
+???
+- Only consider a subset of those schedules
+
+--
+count: false
+##### Challenge
+Provide coverage guarantees
+
+???
+<!-- TODO -->
+- Challenge is to choose that subset so carefully that the class of interleavings seen can be 
+  somehow quantified.
+
+<!-- <<< -->
+
+---
+layout: true
+#### Systematic Exploration | Exploration Algorithms
+# Bounded Exploration
+
+<!-- >>> Slide -->
+
+---
+
+```cpp
+bounded_exploration(program, bound_function, bound)
+{
+   for (schedule : possible_schedules(program))
+   {
+      if (bound_function(schedule) <= bound)
+      {
+         run(program, schedule);
+      }
+   }
+}
+```
+
+???
+One technique to prune the space of schedules is Bounded Exploration.
+Apart from an input program, Bounded Exploration takes a bound function, which is a function 
+on schedules and a bound.
+It only considers those schedules whose bound value is less than or equal to the bound.
+
+- A bound function that works well in practice is the function that maps a schedule to the 
+  number of times it preempts a thread.
+ 
+<!-- TODO: define preemption -->
+
+<!-- <<< -->
+
+---
+layout: true
+#### Systematic Exploration | Exploration Algorithms
+# Bounded Exploration
+<span class="h_example">background_thread.cpp, preemptions=0</span>
+
+<!-- >>> Slide -->
+
+---
+
+---
+count: false
+<div class="animation_bs" style="margin-right: 6em;">
+   .right[<img src='./generated_trees/background_thread.cpp/bounded_search/0/trees/animations/0.png' height="560"/>]
+</div>
+
+???
+Bounded Exploration works very similar to Depth-First exploration. 
+When backtracking, it additionally checks whether the new schedule exceeds the bound.
+
+---
+count: false 
+<div class="animation_bs" style="margin-right: 6em;">
+   .right[<img src='./generated_trees/background_thread.cpp/bounded_search/0/trees/animations/1.png' height="560"/>]
+</div>
+
+???
+Backtracking this branch, Bounded Exploration skips many schedules that Depth-First exploration 
+would explore.
+
+---
+count: false 
+<div class="animation_bs" style="margin-right: 6em;">
+   .right[<img src='./generated_trees/background_thread.cpp/bounded_search/0/trees/animations/2.png' height="560"/>]
+</div>
+
+???
+BRIDGE FROM:
+The background_thread example clearly demonstrates the advantages of Bounded Exploration
+
+<!-- <<< -->
+
+---
+layout: true
+#### Systematic Exploration | Exploration Algorithms
+# Bounded Exploration
+
+<!-- >>> Slide -->
+
+---
+##### :) Very strong reduction
+With low bounds a large part of the space of schedules is pruned away
+
+--
+count: false
+##### :) Low bounds often sufficient (with right bound functions)
+[Musuvathi and Qadeer]: Empirically, many bugs in multi-threaded programs are exposed by *some* 
+schedule with small number of preemptions
+
+???
+By exploring only three schedules, Bounded Exploration found the deadlock in the background_thread 
+example. Research suggests that this is often the case in practice and that many bugs are 
+exposed with low bounds, assuming the right bound function is chosen.
+
+<!-- <<< -->
+
+---
+layout: true
+#### Systematic Exploration | Exploration Algorithms
+# Bounded Exploration
+<span class="h_example">bank_account.cpp, preemptions=0</span>
+
+<!-- TODO: Think about only showing the full schedules from here -->
+
+<!-- >>> Slide -->
+
+---
+
+???
+The bank_account example shows that low bounds may not always find existing bugs in a program.
+
+---
+count: false
+<div class="animation_bs" style="margin-right: 6em;">
+   .right[<img src='./generated_trees/bank_account.cpp/bounded_search/0/trees/animations/0.png' height="560"/>]
+</div>
+---
+count: false 
+<div class="animation_bs" style="margin-right: 6em;">
+   .right[<img src='./generated_trees/bank_account.cpp/bounded_search/0/trees/animations/1.png' height="560"/>]
+</div>
+---
+count: false 
+<div class="animation_bs" style="margin-right: 6em;">
+   .right[<img src='./generated_trees/bank_account.cpp/bounded_search/0/trees/animations/2.png' height="560"/>]
+</div>
+
+<!-- <<< -->
+
+---
+layout: true
+#### Systematic Exploration | Exploration Algorithms
+# Bounded Exploration
+<span class="h_example">bank_account.cpp, preemptions=1</span>
+
+<!-- >>> Slide -->
+
+---
+
+---
+count: false
+<div class="animation_bs" style="margin-right: 6em;">
+   .right[<img src='./generated_trees/bank_account.cpp/bounded_search/1/trees/animations/0.png' height="560"/>]
+</div>
+---
+count: false
+<div class="animation_bs" style="margin-right: 6em;">
+   .right[<img src='./generated_trees/bank_account.cpp/bounded_search/1/trees/animations/1.png' height="560"/>]
+</div>
+---
+count: false
+<div class="animation_bs" style="margin-right: 6em;">
+   .right[<img src='./generated_trees/bank_account.cpp/bounded_search/1/trees/animations/2.png' height="560"/>]
+</div>
+---
+count: false
+<div class="animation_bs" style="margin-right: 1em;">
+   .right[<img src='./generated_trees/bank_account.cpp/bounded_search/1/trees/full_schedules.png' height="560"/>]
+</div>
+
+<!-- <<< -->
+
+---
+layout: true
+#### Systematic Exploration | Exploration Algorithms
+# Bounded Exploration
+
+<!-- >>> Slide -->
+
+---
+
+##### :( Incomplete
+With low bound value, not all program behaviors may be covered
+
+--
+count: false
+##### :( Redundant
+- May still explore many schedules that lead to program executions with the same *behavior*
+- In the limit: same as depth first search
+
+--
+count: false
+##### :) Iterative
+[Musuvathi and Qadeer]: Start with low bound value and iteratively increase it to gain better 
+coverage
+
+???
+Redundant: bounded exploration with preemption bound 1 discovered the same assertion failure in
+many executions.
+
+BRIDGE FROM:
+Redundancy is exactly the problem that is tackled by the last pruning technique I will discuss:
+Partial Order Reduction
+
+<!-- 
+NOTE: 
+This point has already has a notion of different schedules leading to the same behaviour,
+some with high and some with low preemption number
+
+Program with n threads that each execute at most k steps and a context-bound of c:
+O(n^(2c)k^c) schedules with c context-switches.
+Polynomial in k for fixed context-bound
+-->
+
+<!-- <<< -->
+
+---
+layout: true
+#### Systematic Exploration | Exploration Algorithms
+# Partial Order Reduction
+
+<!-- >>> Slide -->
+
+---
+
+<!-- HERE -->
+
+--
+count: false
+```cpp
+partial_order_reduction(program, equivalence_relation)
+{
+   for (equivalence_class : equivalence_classes(program, equivalence_relation))
+   {
+      schedule = representative(equivalence_class);
+      run(program, schedule);
+   }
+}
+```
+
+<!-- 
+NOTE: 
+equivalence relation: groups schedules that lead to the same observable program behaviour 
+-->
+
+<!-- <<< -->
+
+---
+
+<!-- TODO: dependence, happens-before -->
+
+<!-- >>> Slide -->
+
+---
+
+##### :) Complete
+Explores at least one schedule per equivalence class
+
+--
+count: false
+##### :) Ideally non-redundant
+Ideally explores exactly one schedule per equivalence class
+
+--
+count: false
+##### :( No obvious coverage versus resources trade-off 
+- For large programs with many dependencies between threads, partial order reduction may still be 
+infeasible
+- No iterative approach with incomplete but quantifiable coverage guarantees
+
+<!-- <<< -->
+
+<!-- >>> Slide -->
+
+---
+layout: true
+#### Systematic Exploration - Exploration Algorithms
+# Partial Order Reduction
+<span class="h_example">background_thread.cpp</span>
+---
+---
+count: false
+<div class="animation_dpor" style="margin-top: -7em">
+   .right[<img src='./generated_trees/background_thread.cpp/dpor/trees/animations/0.png' height="560"/>]
+</div>
+---
+count: false
+<div class="animation_dpor" style="margin-top: -7em">
+   .right[<img src='./generated_trees/background_thread.cpp/dpor/trees/animations/1.png' height="560"/>]
+</div>
+
+<!-- <<< -->
+
+<!-- >>> Slide -->
+
+---
+layout: true
+#### Systematic Exploration - Exploration Algorithms
+# Partial Order Reduction
+<span class="h_example">bank_account.cpp</span>
+---
+---
+count: false
+<div class="animation_dpor">
+   .right[<img src='./generated_trees/bank_account.cpp/dpor/trees/animations/0.png' width="1150"/>]
+</div>
+---
+count: false
+<div class="animation_dpor">
+   .right[<img src='./generated_trees/bank_account.cpp/dpor/trees/animations/1.png' width="1150"/>]
+</div>
+---
+count: false
+<div class="animation_dpor">
+   .right[<img src='./generated_trees/bank_account.cpp/dpor/trees/animations/2.png' width="1150"/>]
+</div>
+---
+count: false
+<div class="animation_dpor">
+   .right[<img src='./generated_trees/bank_account.cpp/dpor/trees/animations/3.png' width="1150"/>]
+</div>
+---
+count: false
+<div class="animation_dpor">
+   .right[<img src='./generated_trees/bank_account.cpp/dpor/trees/animations/4.png' width="1150"/>]
+</div>
+---
+count: false
+<div class="animation_dpor">
+   .right[<img src='./generated_trees/bank_account.cpp/dpor/trees/animations/5.png' width="1150"/>]
+</div>
+
+<!-- <<< -->
+
+
+
+<!-- ////////// -->
+
+
+
+
+      </textarea>
+      
+      <script src="../libs/mermaid/dist/mermaid.js"></script>
+      <link rel="stylesheet" href="../libs/mermaid/dist/mermaid.forest.css">
+      <script src="https://gnab.github.io/remark/downloads/remark-latest.min.js"></script>
+      <script>
+         var slideshow = remark.create({ 
+            ratio: '16:9',
+            highlightLanguage: 'cpp',
+            highlightStyle: 'github',
+            highlightLines: true
+         });
+         mermaid.initialize({ 
+            startOnLoad: false,
+            cloneCssStyles: false
+         });
+         function initMermaid(s) {
+            var diagrams = document.querySelectorAll('.mermaid');
+            var i;
+            for (i=0; i < diagrams.length; i++) {
+               if(diagrams[i].offsetWidth>0){
+                  mermaid.init(undefined, diagrams[i]);
+               }
+            }
+         }
+         slideshow.on('afterShowSlide', initMermaid);
+         initMermaid(slideshow.getSlides()[slideshow.getCurrentSlideIndex()]);
+      </script>
+      
+   </body>
+</html>
