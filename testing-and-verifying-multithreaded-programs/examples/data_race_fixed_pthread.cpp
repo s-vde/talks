@@ -23,13 +23,13 @@ void* thread_routine(void* arg)
 
 int main()
 {
-   pthread_mutex_init(&mutex, NULL);
+   pthread_mutex_init(&mutex, 0);
    
    pthread_create(&thread1, 0, thread_routine, values + 0);
    pthread_create(&thread2, 0, thread_routine, values + 1);
    
-   pthread_join(thread1, NULL);
-   pthread_join(thread2, NULL);
+   pthread_join(thread1, 0);
+   pthread_join(thread2, 0);
 
    return 0;
 }

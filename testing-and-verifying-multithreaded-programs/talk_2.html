@@ -39,8 +39,11 @@ layout: false
 # Systematic Exploration
 
 ???
-Systematic exploration is a dynamic program analysis technique to overcome the challenge that
-nondeterminism poses for testing an verifying multi-threaded programs.
+We've seen that nondeterminism poses a serious challenge for testing and verifying multi-threaded 
+programs.
+
+In this part of the talk I am going to discuss Systematic Exploration
+which is a dynamic program analysis technique to overcome exactly that challenge.
 
 <!-- <<< -->
 
@@ -54,6 +57,20 @@ layout: true
 
 # The Idea
 - Take control over the interleaving of the program's threads at runtime
+- Systematically drive the program through a set of relevant schedules
+
+???
+The basic idead behind systematic exploration is to ...
+
+BRIDGE FROM:
+I am going to present how this basic idea is implemented in the systematic 
+exploration tool that I build.
+I will start by the RecordReplay library and how it assumes control over the runtime scheduler.
+
+---
+count: false
+# The Idea
+- **RecordReplay Library**: Take control over the interleaving of the program's threads at runtime
 - Systematically drive the program through a set of relevant schedules
 
 <!-- <<< -->
@@ -78,6 +95,7 @@ layout: true
 </div>
 
 ???
+The RecordReplay library has two components: a Scheduler library and a compiler instrumentation pass.
 - The instrumentation process starts with the program's source code.
 - This source code is compiled to LLVM Intermediate Representation using Clang
 - The RecordReplay compiler instrumentation pass is build on top op the LLVM compiler infrastructure
@@ -96,6 +114,37 @@ be mapped to it;
 Choice for LLVM route makes it possible to apply the tool to other languages that have a compiler
 frontend that translated to LLVM IR;
 -->
+
+<!-- <<< -->
+
+<!-- >>> Slide -->
+
+---
+exclude: true
+```cpp
+int x = 0;
+pthread_t thread1, thread2;
+int values[2] = {0, 1};
+pthread_mutex_t mutex;
+
+void* thread_routine(void* arg) {
+   int value = *(int*) arg;
+   pthread_mutex_lock(&mutex);
+   x = value;
+   pthread_mutex_unlock(&mutex);
+   pthread_exit(0);
+}
+
+int main() {
+   pthread_mutex_init(&mutex, 0);
+   pthread_create(&thread1, 0, thread_routine, values + 0);
+   pthread_create(&thread2, 0, thread_routine, values + 1);
+   pthread_join(thread1, 0);
+   pthread_join(thread2, 0);
+
+   return 0;
+}
+```
 
 <!-- <<< -->
 
@@ -125,6 +174,11 @@ define i32 @main() local_unnamed_addr #3 !dbg !78 {
   ret i32 0, !dbg !90
 }
 </code></pre></div>
+
+???
+In the next slides you'll see the human-redable dump of the LLVM intermediate representation of a 
+simple multi-threaded program with pthreads. This is the intermediate representation of the 
+program's main function
 
 ---
 count: false
@@ -152,8 +206,10 @@ define i32 @main() local_unnamed_addr #3 !dbg !78 {
 </code></pre></div>
 
 ???
-wrapper_register_main_thread registers the main thread with its thread id with the Scheduler.
-This allows the Scheduler to know for example when the main thread is finished.
+<!-- TODO -->
+The first instrumentation call in the main thread registers the main thread with the Scheduler.
+This allows the Scheduler to later identify the main thread, for example to determine whether or note
+the main thread is finished.
 
 ---
 count: false
@@ -181,9 +237,10 @@ define i32 @main() local_unnamed_addr #3 !dbg !78 {
 </code></pre></div>
 
 ???
-The enter/exit function wrappers allow the Scheduler to keep track of the call stack of a thread.
-This is useful for bug reports, but also for knowing when a thread is finished executing and may 
-be joined.
+At the entry point and at each exit point of the function, the instrumentation pass inserts calls
+to the schedulers enter/exit functions. These calls allow the Scheduler to keep track of the call 
+stack of a thread. This is useful for bug reports, but also for knowing when a thread is finished 
+executing and may be joined.
 
 ---
 count: false
@@ -211,8 +268,39 @@ define i32 @main() local_unnamed_addr #3 !dbg !78 {
 </code></pre></div>
 
 ???
-pthread_create calls in the original program are wrapped between two calls to Scheduler functions,
-which register the thread to be created.
+All thread creation instructions in the original program are wrapped between two calls to Scheduler 
+functions, which register the thread to be created.
+
+---
+count: false
+<div class="code_right" style="width: 100%;"><pre><code class="language-cpp">
+define i32 @main() local_unnamed_addr #3 !dbg !78 {
+  call void @wrapper_register_main_thread(), !dbg !81
+  call void @wrapper_enter_function(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @_recrep_function_name_main, i32 0, i32 0)), !dbg !81
+* %0 = call i32 @wrapper_post_spawn_instruction(%struct._opaque_pthread_t** @thread1, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/data_race_fixed_pthread.cpp", i32 0, i32 0), i32 28)
+* %call1 = tail call i32 @pthread_create(%struct._opaque_pthread_t** nonnull @thread1, %struct._opaque_pthread_attr_t* null, i8* (i8*)* nonnull @_Z14thread_routinePv, i8* bitcast ([2 x i32]* @values to i8*)), !dbg !82
+* call void @wrapper_register_thread(%struct._opaque_pthread_t** @thread1, i32 %0)
+  %1 = call i32 @wrapper_post_spawn_instruction(%struct._opaque_pthread_t** @thread2, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/data_race_fixed_pthread.cpp", i32 0, i32 0), i32 29)
+  %call2 = tail call i32 @pthread_create(%struct._opaque_pthread_t** nonnull @thread2, %struct._opaque_pthread_attr_t* null, i8* (i8*)* nonnull @_Z14thread_routinePv, i8* bitcast (i32* getelementptr inbounds ([2 x i32], [2 x i32]* @values, i64 0, i64 1) to i8*)), !dbg !83
+  call void @wrapper_register_thread(%struct._opaque_pthread_t** @thread2, i32 %1)
+  call void @wrapper_post_memory_instruction(i32 0, i8* bitcast (%struct._opaque_pthread_t** @thread1 to i8*), i8* getelementptr inbounds ([8 x i8], [8 x i8]* @_mem_loc_name_thread1, i32 0, i32 0), i8 0, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/data_race_fixed_pthread.cpp", i32 0, i32 0), i32 31)
+  %2 = load %struct._opaque_pthread_t*, %struct._opaque_pthread_t** @thread1, align 8, !dbg !84, !tbaa !85
+* call void @wrapper_post_pthread_join_instruction(%struct._opaque_pthread_t* %2, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/data_race_fixed_pthread.cpp", i32 0, i32 0), i32 31)
+* %call3 = tail call i32 @"\01_pthread_join"(%struct._opaque_pthread_t* %2, i8** null), !dbg !87
+  call void @wrapper_post_memory_instruction(i32 0, i8* bitcast (%struct._opaque_pthread_t** @thread2 to i8*), i8* getelementptr inbounds ([8 x i8], [8 x i8]* @_mem_loc_name_thread2, i32 0, i32 0), i8 0, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/data_race_fixed_pthread.cpp", i32 0, i32 0), i32 32)
+  %3 = load %struct._opaque_pthread_t*, %struct._opaque_pthread_t** @thread2, align 8, !dbg !88, !tbaa !85
+  call void @wrapper_post_pthread_join_instruction(%struct._opaque_pthread_t* %3, i8* getelementptr inbounds ([39 x i8], [39 x i8]* @"_recrep_file_name_./examples/data_race_fixed_pthread.cpp", i32 0, i32 0), i32 32)
+  %call4 = tail call i32 @"\01_pthread_join"(%struct._opaque_pthread_t* %3, i8** null), !dbg !89
+  call void @wrapper_exit_function(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @_recrep_function_name_main, i32 0, i32 0)), !dbg !90
+  ret i32 0, !dbg !90
+}
+</code></pre></div>
+
+???
+A similar scheduler call is inserted before join instructions.
+
+BRIDGE FROM:
+The next snippet shows the LLVM IR of a thread start_routine.
 
 ---
 count: false
