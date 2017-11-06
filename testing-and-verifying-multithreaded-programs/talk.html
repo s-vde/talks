@@ -175,35 +175,6 @@ testing: nondeterminism.
 end_subsubsection:Tools -->
 
 
----
-layout: true
-#### Challenges in Testing and Verifying Multi-Threaded Programs | Nondeterminism
-# What does this mean for testing?
-
-<!-- >>> Slide -->
-
----
-
---
-count: false
-##### Hard to get good test coverage:
-- Running tests repeatedly without the guarantee that schedules will be different
-
---
-count: false
-- Some bugs only occur under very rare schedules
-<!-- Approach of inducing bad schedules by forcing context-switches is not systematic! -->
-
---
-count: false
-- "Heisenbugs" may even disappear as a result of changes in timing introduced by the debugging tool
-<!-- bugs that tend to disappear when you want to find them -->
-
---
-count: false
-##### Bugs are hard to reproduce: 
-- If buggy behavior is observed, the next execution may be under a different schedule
-
 <!-- >>> Slide -->
 
 ---
@@ -375,18 +346,6 @@ valgrind --tool=helgrind ./background_thread
 <!--
             }
 end_example:background_thread.cpp -->
-
-<!--
-      }
-end_subsubsection:Nondeterminism -->
-
-<!--
-}
-end_section:section:Challenges in Testing and Verifying Multi-Threaded Programs -->
-
-
-
-
 
 <!-- section:Systematic Exploration -->
 
