@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <title>Testing and Verifying Multi-Threaded Programs</title>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+      <link rel="stylesheet" type="text/css" href="talk.css"/>
+   </head>
+   <body>
+      <textarea id="source">
+
+
+
+
+
+<!-- section:Title -->
+
+class: slide_title, no_number
+count: false
+
+# Automated Verification of Multi-Threaded Programs
+### Susanne van den Elsen
+Software Developer @ Native Instruments
+
+### Meeting C++
+November 10, 2017
+
+<!-- TODO INTRODUCTION, NI, research -->
+
+???
+My goal in this talk is to first provide an insight into why testing and verifying the correctness 
+of multi-threaded programs is challenging, and why traditional testing tools are inadequate for 
+meeting those challenges.
+Then I will present a technique, called Systematic Exploration, which is designed to overcome 
+excatly those challenges.
+I will demonstrate Systematic Exploration using a tool that I built in the context of my research on 
+the topic.
+
+
+
+
+
+<!-- section:Challenge In Testing And Verifying Mulit-Threaded Programs -->
+
+<!-- >>> Slide -->
+
+---
+class: slide_section, no_number
+count: false
+layout: false
+# Challenges in Testing and Verifying Multi-Threaded Programs
+
+???
+Let's look at why testing and verifying multi-threaded programs is challenging.
+
+When testing sequential programs, there are different types of bugs to look out for.
+These include errors like:
+<!-- TODO -->
+
+All these bugs can occur in multi-threaded programs too..., plus more.
+Programming with threads introduces a whole new class of potential bugs, which I will refer to as 
+"Concurrency Bugs"
+
+
+<!-- <<< -->
+
+<!-- subsection:Concurrency Bugs -->
+
+<!-- >>> Slide -->
+
+---
+# Concurrency Bugs
+
+<!-- <<< -->
+
+???
+BRIDGE ==>:
+<!-- TODO: memory errors, and ... -->
+Just like there are tools specifically tailored to detect typical memory errors, concurrency bugs
+ask for tools that specialize in detecting them. Luckily there are such tools available.
+
+<!-- subsubsection:Concurrency Bug Detectors -->
+
+---
+layout: true
+#### Challenges in Testing and Verifying Multi-Threaded Programs | Concurrency Bugs
+# Concurrency Bug Detectors
+
+<!-- >>> Slide -->
+
+---
+
+???
+The most well-known concurrency error detectors are probably ThreadSanitizer and Helgrind.
+At a very high level, these tools work as follows:
+
+<!-- <<< -->
+
+---
+count: false
+##### ThreadSanitizer / Helgrind
+
+<div class="mermaid" style="align: center; width: 100%; margin: 0px auto; margin-top: 3em;">
+   graph LR
+      input_program[Input Program<br/><.Source/Binary.>]
+      exe_instr[Instrumented Executable]
+      input_program --> |Compiler/Binary<br/>Instrumentation| exe_instr
+      core[Analysis Core<br/><br/>-  Monitoring facilities<br/><br/>-  Datarace/Deadlock<br/>&nbsp&nbspDetection Algorithms]
+      core --> |Execute| exe_instr
+      exe_instr --> |Trace| core
+      core --> report[Bug Report]
+</div>
+
+???
+- They instrument the program under test so that it can be monitored by the core of the tool.
+- In the case of ThreadSanitizer, this instrumentation happens on the source-code level when 
+  compiling, while Helgrind instruments binary input programs.
+- The instrumented executable is then executed.
+  The instrumentation allows the analysis core to record interesting events in the running program 
+  and the order in which they happened. Such a record is also called a "trace" of the execution. 
+  Events that are tracked include:
+   - thread creation, joining and destruction;
+   - memory accesses;
+   - lock and unlock instructions
+- The analysis core deploys algorithms that are specifically tailored to detect potential dataraces
+  and deadlocks in a trace.
+- If bugs are found, they are reported to the user.
+
+Tools like ThreadSanitizer and Helgrind have been applied to large C++ programs and have 
+successfully found concurrency errors, particularly data races, in real software applications.
+
+Needless to say, if you're programming with threads, I highly encourage you to use these tools if 
+you don't already.
+
+<!-- >>> Slide -->
+
+---
+layout: false
+# Nondeterminism
+
+<!-- <<< -->
+
+<!-- section:Systematic Exploration -->
+
+<!-- >>> Slide -->
+
+---
+class: slide_section, no_number
+count: false
+layout: false
+# Systematic Exploration
+
+???
+We've seen that nondeterminism poses a serious challenge for testing and verifying multi-threaded 
+programs.
+
+In this part of the talk I am going to discuss Systematic Exploration,
+which is a dynamic program analysis technique to overcome exactly that challenge.
+
+<!-- <<< -->
+
+
+
+
+
+<!-- ////////// -->
+
+
+
+
+      </textarea>
+      
+      <script src="../libs/mermaid/dist/mermaid.js"></script>
+      <link rel="stylesheet" href="../libs/mermaid/dist/mermaid.forest.css">
+      <script src="https://gnab.github.io/remark/downloads/remark-latest.min.js"></script>
+      <script>
+         var slideshow = remark.create({ 
+            ratio: '16:9',
+            highlightLanguage: 'cpp',
+            highlightStyle: 'github',
+            highlightLines: true
+         });
+         mermaid.initialize({ 
+            startOnLoad: false,
+            cloneCssStyles: false
+         });
+         function initMermaid(s) {
+            var diagrams = document.querySelectorAll('.mermaid');
+            var i;
+            for (i=0; i < diagrams.length; i++) {
+               if(diagrams[i].offsetWidth>0){
+                  mermaid.init(undefined, diagrams[i]);
+               }
+            }
+         }
+         slideshow.on('afterShowSlide', initMermaid);
+         initMermaid(slideshow.getSlides()[slideshow.getCurrentSlideIndex()]);
+      </script>
+      
+   </body>
+</html>

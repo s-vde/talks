@@ -42,34 +42,32 @@ end_section:section:Title -->
 
 
 
-<!-- section:Challenges in Testing Multi-Threaded Programs
-   {
--->
+         <!-- section:Challenges in Testing and Verifying Multi-Threaded Programs -->
 
----
-class: slide_section, no_number
-count: false
-layout: false
-# Challenges in Testing Multi-Threaded Programs
+         ---
+         class: slide_section, no_number
+         count: false
+         layout: false
+         # Challenges in Testing and Verifying Multi-Threaded Programs
 
-???
-BRIDGE: 
-Before I do that, let me first give you an insight in the challenges of testing multi-threaded 
-programs and why traditional testing and debugging tools are not sufficient for meeting these 
-challenges
+         ???
+         BRIDGE: 
+         Before I do that, let me first give you an insight in the challenges of testing multi-threaded 
+         programs and why traditional testing and debugging tools are not sufficient for meeting these 
+         challenges
 
-<!-- subsection:Concurrency Bugs
-      {
--->
+         <!-- subsection:Concurrency Bugs
+               {
+         -->
 
----
-layout: true
-#### Challenges in Testing Multi-Threaded Programs
-# Concurrency Bugs
+         ---
+         layout: true
+         #### Challenges in Testing and Verifying Multi-Threaded Programs
+         # Concurrency Bugs
 
-<!-- >>> Slide -->
+         <!-- >>> Slide -->
 
----
+         ---
 
 ???
 First of all, programming with threads instroduces a whole new class of potential bugs to look for.
@@ -103,40 +101,36 @@ one of the others to release a held resource
 
 <!-- <<< -->
 
-<!-- subsubsection:Tools
-         {
--->
+         <!-- subsubsection:Tools
+                  {
+         -->
 
----
-layout: true
-#### Challenges in Testing Multi-Threaded Programs | Concurrency Bugs
-# Specialized Tools For Concurrency Bug Detection
+         ---
+         layout: true
+         #### Challenges in Testing and Verifying Multi-Threaded Programs | Concurrency Bugs
+         # Specialized Tools For Concurrency Bug Detection
 
-<!-- >>> Slide -->
+         <!-- >>> Slide -->
 
----
+         ---
 
-???
-BRIDGE:
-- Just like there are tools specifically tailored to detect typical memory errors, concurrency bugs
-ask for tools that specialize in detecting them. 
-- Luckily there are such tools available, the most well-known ones probably being ThreadSanitizer 
-and Helgrind.
+         ???
+         BRIDGE:
+         - Just like there are tools specifically tailored to detect typical memory errors, concurrency bugs
+         ask for tools that specialize in detecting them. 
+         - Luckily there are such tools available, the most well-known ones probably being ThreadSanitizer 
+         and Helgrind.
 
---
-count: false
-##### ThreadSanitizer and Helgrind
-
-<!-- TODO: Am I going to branch off TSan/Helgrind here and explain high-level how they work? -->
-
---
-count: false
-- Instrument the program (source vs. binary), run it, and observe its execution
-- Deploy algorithms specifically tailored to detect data races (happens-before relation) and deadlocks (cycle detection)
-  at run-time
-  
-<!-- TODO: NOTES -->
-
+         --
+         count: false
+         ##### ThreadSanitizer and Helgrind
+         
+         --
+         count: false
+         - Instrument the program (source vs. binary), run it, and observe its execution
+         - Deploy algorithms specifically tailored to detect data races (happens-before relation) and deadlocks (cycle detection)
+           at run-time
+ 
 <!-- <<< -->
 
 <!-- >>> Slide -->
@@ -249,7 +243,7 @@ end_subsubsection:Tools -->
 
 ---
 layout: true
-#### Challenges in Testing Multi-Threaded Programs
+#### Challenges in Testing and Verifying Multi-Threaded Programs
 # Nondeterminism
 
 <!-- >>> Slide -->
@@ -296,7 +290,7 @@ outcome
 
 ---
 layout: true
-#### Challenges in Testing Multi-Threaded Programs | Nondeterminism
+#### Challenges in Testing and Verifying Multi-Threaded Programs | Nondeterminism
 # What does this mean for testing?
 
 <!-- >>> Slide -->
@@ -337,7 +331,7 @@ testing. These programs will later be used to demonstrate systematic exploration
 
 ---
 layout: true
-#### Challenges in Testing Multi-Threaded Programs | Nondeterminism
+#### Challenges in Testing and Verifying Multi-Threaded Programs | Nondeterminism
 # Example: bank_account.cpp
 
 
@@ -487,7 +481,7 @@ end_example:bank_account.cpp -->
 
 ---
 layout: true
-#### Challenges in Testing Multi-Threaded Programs | Nondeterminism
+#### Challenges in Testing and Verifying Multi-Threaded Programs | Nondeterminism
 # Example: background_thread.cpp
 
 <!-- >>> Slide -->
@@ -658,7 +652,7 @@ end_subsubsection:Nondeterminism -->
 
 <!--
 }
-end_section:section:Challenges in Testing Multi-Threaded Programs -->
+end_section:section:Challenges in Testing and Verifying Multi-Threaded Programs -->
 
 
 
