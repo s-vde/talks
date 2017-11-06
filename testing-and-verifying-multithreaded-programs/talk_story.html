@@ -407,6 +407,10 @@ So, nondeterminism poses a serious challenge for testing and verifying multi-thr
 In the next part of the talk I am going to discuss Systematic Exploration, which is a technique to 
 overcome exactly that challenge.
 
+
+
+
+
 <!-- section:Systematic Exploration -->
 
 <!-- >>> Slide -->
@@ -416,6 +420,34 @@ class: slide_section, no_number
 count: false
 layout: false
 # Systematic Exploration
+
+???
+The main idea behind Systematic Exploration to take control over the thread interleaving at runtime 
+and then repeatedly run and rerun the program, each time with a different schedule that is somehow
+interesting.
+
+The next slide shows the components of my Systematic Exploration tool.
+
+<!-- <<< -->
+
+---
+layout: true
+#### Systematic Exploration
+
+<!-- >>> Slide -->
+
+---
+
+# Tool
+
+##### RecordReplay Library
+Library to assume control over the program's thread interleaving
+
+--
+count: false
+##### StateSpaceExplorer
+- Algorithms to compute a set of interesting schedules
+- Exploration algorithm that executes the program under each of those schedules
 
 <!-- <<< -->
 
