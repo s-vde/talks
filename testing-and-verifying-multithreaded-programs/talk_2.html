@@ -790,7 +790,7 @@ layout: true
 
 ---
 
-<!-- HERE -->
+<!-- TODO: Credits -->
 
 --
 count: false
@@ -805,10 +805,63 @@ partial_order_reduction(program, equivalence_relation)
 }
 ```
 
+???
+The idea behind partial order reduction is to group schedules whose executions are, from the point of view of the
+specification that we're checking the program against, semantically equivalent. 
+The exploration algorithm makes sure that by the time it's finished it has, for each such group, or equivalence class, 
+seen at least one (and ideally exactly one) representative execution.
+
+BRIDGE FROM:
+At the heart of the equivalence relation is the concept of dependence. For verifying against dataraces, deadlocks
+and assertion failures the following dependence relation can be used.
+
+<!-- <<< -->
+
+<!-- >>> Slide -->
+
+---
+
+##### Dependence Relation
+Two instructions are *dependent* iff
+- they are carried out by the same thread; or
+- they operate on the same operand and at least one of them is a write
+
 <!-- 
-NOTE: 
-equivalence relation: groups schedules that lead to the same observable program behaviour 
+TODO: see if this works for our examples
 -->
+
+--
+count: false
+```cpp
+dependent(  1 Load x,   1 Load y    );       // same thread
+dependent(  1 Load x,   2 Store x   );       // same operand and one write
+!dependent( 1 Load x,   2 Load x    );       // same operand, but no write
+!dependent( 1 Load x,   2 Store y   );       // different threads, different operands
+```
+
+???
+BRIDGE FROM:
+Based on the dependence relation a happens-before relation can be defined.
+
+<!-- <<< -->
+
+<!-- >>> Slide -->
+
+---
+
+##### Happens-Before Relation
+In an execution E, instruction E[i] *happens-before* E[j] iff
+- i < j; and
+- E[i] and E[j] are *dependent*
+
+???
+i < j: In other words, E[i] is executed before E[j] in E
+
+--
+count: false
+<div class="animation_no_shift_up" style="margin-top: -10em;">
+   .right[<img src='./generated_trees/data_race_fixed_pthread.cpp/bounded_search/0/trees/animations/0.png' height="500"/>]
+</div>
 
 <!-- <<< -->
 
