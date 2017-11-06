@@ -95,13 +95,15 @@ At a very high level, these tools work as follows:
 
 <!-- <<< -->
 
+<!-- >>> Slide -->
+
 ---
 count: false
 ##### ThreadSanitizer / Helgrind
 
 <div class="mermaid" style="align: center; width: 100%; margin: 0px auto; margin-top: 3em;">
    graph LR
-      input_program[Input Program<br/><.Source/Binary.>]
+      input_program[Source/Binary<br/>Input Program]
       exe_instr[Instrumented Executable]
       input_program --> |Compiler/Binary<br/>Instrumentation| exe_instr
       core[Analysis Core<br/><br/>-  Monitoring facilities<br/><br/>-  Datarace/Deadlock<br/>&nbsp&nbspDetection Algorithms]
@@ -131,11 +133,218 @@ successfully found concurrency errors, particularly data races, in real software
 Needless to say, if you're programming with threads, I highly encourage you to use these tools if 
 you don't already.
 
+What these tools are good at is *detecting* concurrency bugs when they occur in the execution of 
+your program that they happended to monitor. However, as we'll see next, whether or not a potential 
+bug in the program occurs depends heavily on the actual runtime interleaving of threads.
+
+The following small bank account program illustrates this dependence.
+
+<!-- <<< -->
+
+<!-- subsubsection:Dependence on Thread Interleaving -->
+
+---
+layout: true
+#### Challenges in Testing and Verifying Multi-Threaded Programs | Concurrency Bugs
+# Dependence on Thread Interleaving
+<!-- <div class="h_example">bank_account.cpp</div> -->
+
+<!-- example:bank_account.cpp -->
+
 <!-- >>> Slide -->
 
 ---
-layout: false
+```cpp
+struct bank_account { atomic<int> balance; }
+
+void transfer(bank_account& sender, int amount, bank_account& receiver);
+```
+
+???
+A bank account has a balance and there is a function for transferring a given amount of money from
+one bank account (sender) to the other (the receiver).
+The specification of the transfer function states that when the function returns, the balances 
+of both involved accounts are non-negative.
+
+One test case for the transfer function checks that this is true in case two threads attempt to 
+transfer the whole amount of money out of the same account concurrently.
+
+--
+count: false
+```cpp
+TEST(AfterConcurrentTransfersBalancesArePositive)
+{
+   array<bank_account, 2> accounts = {{ 100, 0 }};
+   thread mallory(transfer, ref(accounts[0]), 100, ref(accounts[1]));
+   thread marvin(transfer, ref(accounts[0]), 100, ref(accounts[1]));
+   
+   mallory.join();
+   marvin.join();
+   
+   ASSERT(accounts[0] >= 0 && accounts[1] >= 0);
+}
+```
+
+???
+- There are two accounts, one with an initial balance of 100, and one with an initial balance of 0
+- Two adversary threads, Mallory and Marvin both try to transfer 100 euros from the first to the 
+  second account.
+- Obviously, if the program meets the specification, at least one of them should not succeed
+- The assertion states that after both threads are joined, both accounts have non-negative balance.
+
+<!-- <<< -->
+
+<!-- >>> Slide -->
+
+---
+
+```cpp
+void transfer(bank_account& sender, int amount, bank_account& receiver)
+{
+   const auto balance_sender = sender.balance.load();
+   if (balance_sender >= amount)
+   {
+      receiver.balance.fetch_add(amount);
+      sender.balance.fetch_sub(amount);
+   }
+}
+```
+
+???
+Here is an *attempt* at an implementation of the transfer function.
+1. First, the balance of the sender's account is atomically read and stored in a local variable
+2. Then, the function checks if that balance is sufficient for transferring the given amount of 
+   money out of it
+3. If so, it atomically adds the amount to the receiver's account and 
+   subsequently subtracts the same amount from the sender's account.
+
+<!-- <<< -->
+
+<!-- >>> Slide -->
+
+--
+```cpp
+mallory                                         marvin                                          accounts
+
+                                                                                                { 100,  0   }
+balance_sender = sender.balance.load() = 100;                                                
+receiver.balance.fetch_add(amount);                                                             { 100,  100 }
+sender.balance.fetch_sub(amount);                                                               { 0,    100 }
+                                                balance_sender = sender.balance.load() = 0;  
+```
+
+--
+count: false
+```cpp
+ASSERT(accounts[0] >= 0 && accounts[1] >= 0);   // assertion holds :(
+```
+
+<!-- <<< -->
+
+<!-- >>> Slide -->
+
+---
+
+```cpp
+void transfer(bank_account& sender, int amount, bank_account& receiver)
+{
+   const auto balance_sender = sender.balance.load();
+   if (balance_sender >= amount)
+   {
+      receiver.balance.fetch_add(amount);
+      sender.balance.fetch_sub(amount);
+   }
+}
+```
+
+```cpp
+mallory                                         marvin                                          accounts
+
+                                                                                                { 100,  0   }
+balance_sender = sender.balance.load() = 100;                                                 
+                                                balance_sender = sender.balance.load() = 100;
+                                                receiver.balance.fetch_add(amount);             { 100,  100 }
+                                                sender.balance.fetch_sub(amount);               { 0,    100 }
+receiver.balance.fetch_add(amount);                                                             { 0,    200 }
+sender.balance.fetch_sub(amount);                                                               { -100, 200 }         
+
+```
+
+--
+count: false
+```cpp
+ASSERT(accounts[0] >= 0 && accounts[1] >= 0);   // assertion is violated :)
+```
+
+???
+Whether or not the executing the unit test reveals the bug depends on the interleaving of the two 
+threads at runtime.
+
+This brings me to the second challenge for testing and verifying multi-threaded programs:
+From the viewpoint of the programmer, this interleaving is nondeterministic.
+
+<!-- <<< -->
+
+<!-- subsection:Nondeterminism -->
+
+---
+layout: true
+#### Challenges in Testing and Verifying Multi-Threaded Programs
 # Nondeterminism
+
+<!-- >>> Slide -->
+
+---
+
+--
+count: false
+The order in which threads get to execute at runtime is under the control of the OS scheduler.
+
+???
+The order in which threads get to execute is *not* under the programmer's control, it is under 
+the control of the OS scheduler.
+
+--
+count: false
+##### OS Scheduler Policy
+- preemptive / non-preemptive
+- assignment of priorities
+
+???
+The OS scheduler makes it scheduling decisions based on a scheduler policy, which may vary from 
+OS to OS. 
+The policy may prescribe, among other things:
+- Whether or not executing threads may be preempted, that is, whether the scheduler may force a 
+  context-switch to another thread, even though the running thread still has instructions to 
+  execute.
+- If and how threads get assigned priorities
+  
+The scheduler in turn can make its choices based on execution enviroment
+
+--
+count: false
+##### Execution Environment
+e.g.
+
+--
+count: false
+- Current CPU load
+
+--
+count: false
+- Priorities of other threads on the CPU
+
+--
+count: false
+- State of the cache
+
+???
+E.g. is the current thread slowed down by cache misses
+
+<!-- TODO: slide -->
+- The total order on which the threads operate on shared data often has an influence the program's 
+outcome
+-->
 
 <!-- <<< -->
 
