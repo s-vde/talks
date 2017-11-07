@@ -149,136 +149,157 @@ layout: true
 # Dependence on Thread Interleaving
 <!-- <div class="h_example">bank_account.cpp</div> -->
 
-<!-- example:bank_account.cpp -->
-
-<!-- >>> Slide -->
+<!-- example:background_thread.cpp -->
 
 ---
-```cpp
-struct bank_account { atomic<int> balance; }
 
-void transfer(bank_account& sender, int amount, bank_account& receiver);
-```
-
-???
-A bank account has a balance and there is a function for transferring a given amount of money from
-one bank account (sender) to the other (the receiver).
-The specification of the transfer function states that when the function returns, the balances 
-of both involved accounts are non-negative.
-
-One test case for the transfer function checks that this is true in case two threads attempt to 
-transfer the whole amount of money out of the same account concurrently.
-
---
-count: false
-```cpp
-TEST(AfterConcurrentTransfersBalancesArePositive)
+<div class="code_left" style="width: 40%;"><pre><code class="language-cpp">
+struct background_thread_manager
 {
-   array<bank_account, 2> accounts = {{ 100, 0 }};
-   thread mallory(transfer, ref(accounts[0]), 100, ref(accounts[1]));
-   thread marvin(transfer, ref(accounts[0]), 100, ref(accounts[1]));
+   void run_thread() {
+      if (!m_mutex.try_lock())
+         return;
+      
+      join_thread();
    
-   mallory.join();
-   marvin.join();
+      m_thread([this]() {
+         m_mutex.lock();
+         // perform task
+         m_mutex.unlock();
+      });
    
-   ASSERT(accounts[0] >= 0 && accounts[1] >= 0);
-}
-```
+      m_mutex.unlock();
+   }
+   
+   void join_thread() {
+      if (m_thread.joinable())
+         m_thread.join();
+   }
+   
+   thread m_thread;
+   mutex m_mutex;
+};
+</code></pre></div>
 
-???
-- There are two accounts, one with an initial balance of 100, and one with an initial balance of 0
-- Two adversary threads, Mallory and Marvin both try to transfer 100 euros from the first to the 
-  second account.
-- Obviously, if the program meets the specification, at least one of them should not succeed
-- The assertion states that after both threads are joined, both accounts have non-negative balance.
+--
+<div class="code_right" style="width: 59%;"><pre><code class="language-cpp">
+TEST(DeadlockTest)
+{
+   background_thread_manager m;
+   m.run_thread();
+   
+   thread t2([&m]() { m.run_thread(); });
+   t2.join();
+   
+   m.join_thread();
+}
+</code></pre></div>
 
 <!-- <<< -->
 
 <!-- >>> Slide -->
 
 ---
-
-```cpp
-void transfer(bank_account& sender, int amount, bank_account& receiver)
+<div class="code_left" style="width: 40%;"><pre><code class="language-cpp">
+struct background_thread_manager
 {
-   const auto balance_sender = sender.balance.load();
-   if (balance_sender >= amount)
-   {
-      receiver.balance.fetch_add(amount);
-      sender.balance.fetch_sub(amount);
+   void run_thread() {
+      if (!m_mutex.try_lock())
+         return;
+      
+      join_thread();
+   
+      m_thread([this]() {
+         m_mutex.lock();
+         // perform task
+         m_mutex.unlock();
+      });
+   
+      m_mutex.unlock();
    }
-}
-```
-
-???
-Here is an *attempt* at an implementation of the transfer function.
-1. First, the balance of the sender's account is atomically read and stored in a local variable
-2. Then, the function checks if that balance is sufficient for transferring the given amount of 
-   money out of it
-3. If so, it atomically adds the amount to the receiver's account and 
-   subsequently subtracts the same amount from the sender's account.
-
-<!-- <<< -->
-
-<!-- >>> Slide -->
-
---
-```cpp
-mallory                                         marvin                                          accounts
-
-                                                                                                { 100,  0   }
-balance_sender = sender.balance.load() = 100;                                                
-receiver.balance.fetch_add(amount);                                                             { 100,  100 }
-sender.balance.fetch_sub(amount);                                                               { 0,    100 }
-                                                balance_sender = sender.balance.load() = 0;  
-```
-
---
-count: false
-```cpp
-ASSERT(accounts[0] >= 0 && accounts[1] >= 0);   // assertion holds :(
-```
+   
+   void join_thread() {
+      if (m_thread.joinable())
+         m_thread.join();
+   }
+   
+   thread m_thread;
+   mutex m_mutex;
+};
+</code></pre></div>
+<div class="code_right" style="width: 59%;"><pre><code class="language-cpp">
+main                          m_thread          | m_mutex
+                                                |
+                                                |
+m_mutex.try_lock()                              | locked
+m_thread.joinable() == false                    |
+m_thread.spawn()                                |
+m_mutex.unlock()                                | unlocked
+                              m_mutex.lock()    | locked
+                              // perform task   |
+                              m_mutex.unlock()  | unlocked
+m_mutex.try_lock()                              | locked
+m_thread.joinable() == true                     |
+m_thread.join()                                 |
+m_thread.spawn()                                |
+m_mutex.unlock()                                | unlocked
+                              m_mutex.lock()    | locked
+                              // perform task   |
+                              m_mutex.unlock()  | unlocked
+m_thread.join()                                 |    
+</code></pre></div>
 
 <!-- <<< -->
 
 <!-- >>> Slide -->
 
 ---
-
-```cpp
-void transfer(bank_account& sender, int amount, bank_account& receiver)
+<div class="code_left" style="width: 40%;"><pre><code class="language-cpp">
+struct background_thread_manager
 {
-   const auto balance_sender = sender.balance.load();
-   if (balance_sender >= amount)
-   {
-      receiver.balance.fetch_add(amount);
-      sender.balance.fetch_sub(amount);
+   void run_thread() {
+      if (!m_mutex.try_lock())
+         return;
+      
+      join_thread();
+   
+      m_thread([this]() {
+         m_mutex.lock();
+         // perform task
+         m_mutex.unlock();
+      });
+   
+      m_mutex.unlock();
    }
-}
-```
-
-```cpp
-mallory                                         marvin                                          accounts
-
-                                                                                                { 100,  0   }
-balance_sender = sender.balance.load() = 100;                                                 
-                                                balance_sender = sender.balance.load() = 100;
-                                                receiver.balance.fetch_add(amount);             { 100,  100 }
-                                                sender.balance.fetch_sub(amount);               { 0,    100 }
-receiver.balance.fetch_add(amount);                                                             { 0,    200 }
-sender.balance.fetch_sub(amount);                                                               { -100, 200 }         
-
-```
-
---
-count: false
-```cpp
-ASSERT(accounts[0] >= 0 && accounts[1] >= 0);   // assertion is violated :)
-```
+   
+   void join_thread() {
+      if (m_thread.joinable())
+         m_thread.join();
+   }
+   
+   thread m_thread;
+   mutex m_mutex;
+};
+</code></pre></div>
+<div class="code_right" style="width: 59%;"><pre><code class="language-cpp">
+main                          m_thread          | m_mutex
+                                                |
+                                                |
+m_mutex.try_lock()                              | locked
+m_thread.joinable() == false                    |
+m_thread.spawn()                                |
+m_mutex.unlock()                                | unlocked
+                                                |
+m_mutex.try_lock()                              | locked
+m_thread.joinable() == true                     |
+                                                |
+DEADLOCK:                                       |
+m_thread.join()               m_mutex.lock()    |
+</code></pre></div>
 
 ???
-Whether or not the executing the unit test reveals the bug depends on the interleaving of the two 
-threads at runtime.
+Whether or not the executing the unit test reveals the deadlock depends on the interleaving of the 
+program's threads at runtime.
 
 This brings me to the second challenge for testing and verifying multi-threaded programs:
 From the viewpoint of the programmer, this interleaving is nondeterministic.
@@ -720,31 +741,6 @@ count: false
 <div class="animation_no_shift_up" style="margin-top: -10em;">
    .right[<img src='./generated_trees/data_race_fixed_pthread.cpp/bounded_search/0/trees/animations/0.png' height="500"/>]
 </div>
-
-<!-- <<< -->
-
----
-
-<!-- TODO: dependence, happens-before -->
-
-<!-- >>> Slide -->
-
----
-
-##### :) Complete
-Explores at least one schedule per equivalence class
-
---
-count: false
-##### :) Ideally non-redundant
-Ideally explores exactly one schedule per equivalence class
-
---
-count: false
-##### :( No obvious coverage versus resources trade-off 
-- For large programs with many dependencies between threads, partial order reduction may still be 
-infeasible
-- No iterative approach with incomplete but quantifiable coverage guarantees
 
 <!-- <<< -->
 

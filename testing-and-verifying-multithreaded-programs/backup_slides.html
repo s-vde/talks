@@ -26,6 +26,142 @@ November 10, 2017
 
 <!-- <<< -->
 
+<!-- example:bank_account.cpp -->
+
+<!-- >>> Slide -->
+
+---
+```cpp
+struct bank_account { atomic<int> balance; }
+
+void transfer(bank_account& sender, int amount, bank_account& receiver);
+```
+
+???
+A bank account has a balance and there is a function for transferring a given amount of money from
+one bank account (sender) to the other (the receiver).
+The specification of the transfer function states that when the function returns, the balances 
+of both involved accounts are non-negative.
+
+One test case for the transfer function checks that this is true in case two threads attempt to 
+transfer the whole amount of money out of the same account concurrently.
+
+--
+count: false
+```cpp
+TEST(AfterConcurrentTransfersBalancesArePositive)
+{
+   array<bank_account, 2> accounts = {{ 100, 0 }};
+   thread mallory(transfer, ref(accounts[0]), 100, ref(accounts[1]));
+   thread marvin(transfer, ref(accounts[0]), 100, ref(accounts[1]));
+   
+   mallory.join();
+   marvin.join();
+   
+   ASSERT(accounts[0] >= 0 && accounts[1] >= 0);
+}
+```
+
+???
+- There are two accounts, one with an initial balance of 100, and one with an initial balance of 0
+- Two adversary threads, Mallory and Marvin both try to transfer 100 euros from the first to the 
+  second account.
+- Obviously, if the program meets the specification, at least one of them should not succeed
+- The assertion states that after both threads are joined, both accounts have non-negative balance.
+
+<!-- <<< -->
+
+<!-- >>> Slide -->
+
+---
+
+```cpp
+void transfer(bank_account& sender, int amount, bank_account& receiver)
+{
+   const auto balance_sender = sender.balance.load();
+   if (balance_sender >= amount)
+   {
+      receiver.balance.fetch_add(amount);
+      sender.balance.fetch_sub(amount);
+   }
+}
+```
+
+???
+Here is an *attempt* at an implementation of the transfer function.
+1. First, the balance of the sender's account is atomically read and stored in a local variable
+2. Then, the function checks if that balance is sufficient for transferring the given amount of 
+   money out of it
+3. If so, it atomically adds the amount to the receiver's account and 
+   subsequently subtracts the same amount from the sender's account.
+
+<!-- <<< -->
+
+<!-- >>> Slide -->
+
+--
+```cpp
+mallory                                         marvin                                          accounts
+
+                                                                                                { 100,  0   }
+balance_sender = sender.balance.load() = 100;                                                
+receiver.balance.fetch_add(amount);                                                             { 100,  100 }
+sender.balance.fetch_sub(amount);                                                               { 0,    100 }
+                                                balance_sender = sender.balance.load() = 0;  
+```
+
+--
+count: false
+```cpp
+ASSERT(accounts[0] >= 0 && accounts[1] >= 0);   // assertion holds :(
+```
+
+<!-- <<< -->
+
+<!-- >>> Slide -->
+
+---
+
+```cpp
+void transfer(bank_account& sender, int amount, bank_account& receiver)
+{
+   const auto balance_sender = sender.balance.load();
+   if (balance_sender >= amount)
+   {
+      receiver.balance.fetch_add(amount);
+      sender.balance.fetch_sub(amount);
+   }
+}
+```
+
+```cpp
+mallory                                         marvin                                          accounts
+
+                                                                                                { 100,  0   }
+balance_sender = sender.balance.load() = 100;                                                 
+                                                balance_sender = sender.balance.load() = 100;
+                                                receiver.balance.fetch_add(amount);             { 100,  100 }
+                                                sender.balance.fetch_sub(amount);               { 0,    100 }
+receiver.balance.fetch_add(amount);                                                             { 0,    200 }
+sender.balance.fetch_sub(amount);                                                               { -100, 200 }         
+
+```
+
+--
+count: false
+```cpp
+ASSERT(accounts[0] >= 0 && accounts[1] >= 0);   // assertion is violated :)
+```
+
+???
+Whether or not the executing the unit test reveals the bug depends on the interleaving of the two 
+threads at runtime.
+
+This brings me to the second challenge for testing and verifying multi-threaded programs:
+From the viewpoint of the programmer, this interleaving is nondeterministic.
+
+<!-- <<< -->
+
 <!-- backup_slides:Instrumentation>
 
 ---

@@ -170,11 +170,6 @@ testing: nondeterminism.
 
 <!-- <<< -->
 
-<!--
-         }
-end_subsubsection:Tools -->
-
-
 <!-- >>> Slide -->
 
 ---
@@ -186,151 +181,7 @@ valgrind --tool=helgrind ./bank_account
 
 <!-- <<< -->
 
----
 
-<div class="code_left" style="width: 40%;"><pre><code class="language-cpp">
-struct background_thread_manager
-{
-   void run_thread() {
-      if (!m_mutex.try_lock())
-         return;
-      
-      join_thread();
-   
-      m_thread([this]() {
-         m_mutex.lock();
-         // perform task
-         m_mutex.unlock();
-      });
-   
-      m_mutex.unlock();
-   }
-   
-   void join_thread() {
-      if (m_thread.joinable())
-         m_thread.join();
-   }
-   
-   thread m_thread;
-   mutex m_mutex;
-};
-</code></pre></div>
-
---
-<div class="code_right" style="width: 59%;"><pre><code class="language-cpp">
-int main()
-{
-   background_thread_manager m;
-   m.run_thread();
-   m.run_thread();
-   
-   m.join_thread();
-}
-</code></pre></div>
-
-<!-- <<< -->
-
-<!-- >>> Slide -->
-
----
-<div class="code_left" style="width: 40%;"><pre><code class="language-cpp">
-struct background_thread_manager
-{
-   void run_thread() {
-      if (!m_mutex.try_lock())
-         return;
-      
-      join_thread();
-   
-      m_thread([this]() {
-         m_mutex.lock();
-         // perform task
-         m_mutex.unlock();
-      });
-   
-      m_mutex.unlock();
-   }
-   
-   void join_thread() {
-      if (m_thread.joinable())
-         m_thread.join();
-   }
-   
-   thread m_thread;
-   mutex m_mutex;
-};
-</code></pre></div>
-<div class="code_right" style="width: 59%;"><pre><code class="language-cpp">
-main                          m_thread          | m_mutex
-                                                |
-                                                |
-m_mutex.try_lock()                              | locked
-m_thread.joinable() == false                    |
-m_thread.spawn()                                |
-m_mutex.unlock()                                | unlocked
-                              m_mutex.lock()    | locked
-                              // perform task   |
-                              m_mutex.unlock()  | unlocked
-m_mutex.try_lock()                              | locked
-m_thread.joinable() == true                     |
-m_thread.join()                                 |
-m_thread.spawn()                                |
-m_mutex.unlock()                                | unlocked
-                              m_mutex.lock()    | locked
-                              // perform task   |
-                              m_mutex.unlock()  | unlocked
-m_thread.join()                                 |    
-</code></pre></div>
-
-<!-- <<< -->
-
-<!-- >>> Slide -->
-
----
-<div class="code_left" style="width: 40%;"><pre><code class="language-cpp">
-struct background_thread_manager
-{
-   void run_thread() {
-      if (!m_mutex.try_lock())
-         return;
-      
-      join_thread();
-   
-      m_thread([this]() {
-         m_mutex.lock();
-         // perform task
-         m_mutex.unlock();
-      });
-   
-      m_mutex.unlock();
-   }
-   
-   void join_thread() {
-      if (m_thread.joinable())
-         m_thread.join();
-   }
-   
-   thread m_thread;
-   mutex m_mutex;
-};
-</code></pre></div>
-<div class="code_right" style="width: 59%;"><pre><code class="language-cpp">
-main                          m_thread          | m_mutex
-                                                |
-                                                |
-m_mutex.try_lock()                              | locked
-m_thread.joinable() == false                    |
-m_thread.spawn()                                |
-m_mutex.unlock()                                | unlocked
-                                                |
-m_mutex.try_lock()                              | locked
-m_thread.joinable() == true                     |
-                                                |
-DEADLOCK:                                       |
-m_thread.join()               m_mutex.lock()    |
-</code></pre></div>
-
-<!-- <<< -->
 
 <!-- >>> Slide -->
 
@@ -342,10 +193,6 @@ valgrind --tool=helgrind ./background_thread
 ```
 
 <!-- <<< -->
-
-<!--
-            }
-end_example:background_thread.cpp -->
 
 <!-- section:Systematic Exploration -->
 
@@ -392,6 +239,31 @@ layout: true
 </div>
 
 <!-- >>> Slide -->
+
+---
+
+<!-- TODO: dependence, happens-before -->
+
+<!-- >>> Slide -->
+
+---
+
+##### :) Complete
+Explores at least one schedule per equivalence class
+
+--
+count: false
+##### :) Ideally non-redundant
+Ideally explores exactly one schedule per equivalence class
+
+--
+count: false
+##### :( No obvious coverage versus resources trade-off 
+- For large programs with many dependencies between threads, partial order reduction may still be 
+infeasible
+- No iterative approach with incomplete but quantifiable coverage guarantees
+
+<!-- <<< -->
 
 
 
