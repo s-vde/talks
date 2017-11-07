@@ -500,13 +500,182 @@ graph LR
 The instrumented executable now takes as input a schedule and after execution dumps a trace of the 
 execution.
 
+This trace is used by the Systematic Exploration algorithms implemented in the StateSpaceExplorer 
+tool to compute the next schedules to run the instrumented executable under.
 
+Let's take a look at two algorithms implemented in the StateSpaceExplorer tool
+
+<!-- <<< -->
+
+---
+layout: true
+#### Systematic Exploration
+# Depth-First Exploration
+
+<!-- >>> Slide -->
+
+---
+
+```cpp
+depth_first_exploration(program)
+{
+   for (schedule : possible_schedules(program))
+   {
+      run(program, schedule);
+   }
+}
+```
+
+???
+The first algorithm is a simple depth-first exploration.
+It simply explores all possible thread interleavings of the original input program.
+The set of possible interleavings is computed on-the-fly.
+The next slide illustrates this on the minimal datarace example I introduced earlier in the talk.
+
+<!-- <<< -->
+
+<!-- >>> Slide -->
+
+---
+layout: true
+#### Systematic Exploration
+# Depth-First Exploration
+<span class="h_example">data_race.cpp</span>
+
+---
+
+---
+count: false
+<div class="animation_no_shift_up" style="margin-right: 6em;">
+   .right[<img src='./generated_trees/data_race.cpp/depth_first_search/trees/animations/0.png' height="400"/>]
+</div>
+
+???
+- The exploration starts with a certain schedule, in this case a non-preemptive one that prioritizes
+  threads in the order in which they were created.
+- The trace contains for each node in the branch the set of threads that are enabled in that state. 
+- And the algorithm maintains for each node the set of threads it has already scheduled from that 
+  state.
+- Then it backtracks the annotated trace until it finds a state in which there is an enabled thread 
+  that has not been scheduled from that state yet.
+- It appends that thread's id to the schedule up to that state and reexecutes the program under the 
+  resulting schedule.
+
+---
+count: false 
+<div class="animation_no_shift_up" style="margin-right: 6em;">
+   .right[<img src='./generated_trees/data_race.cpp/depth_first_search/trees/animations/1.png' height="400"/>]
+</div>
+
+
+
+---
+count: false 
+<div class="animation_no_shift_up" style="margin-right: 6em;">
+   .right[<img src='./generated_trees/data_race.cpp/depth_first_search/trees/animations/2.png' height="400"/>]
+</div>
+---
+count: false 
+<div class="animation_no_shift_up" style="margin-right: 6em;">
+   .right[<img src='./generated_trees/data_race.cpp/depth_first_search/trees/animations/3.png' height="400"/>]
+</div>
+
+<!-- >>> Slide -->
+
+---
+.center[<img src='./generated_trees/data_race.cpp/depth_first_search/trees/full_schedules.png' width="1100"/>]
+
+???
+This process continues, until eventually it reaches the root node of the tree again and all 
+enabled threads have been scheduled from that root.
+
+This algorithm is very straightforward and, because it executes the program under all 
+possible thread interleavings is guaranteed to find concurrency bugs if they are present.
+However: it suffers from a major problem: combinatorial explosion.
+
+The number of thread interleavings is exponential in the size of the program.
+For the simple datarace program the search tree is still managable, but for real-world 
+applications, Depth First Search simple becomes ... <!-- TODO -->
 
 <!-- <<< -->
 
 
 
 
+
+<!-- section:Outro -->
+
+<!-- >>> Slide -->
+
+---
+count: false
+layout: false
+class: slide_section, no_number
+# Thank you!
+
+<!-- <<< -->
+
+---
+layout: true
+# References
+
+<!-- >>> Slide -->
+
+---
+
+### Tools
+<span class="h_link">StateSpaceExplorer:</span>
+https://github.com/s-vde/state-space-explorer
+
+<span class="h_link">Helgrind:</span>
+http://valgrind.org/docs/manual/hg-manual.html
+
+<span class="h_link">ThreadSanitizer:</span>
+https://github.com/google/sanitizers/wiki
+
+<br/><br/>
+<span class="h_link">CHESS:</span>
+https://chesstool.codeplex.com
+
+<span class="h_link">Maple:</span>
+https://github.com/jieyu/maple
+
+<!-- <<< -->
+
+<!-- >>> Slide -->
+
+---
+
+### Selected Literature
+C. Flanagan and P. Godefroid (2005),
+*Dynamic Partial-Order Reduction for Model Checking Software*,
+In: POPL' 05,
+pages 110-121
+<br class="br_link" />
+https://dl.acm.org/citation.cfm?id=1040315
+
+P. Godefroid (1997),
+*Model Checking for Programming Languages using VeriSoft*,
+InL POPL'97,
+pages 174-186
+<br class="br_link" />
+https://dl.acm.org/citation.cfm?id=263717&CFID=824726696&CFTOKEN=68367255
+
+M. Musuvathi and S. Qadeer (2007),
+*Iterative Context Bounding for Systematic Testing of Multithreaded Programs*,
+In: PLDI' 07,
+pages 446-455
+<br class="br_link" />
+https://dl.acm.org/citation.cfm?id=1040315
+
+M. Musuvathi et al. (2008), 
+*Finding and Reproducing Heisenbugs in Concurrent Programs*,
+In OSDI'08,
+pages 267-280
+<br class="br_link" />
+https://dl.acm.org/citation.cfm?id=1855760
+
+<!-- <<< -->
 
 <!-- ////////// -->
 

@@ -111,34 +111,34 @@ def main(argv):
                 #  10),                           # 6: nodesep
                 # -----
                 # NOTE: Just to generate the instrumented.txt
-                os.path.join(test_programs, "data_race_fixed_pthread.cpp"):
-                # 0: name_filter
-                (["x", "value", "mutex"],
-                 # 1: command line options
-                 "--opt 3 --c -std=c++14",
-                 # 2: exploration modes
-                 ["depth_first_search", "bounded_search"],
-                 # 3: bounds
-                 [(0, "Until:2")],
-                 # 4: max nr explorations
-                 1,
-                 # 5: nodesep
-                 10),
+                # os.path.join(test_programs, "data_race_fixed_pthread.cpp"):
+                # # 0: name_filter
+                # (["x", "value", "mutex"],
+                #  # 1: command line options
+                #  "--opt 3 --c -std=c++14",
+                #  # 2: exploration modes
+                #  ["depth_first_search", "bounded_search"],
+                #  # 3: bounds
+                #  [(0, "Until:2")],
+                #  # 4: max nr explorations
+                #  1,
+                #  # 5: nodesep
+                #  10),
                 # -----
                 # NOTE: Just to generate the instrumented.txt
-                os.path.join(test_programs, "data_race.cpp"):
-                # 0: name_filter
-                ([],
-                 # 1: command line options
-                 "--opt 3 --c -std=c++14",
-                 # 2: exploration modes
-                 ["depth_first_search"],
-                 # 3: bounds
-                 [],
-                 # 4: max nr explorations
-                 1000,
-                 # 5: nodesep
-                 10),
+                # os.path.join(test_programs, "data_race.cpp"):
+                # # 0: name_filter
+                # ([],
+                #  # 1: command line options
+                #  "--opt 3 --c -std=c++14",
+                #  # 2: exploration modes
+                #  ["depth_first_search"],
+                #  # 3: bounds
+                #  [],
+                #  # 4: max nr explorations
+                #  1000,
+                #  # 5: nodesep
+                #  10),
                 # # -----
                 # # NOTE: Just to generate full_schedules.png
                 # os.path.join(test_programs, "deadlock_pthread.cpp"):
@@ -182,6 +182,38 @@ def main(argv):
                 #  1000,
                 #  # 5: nodesep
                 #  10)
+                # -----
+                # NOTE: This is used in the presentation: there are 4 executions, 
+                # but the last one should not be there
+                # os.path.join(test_programs, "background_thread.cpp"):
+                # # 0: name_filter
+                # (["m"],
+                #  # 1: command line options
+                #  "--opt 3 --c -std=c++14",
+                #  # 2: exploration modes
+                #  ["dpor"],
+                #  # 3: bounds
+                #  [],
+                #  # 4: max nr explorations
+                #  3,
+                #  # 5: nodesep
+                #  10),
+                # -----
+                # NOTE: This is used in the presentation: there are 4 executions, 
+                # but the last one should not be there
+                os.path.join(test_programs, "background_thread.cpp"):
+                # 0: name_filter
+                (["m"],
+                 # 1: command line options
+                 "--opt 3 --c -std=c++14",
+                 # 2: exploration modes
+                 ["depth_first_search"],
+                 # 3: bounds
+                 [],
+                 # 4: max nr explorations
+                 1000,
+                 # 5: nodesep
+                 10),
                }
 
     for program, properties in programs.items():

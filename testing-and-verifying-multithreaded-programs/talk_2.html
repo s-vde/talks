@@ -169,119 +169,11 @@ accesses are coordinated very carefully in order not to actually introduce deadl
 
 <!-- <<< -->
 
-<!-- >>> Slide -->
 
-???
-BRIDGE FROM:
-Now that I've showed you how the RecordReplay library allows to take control over a program's 
-thread interleaving at runtime, let's take a first look at algorithms that compute a set of 
-relevant schedules to drive the program through.
 
---
-count: false
-   - The discussed algorithms are implemeted in the StateSpaceExplorer library
-   
-???
-These algorithms all compute the set of schedules to consider on-the-fly, based on the trace of the 
-previous execution.
 
---
-count: false
-   - Relevant schedules are computed on-the-fly, based on the recorded trace of the previous 
-     execution
-   
-<!-- <<< -->
 
----
-layout: true
-#### Systematic Exploration | Exploration Algorithms
-# Depth-First Exploration
 
-<!-- >>> Slide -->
-
----
-
-```cpp
-depth_first_exploration(program)
-{
-   for (schedule : possible_schedules(program))
-   {
-      run(program, schedule);
-   }
-}
-```
-
-???
-The first algorithm is a simple depth-first exploration.
-
-<!-- <<< -->
-
-<!-- >>> Slide -->
-
----
-layout: true
-#### Systematic Exploration | Exploration Algorithms
-# Depth-First Exploration
-<span class="h_example">data_race.cpp</span>
-
----
-
----
-count: false
-<div class="animation_no_shift_up" style="margin-right: 6em;">
-   .right[<img src='./generated_trees/data_race.cpp/depth_first_search/trees/animations/0.png' height="400"/>]
-</div>
-
-???
-- The exploration starts with a certain schedule, in this case a non-preemptive one that prioritizes
-  threads in the order in which they were created.
-- It annotates each state in the branch with the set of threads that are enabled in that state as 
-  well as the set of threads that it has already scheduled in that state.
-- Then it backtracks the annotated trace until it finds a state in which there is an enabled thread 
-  that has not been scheduled from that state yet.
-- It appends that thread's id to the schedule up to that state and runs the program under the 
-  resulting schedule.
-
----
-count: false 
-<div class="animation_no_shift_up" style="margin-right: 6em;">
-   .right[<img src='./generated_trees/data_race.cpp/depth_first_search/trees/animations/1.png' height="400"/>]
-</div>
-
-???
-This process continues, until eventually it reaches the root node of the tree again and all 
-enabled threads have been scheduled from that root.
-
----
-count: false 
-<div class="animation_no_shift_up" style="margin-right: 6em;">
-   .right[<img src='./generated_trees/data_race.cpp/depth_first_search/trees/animations/2.png' height="400"/>]
-</div>
----
-count: false 
-<div class="animation_no_shift_up" style="margin-right: 6em;">
-   .right[<img src='./generated_trees/data_race.cpp/depth_first_search/trees/animations/3.png' height="400"/>]
-</div>
-
-???
-Although this algorithm is very straightforward and, because it executes the program under all 
-possible thread interleavings is guaranteed to find concurrency bugs if they are present, 
-it suffers from a major problem: combinatorial explosion.
-
-<!-- <<< -->
-
----
-layout: true
-#### Systematic Exploration | Exploration Algorithms
-# Combinatorial Explosion!
-<div class="h_example">data_race.cpp</div>
-
-<!-- >>> Slide -->
-
----
-.center[<img src='./generated_trees/data_race.cpp/depth_first_search/trees/full_schedules.png' width="1100"/>]
-
-<!-- <<< -->
 
 <!-- >>> Slide -->
 
@@ -647,6 +539,12 @@ count: false
 <div class="animation_dpor" style="margin-top: -7em">
    .right[<img src='./generated_trees/background_thread.cpp/dpor/trees/animations/1.png' height="560"/>]
 </div>
+---
+count: false
+<div class="animation_dpor" style="margin-top: -7em">
+   .right[<img src='./generated_trees/background_thread.cpp/dpor/trees/animations/2.png' height="560"/>]
+</div>
+---
 
 <!-- <<< -->
 
