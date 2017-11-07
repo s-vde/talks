@@ -70,13 +70,86 @@ Programming with threads introduces a whole new class of potential bugs, which I
 ---
 # Concurrency Bugs
 
-<!-- <<< -->
+???
+In general, concurrency bugs arise from the fact that multiple threads are sharing the same 
+resources.
+In this talk I focus on three types of bugs.
+
+--
+count: false
+##### Race Conditions
+
+```cpp
+atomic<int> x = 0;
+
+thread t1([&x]{ x.store(1); });
+thread t2([&x]{ x.store(2); });
+
+t1.join();
+t2.join();
+
+assert(x.load() == 2);
+```
 
 ???
+Race conditions: Arise when the program's correctness depends on the relative timing or ordering of 
+thread instructions.
+
+---
+count: false
+# Concurrency Bugs
+##### Data Races
+
+```cpp
+int x = 0;
+
+thread t1([&x]{ x = 1; });
+thread t2([&x]{ x = 2; });
+
+t1.join();
+t2.join();
+```
+
+???
+Data Races: Arise when two threads
+- may access the same memory location concurrently; and
+- at least one of the accesses is a write
+
+Since the C++11 memory model we can reason about memory accesses and dataraces are deemed undefined 
+behaviour (so it is very important to make sure your programs are datarace free)
+
+---
+count: false
+# Concurrency Bugs
+##### Deadlocks
+
+```cpp
+mutex m1, m2;
+
+thread t1([&m1, &m2]{ 
+   lock_guard<mutex> lock1(m1);
+   lock_guard<mutex> lock2(m2);
+});
+
+thread t2([&m1, &m2]{ 
+   lock_guard<mutex> lock2(m2);
+   lock_guard<mutex> lock1(m1);
+});
+
+t1.join();
+t2.join();
+```
+
+???
+Deadlock is a situation where a set of threads is blocked indefinitely because each of them is 
+waiting for one of the others to release a held resource.
+
 BRIDGE ==>:
 <!-- TODO: memory errors, and ... -->
 Just like there are tools specifically tailored to detect typical memory errors, concurrency bugs
 ask for tools that specialize in detecting them. Luckily there are such tools available.
+
+<!-- <<< -->
 
 <!-- subsubsection:Concurrency Bug Detectors -->
 
@@ -638,10 +711,18 @@ layout: true
 count: false
 ##### Challenge
 Explore a subset of the possbile interleavings, but still provide coverage guarantees
+--
+count: false
 - Complete coverage: all concurrency bugs in the program are found
+--
+count: false
 - Partial coverage: all concurrency bugs with a certain property are found
    e.g.: 
+--
+count: false
    - all bugs reachable by a schedule of length 10
+--
+count: false
    - all bugs reachable by a schedule with at most 2 context-switches
    
 

@@ -39,34 +39,7 @@ Good afternoon, welcome everybody and thank you for coming,
 end_section:section:Title -->
 
 
-???
-In general, concurrency bugs arise from the fact that multiple threads are sharing the same resources.
-In this talk I focus on three types of bugs.
 
-
---
-count: false
-##### Race Conditions
-Arise when the program's correctness depends on the relative timing or ordering of thread 
-instructions
-
---
-count: false
-##### Data Races
-Arise when two threads
-- access the same memory location concurrently; and 
-- at least one of the accesses is a write
-
-???
-Data Races:
-Since the C++11 memory model we can reason about memory accesses and dataraces are deemed undefined 
-behaviour (so it is very important to make sure your programs are datarace free)
-
---
-count: false
-##### Deadlocks
-Situation where a set of threads is blocked indefinitely because each of them is waiting for 
-one of the others to release a held resource
  
 <!-- <<< -->
 
