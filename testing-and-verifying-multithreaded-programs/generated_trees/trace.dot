@@ -1,0 +1,62 @@
+digraph "" {
+	graph [bgcolor=transparent,
+		directed=True,
+		dpi=300,
+		fontname="Ubuntu Mono",
+		forcelabels=True,
+		nodesep=3,
+		ordering=out,
+		rankdir=TB,
+		ranksep=0.8,
+		"strict"=False
+	];
+	node [color=black,
+		fillcolor=black,
+		fixedsize=true,
+		fontsize=32,
+		height=.05,
+		shape=point,
+		style=filled,
+		width=.05
+	];
+	edge [arrowsize=0.5,
+		color=black,
+		fontsize=32,
+		penwidth=2,
+		weight=100
+	];
+	s	 [fontcolor=black];
+	"s.0"	 [fontcolor=black];
+	s -> "s.0"	 [fontcolor=black,
+		xlabel="   0 Store 0x7fff5be97a4c   "];
+	"s.0.0"	 [fontcolor=black];
+	"s.0" -> "s.0.0"	 [fontcolor=black,
+		xlabel="   0 Spawn 1   "];
+	"s.0.0.0"	 [fontcolor=black];
+	"s.0.0" -> "s.0.0.0"	 [fontcolor=black,
+		xlabel="   0 Spawn 2   "];
+	"s.0.0.0.1"	 [fontcolor=black];
+	"s.0.0.0" -> "s.0.0.0.1"	 [fontcolor=black,
+		xlabel="   1 Load 0x7fc92c402888   "];
+	"s.0.0.0.1.1"	 [fontcolor=black];
+	"s.0.0.0.1" -> "s.0.0.0.1.1"	 [fontcolor=black,
+		xlabel="   1 Store 0x7fff5c8b5a4c   "];
+	"s.0.0.0.1.1.0"	 [fontcolor=black];
+	"s.0.0.0.1.1" -> "s.0.0.0.1.1.0"	 [fontcolor=black,
+		xlabel="   0 Join 1   "];
+	"s.0.0.0.1.1.0.2"	 [fontcolor=black];
+	"s.0.0.0.1.1.0" -> "s.0.0.0.1.1.0.2"	 [fontcolor=black,
+		xlabel="   2 Load 0x7f9082d00078   "];
+	"s.0.0.0.1.1.0.2.2"	 [fontcolor=black];
+	"s.0.0.0.1.1.0.2" -> "s.0.0.0.1.1.0.2.2"	 [fontcolor=black,
+		xlabel="   2 Store 0x7fff5aae9a4c   "];
+	"s.0.0.0.1.1.0.2.2.0"	 [fontcolor=black];
+	"s.0.0.0.1.1.0.2.2" -> "s.0.0.0.1.1.0.2.2.0"	 [fontcolor=black,
+		xlabel="   0 Join 2   "];
+	"s.0.0.0.1.1.0.2.2.0.status"	 [color=transparent,
+		fillcolor=transparent,
+		fontcolor=black];
+	"s.0.0.0.1.1.0.2.2.0" -> "s.0.0.0.1.1.0.2.2.0.status"	 [color=transparent,
+		fontcolor=transparent,
+		xlabel="  "];
+}

@@ -422,11 +422,11 @@ layout: false
 # Systematic Exploration
 
 ???
-The main idea behind Systematic Exploration to take control over the thread interleaving at runtime 
-and then repeatedly run and rerun the program, each time with a different schedule that is somehow
-interesting.
+The main idea behind Systematic Exploration is to repeatedly execute the program under test, each 
+time with a different schedule from a set of interesting schedules. 
 
-The next slide shows the components of my Systematic Exploration tool.
+Thereto, the exploration tool first has to gain control over the program's thread interleaving at 
+runtime. In my tool, this is taken care of by the RecordReplay Library
 
 <!-- <<< -->
 
@@ -436,18 +436,71 @@ layout: true
 
 <!-- >>> Slide -->
 
+<!-- <<< -->
+
 ---
+layout: true
+#### Systematic Exploration
+# RecordReplay library: Taking "Control" over the Scheduler
 
-# Tool
+<!-- >>> Slide -->
 
-##### RecordReplay Library
-Library to assume control over the program's thread interleaving
+---
+<div class="mermaid" style="align: center; width: 60%; margin: 0px auto;">
+graph TD
+   sut[Souce Code]
+   ir[LLVM IR]
+   ir_instr[Instrumented IR]
+   scheduler[Run Time Scheduler Library]
+   exe_instr[Instrumented Executable]
+   sut --> |Clang| ir
+   ir --> |RecordReplay Instrumentation Pass| ir_instr
+   ir_instr --> exe_instr
+   scheduler --> exe_instr
+</div>
 
---
-count: false
-##### StateSpaceExplorer
-- Algorithms to compute a set of interesting schedules
-- Exploration algorithm that executes the program under each of those schedules
+???
+The RecordReplay library which has two components: 
+- a Scheduler Library and
+- a compiler instrumentation pass built on top of the LLVM compiler infrastructure.
+
+- The instrumentation process starts with the program's source code.
+- This source code is compiled to LLVM Intermediate Representation using Clang
+- It instruments the program's intermediate representation by inserting calls to functions from the 
+  Scheduler library, which allow the Scheduler to:
+  * control which of the program's threads gets to execute in every scheduling round; and
+  * record the execution's trace
+  Calls to the scheduler are inserted before thread creation/joining, memory instructions, and 
+  lock instructions
+- Then the instrumented source code is linked to the Scheduler library into an executable.
+
+<!-- 
+NOTE: 
+LLVM IR: low-level assembly-like language that is designed so that many higher level langauges can 
+be mapped to it;
+Choice for LLVM route makes it possible to apply the tool to other languages that have a compiler
+frontend that translated to LLVM IR;
+-->
+
+---
+<div class="mermaid" style="align: left; width: 50%; margin: 0px auto;">
+graph LR
+   schedule[0.0.0.1.1.0.2.2.0]
+   exe_instr[Instrumented Executable]
+   trace
+   schedule --> exe_instr
+   exe_instr --> trace
+</div>
+<div class="animation_no_shift_up" style="margin-top: -5em;">
+   .right[<img src='./generated_trees/trace.png' height="450"/>]
+</div>
+
+
+???
+The instrumented executable now takes as input a schedule and after execution dumps a trace of the 
+execution.
+
+
 
 <!-- <<< -->
 
