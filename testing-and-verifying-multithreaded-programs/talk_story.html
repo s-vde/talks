@@ -503,7 +503,7 @@ execution.
 This trace is used by the Systematic Exploration algorithms implemented in the StateSpaceExplorer 
 tool to compute the next schedules to run the instrumented executable under.
 
-Let's take a look at two algorithms implemented in the StateSpaceExplorer tool
+Let's take a look at two algorithms implemented in the StateSpaceExplorer tool.
 
 <!-- <<< -->
 
@@ -530,7 +530,7 @@ depth_first_exploration(program)
 The first algorithm is a simple depth-first exploration.
 It simply explores all possible thread interleavings of the original input program.
 The set of possible interleavings is computed on-the-fly.
-The next slide illustrates this on the minimal datarace example I introduced earlier in the talk.
+The next slide illustrates this on the background_thread example I introduced earlier in the talk.
 
 <!-- <<< -->
 
@@ -540,14 +540,14 @@ The next slide illustrates this on the minimal datarace example I introduced ear
 layout: true
 #### Systematic Exploration
 # Depth-First Exploration
-<span class="h_example">data_race.cpp</span>
+<span class="h_example">background_thread.cpp</span>
 
 ---
 
 ---
 count: false
-<div class="animation_no_shift_up" style="margin-right: 6em;">
-   .right[<img src='./generated_trees/data_race.cpp/depth_first_search/trees/animations/0.png' height="400"/>]
+<div class="animation_no_shift_up" style="margin-right: 6em; margin-top: -4em;">
+   .right[<img src='./generated_trees/background_thread.cpp/depth_first_search/trees/animations/0.png' height="500"/>]
 </div>
 
 ???
@@ -563,27 +563,28 @@ count: false
 
 ---
 count: false 
-<div class="animation_no_shift_up" style="margin-right: 6em;">
-   .right[<img src='./generated_trees/data_race.cpp/depth_first_search/trees/animations/1.png' height="400"/>]
+<div class="animation_no_shift_up" style="margin-right: 6em; margin-top: -4em;">
+   .right[<img src='./generated_trees/background_thread.cpp/depth_first_search/trees/animations/1.png' height="500"/>]
 </div>
 
 
 
 ---
 count: false 
-<div class="animation_no_shift_up" style="margin-right: 6em;">
-   .right[<img src='./generated_trees/data_race.cpp/depth_first_search/trees/animations/2.png' height="400"/>]
+<div class="animation_no_shift_up" style="margin-right: 6em; margin-top: -4em;">
+   .right[<img src='./generated_trees/background_thread.cpp/depth_first_search/trees/animations/2.png' height="500"/>]
 </div>
 ---
 count: false 
-<div class="animation_no_shift_up" style="margin-right: 6em;">
-   .right[<img src='./generated_trees/data_race.cpp/depth_first_search/trees/animations/3.png' height="400"/>]
+<div class="animation_no_shift_up" style="margin-right: 6em; margin-top: -4em;">
+   .right[<img src='./generated_trees/background_thread.cpp/depth_first_search/trees/animations/3.png' height="500"/>]
 </div>
 
 <!-- >>> Slide -->
 
 ---
-.center[<img src='./generated_trees/data_race.cpp/depth_first_search/trees/full_schedules.png' width="1100"/>]
+count: false
+.center[<img src='./generated_trees/background_thread.cpp/depth_first_search/trees/full_schedules_small.png' width="1100"/>]
 
 ???
 This process continues, until eventually it reaches the root node of the tree again and all 
@@ -591,11 +592,186 @@ enabled threads have been scheduled from that root.
 
 This algorithm is very straightforward and, because it executes the program under all 
 possible thread interleavings is guaranteed to find concurrency bugs if they are present.
-However: it suffers from a major problem: combinatorial explosion.
+However: it suffers from a *major* problem: combinatorial explosion!
 
 The number of thread interleavings is exponential in the size of the program.
-For the simple datarace program the search tree is still managable, but for real-world 
-applications, Depth First Search simple becomes ... <!-- TODO -->
+For the relatively small background_thread program the search tree is still managable, but for 
+real-world applications with many threads and many instructions, Depth First Search simply doesn't 
+scale.
+
+The solution is to prune the tree of schedules considered by depth-first exploration
+and only explore a subset of the possible thread interleavings of an input program.
+
+<!-- <<< -->
+
+<!-- >>> Slide -->
+
+---
+layout: true
+#### Systematic Exploration
+# Prune the State Space
+
+---
+
+--
+count: false
+##### Challenge
+Explore a subset of the possbile interleavings, but still provide coverage guarantees
+- Complete coverage: all concurrency bugs in the program are found
+- Partial coverage: all concurrency bugs with a certain property are found
+   e.g.: 
+   - all bugs reachable by a schedule of length 10
+   - all bugs reachable by a schedule with at most 2 context-switches
+   
+
+???
+The challenge is to choose that subset so carefully that coverage guarantees can still be provided.
+A coverage guarantee can be complete: it states that ...
+Or partial: in that case it should be able to say that all concurrency bugs with a certain property
+are found.
+
+StateSpaceExplorer implements several state space pruning algorithms, each providing different 
+coverage guarantees. In the rest of this talk I will discuss one of them: Partial Order Reduction.
+
+<!-- <<< -->
+
+---
+layout: true
+#### Systematic Exploration | Exploration Algorithms
+# Partial Order Reduction
+
+<!-- >>> Slide -->
+
+---
+
+???
+The idea behind partial order reduction is to group schedules whose resulting executions are 
+semantically equivalent, at least with respect to the class of concurrency bugs we're checking the 
+input program against.
+
+<!-- TODO: Credits -->
+
+--
+count: false
+```cpp
+partial_order_reduction(program, equivalence_relation)
+{
+   for (equivalence_class : equivalence_classes(program, equivalence_relation))
+   {
+      schedule = representative(equivalence_class);
+      run(program, schedule);
+   }
+}
+```
+
+???
+The exploration algorithm makes sure that by the time it's finished it has, for each such 
+equivalence class of schedules, seen at least one (and ideally exactly one) representative 
+execution.
+
+BRIDGE FROM:
+At the heart of the equivalence relation is the concept of dependence. For verifying against dataraces, deadlocks
+and assertion failures the following dependence relation can be used.
+
+<!-- <<< -->
+
+<!-- >>> Slide -->
+
+---
+
+##### Dependence Relation
+Two instructions are *dependent* iff
+- they are carried out by the same thread; or
+- they operate on the same operand and at least one of them is a write
+
+<!-- 
+TODO: see if this works for our examples
+-->
+
+--
+count: false
+```cpp
+dependent(  1 Load x,   1 Load y    );       // same thread
+dependent(  1 Load x,   2 Store x   );       // same operand and one write
+!dependent( 1 Load x,   2 Load x    );       // same operand, but no write
+!dependent( 1 Load x,   2 Store y   );       // different threads, different operands
+```
+
+???
+BRIDGE FROM:
+Based on the dependence relation a happens-before relation can be defined.
+
+<!-- <<< -->
+
+<!-- >>> Slide -->
+
+---
+
+##### Happens-Before Relation
+In an execution E, instruction E[i] *happens-before* E[j] iff
+- i < j; and
+- E[i] and E[j] are *dependent*
+
+???
+i < j: In other words, E[i] is executed before E[j] in E
+
+--
+count: false
+<div class="animation_no_shift_up" style="margin-top: -10em;">
+   .right[<img src='./generated_trees/data_race_fixed_pthread.cpp/bounded_search/0/trees/animations/0.png' height="500"/>]
+</div>
+
+<!-- <<< -->
+
+---
+
+<!-- TODO: dependence, happens-before -->
+
+<!-- >>> Slide -->
+
+---
+
+##### :) Complete
+Explores at least one schedule per equivalence class
+
+--
+count: false
+##### :) Ideally non-redundant
+Ideally explores exactly one schedule per equivalence class
+
+--
+count: false
+##### :( No obvious coverage versus resources trade-off 
+- For large programs with many dependencies between threads, partial order reduction may still be 
+infeasible
+- No iterative approach with incomplete but quantifiable coverage guarantees
+
+<!-- <<< -->
+
+<!-- >>> Slide -->
+
+---
+layout: true
+#### Systematic Exploration - Exploration Algorithms
+# Partial Order Reduction
+<span class="h_example">background_thread.cpp</span>
+---
+---
+count: false
+<div class="animation_dpor" style="margin-top: -7em">
+   .right[<img src='./generated_trees/background_thread.cpp/dpor/trees/animations/0.png' height="560"/>]
+</div>
+---
+count: false
+<div class="animation_dpor" style="margin-top: -7em">
+   .right[<img src='./generated_trees/background_thread.cpp/dpor/trees/animations/1.png' height="560"/>]
+</div>
+---
+count: false
+<div class="animation_dpor" style="margin-top: -7em">
+   .right[<img src='./generated_trees/background_thread.cpp/dpor/trees/animations/2.png' height="560"/>]
+</div>
+---
 
 <!-- <<< -->
 

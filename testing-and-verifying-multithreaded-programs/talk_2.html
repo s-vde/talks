@@ -170,37 +170,6 @@ accesses are coordinated very carefully in order not to actually introduce deadl
 <!-- <<< -->
 
 
-
-
-
-
-
-<!-- >>> Slide -->
-
----
-##### Problem
-The number of possible thread interleavings grows exponentially with the size of the program!
-
---
-count: false
-##### Solution
-Prune the tree of schedules considered by depth-first exploration
-
-???
-- Only consider a subset of those schedules
-
---
-count: false
-##### Challenge
-Provide coverage guarantees
-
-???
-<!-- TODO -->
-- Challenge is to choose that subset so carefully that the class of interleavings seen can be 
-  somehow quantified.
-
-<!-- <<< -->
-
 ---
 layout: true
 #### Systematic Exploration | Exploration Algorithms

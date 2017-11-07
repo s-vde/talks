@@ -199,8 +199,7 @@ def main(argv):
                 #  # 5: nodesep
                 #  10),
                 # -----
-                # NOTE: This is used in the presentation: there are 4 executions, 
-                # but the last one should not be there
+                # NOTE: To be generated with penwidth=8 and ranksep=3
                 os.path.join(test_programs, "background_thread.cpp"):
                 # 0: name_filter
                 (["m"],
@@ -213,7 +212,7 @@ def main(argv):
                  # 4: max nr explorations
                  1000,
                  # 5: nodesep
-                 10),
+                 10)
                }
 
     for program, properties in programs.items():
@@ -257,7 +256,8 @@ def main(argv):
                     generate_animation = "True"
 
                     if mode == "depth_first_search":
-                        generate_animation = "Until:5"
+                        # generate_animation = "Until:5"
+                        generate_animation = "False"
 
                     if mode == "bounded_search":
                         generate_animation = properties[3][index][1]
