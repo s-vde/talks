@@ -479,7 +479,7 @@ count: false
 
 --
 count: false
-- "Heisenbugs" may even disappear when debugging them
+- "Heisenbugs" may even disappear when you try to find them
 
 ???
 So-called Heisenbugs: for example as a result of debugging statements in the code, which also may 
@@ -782,46 +782,45 @@ and assertion failures the following dependence relation can be used.
 ---
 
 ##### Dependence Relation
-Two instructions are *dependent* iff
-- they are carried out by the same thread; or
-- they operate on the same operand and at least one of them is a write
-
-<!-- 
-TODO: see if this works for our examples
--->
-
---
-count: false
-```cpp
-dependent(  1 Load x,   1 Load y    );       // same thread
-dependent(  1 Load x,   2 Store x   );       // same operand and one write
-!dependent( 1 Load x,   2 Load x    );       // same operand, but no write
-!dependent( 1 Load x,   2 Store y   );       // different threads, different operands
-```
-
-???
-BRIDGE FROM:
-Based on the dependence relation a happens-before relation can be defined.
-
-<!-- <<< -->
-
-<!-- >>> Slide -->
-
----
-
-##### Happens-Before Relation
-In an execution E, instruction E[i] *happens-before* E[j] iff
-- i < j; and
-- E[i] and E[j] are *dependent*
-
-???
-i < j: In other words, E[i] is executed before E[j] in E
-
---
-count: false
-<div class="animation_no_shift_up" style="margin-top: -10em;">
-   .right[<img src='./generated_trees/data_race_fixed_pthread.cpp/bounded_search/0/trees/animations/0.png' height="500"/>]
+<div style="float: left; width: 55%;">
+Two instructions are <i>dependent</i> iff
+<ul>
+   <li> they are carried out by the same thread; or</li>
+   <li>memory instructions:
+      <ul>
+         <li>they operate on the same memory location; and</li>
+         <li>at least one of them is a write</li>
+      </ul>
+   </li>
+<li>lock instructions:
+   <ul>
+      <li>they are coenabled; and</li>
+      <li>can enable or disable each other</li>
+   </ul>
 </div>
+
+--
+count: false
+<div style="vertical-align: top; float: right; width: 45%;"><pre><code class="language-cpp">
+// same operand and one write
+dependent(  1 Load x,      2 Store x   );
+
+// same operand, but no write
+!dependent( 1 Load x,      2 Load x    );
+
+
+// coenabled, and disable each other
+dependent(   1 Lock m,     2 Lock m    );
+
+// coenabled, and enable/disable each other       
+dependent(   1 Trylock m,  2 Unlock m  );
+
+// not coenabled
+!dependent(  1 Lock m,     2 Unlock m  );
+</code></pre></div>
+
+???
+<!-- TODO -->
 
 <!-- <<< -->
 
