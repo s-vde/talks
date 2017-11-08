@@ -580,7 +580,7 @@ If you've been lucky enough to find the bug, the bug is typically very hard to r
 
 --
 count: false
-##### It's hard to know whether a bug is fixed
+##### It's hard to know whether a bug is fixed:
 --
 count: false
 - The bug may still exist on other interleavings
@@ -622,6 +622,9 @@ runtime. In my tool, this is taken care of by the RecordReplay Library
 <!-- >>> Slide -->
 
 ---
+background-image: url(./images/github.png)
+
+---
 layout: true
 #### Systematic Exploration
 # RecordReplay library: Taking "Control" over the Scheduler
@@ -656,9 +659,8 @@ executable
 ???
 The Scheduler object maintains a ThreadPool which at any point during the execution of the program
 contains an entry for every active program thread.
-This entry contains a representation of the next instruction of the thread, which is initially 
-empty.
-It also contains a semaphore, which allows the scheduler thread to control that thread.
+This entry contains the next instruction of the corresponding thread, and is initially empty.
+It also contains a semaphore, which allows the scheduler to control the thread.
 
 ---
 count: false
@@ -675,7 +677,8 @@ mut.lock();
 ???
 Every memory instruction, lock or unlock instruction, thread creation abd joining instruction
 in the original source code is instrumented. That is, before each such instruction, the 
-instrumentation pass has inserted a call to the function scheduler::post_instruction().
+instrumentation pass has inserted a call to scheduler's member the function 
+post_instruction().
 
 Inside the post_instruction function, the calling thread sets the instruction field in its 
 associated entry in the thread pool.
@@ -978,7 +981,7 @@ coverage guarantees. In the rest of this talk I will discuss one of them: Partia
 
 ---
 layout: true
-#### Systematic Exploration | Exploration Algorithms
+#### Systematic Exploration
 # Dynamic Partial Order Reduction
 
 <!-- >>> Slide -->
@@ -1064,7 +1067,7 @@ dependent(   1 Trylock m,  2 Unlock m  );
 
 ---
 layout: true
-#### Systematic Exploration - Exploration Algorithms
+#### Systematic Exploration
 # Partial Order Reduction
 <span class="h_example">background_thread.cpp</span>
 ---
