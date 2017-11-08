@@ -32,27 +32,16 @@ For those of you who don't know, Native Instruments is a company producing integ
 hardware for music production.
 
 <br/>
-<!-- TODO: refine -->
-In audio development, concurrency is a big topic, as at the core, there is the audio processing, 
-that has to run in real-time.
-This audio processing runs in a dedicated real-time thread.
-At the same time, it has to synchronize with user input through for example the GUI or the hardware.
-This synchronization has to happen smoothly so that the audio processing is never waiting too long 
-to deliver the next buffer in time.
-My interest is mainly in assuring the correctness of this synchronization.
-
-<br/>
-This is also where my background lies:
 Before joining Native Instruments, I was doing research at the Max Planck Institute for Software 
 Systems.
-My research area was in automated software verification and one of my projects focused specifically 
-on verification of multi-threaded programs.
+My research area was in automated software verification and one of my projects focused on 
+verification of multi-threaded programs.
 This will also be the topic of my talk today.
 
 <br/>
 My goal in this talk is to first provide an insight into why testing and verifying the correctness 
 of multi-threaded programs is particularly challenging, and why traditional testing tools are 
-inadequate for the job.
+inadequate for the task.
 Then I will present a technique, called Systematic Exploration, which explicitly addresses those 
 challenges.
 I will demonstrate Systematic Exploration using a tool that I built in the context of my research on 
@@ -171,8 +160,8 @@ t2.join();
 ???
 The third example of a concurrency bug is a deadlock. In the rest of the talk I will focus on 
 finding deadlocks.
-Deadlock is a situation where a set of threads is blocked indefinitely because each of them is 
-waiting for one of the others to release a held resource.
+Deadlock is a situation where a set of threads is blocked indefinitely, for example because each of
+them is waiting for one of the others to release a held resource.
 
 In this minimal example two threads are locking the same two threads, but in reversed order.
 
@@ -980,9 +969,6 @@ Explore a subset of the possbile interleavings, but still provide coverage guara
 
 ???
 The challenge is to choose that subset so carefully that coverage guarantees can still be provided.
-A coverage guarantee can be complete: it states that ...
-Or partial: in that case it should be able to say that all concurrency bugs with a certain property
-are found.
 
 StateSpaceExplorer implements several state space pruning algorithms, each providing different 
 coverage guarantees. In the rest of this talk I will discuss one of them: Partial Order Reduction.
@@ -993,21 +979,11 @@ coverage guarantees. In the rest of this talk I will discuss one of them: Partia
 ---
 layout: true
 #### Systematic Exploration | Exploration Algorithms
-# Partial Order Reduction
+# Dynamic Partial Order Reduction
 
 <!-- >>> Slide -->
 
 ---
-
-???
-The idea behind partial order reduction is to group schedules whose resulting executions are 
-semantically equivalent, at least with respect to the class of concurrency bugs we're checking the 
-input program against.
-
-<!-- TODO: Credits -->
-
---
-count: false
 ```cpp
 partial_order_reduction(program, equivalence_relation)
 {
@@ -1019,7 +995,14 @@ partial_order_reduction(program, equivalence_relation)
 }
 ```
 
+.footnote[Due to Flanagan and Godefroid (2005)]
+
 ???
+Dynamic Partial Order Reduction is due to Flanagan and Godefroid.
+The idea behind partial order reduction is to group schedules whose resulting executions are 
+semantically equivalent, at least with respect to the class of concurrency bugs we're checking the 
+input program against.
+
 The exploration algorithm makes sure that by the time it's finished it has, for each such 
 equivalence class of schedules, seen at least one (and ideally exactly one) representative 
 execution.
@@ -1055,11 +1038,11 @@ Two instructions are <i>dependent</i> iff
 --
 count: false
 <div style="vertical-align: top; float: right; width: 45%;"><pre><code class="language-cpp">
-// same operand and one write
-dependent(  1 Load x,      2 Store x   );
 
-// same operand, but no write
-!dependent( 1 Load x,      2 Load x    );
+
+
+
+
 
 
 // coenabled, and disable each other
@@ -1100,7 +1083,6 @@ count: false
 <div class="animation_dpor" style="margin-top: -7em">
    .right[<img src='./generated_trees/background_thread.cpp/dpor/trees/animations/2.png' height="560"/>]
 </div>
----
 
 <!-- <<< -->
 
@@ -1127,7 +1109,8 @@ layout: true
 <!-- >>> Slide -->
 
 ---
-
+count: false
+class: no_number
 ### Tools
 <span class="h_link">StateSpaceExplorer:</span>
 https://github.com/s-vde/state-space-explorer
@@ -1142,6 +1125,9 @@ https://github.com/google/sanitizers/wiki
 <span class="h_link">CHESS:</span>
 https://chesstool.codeplex.com
 
+<span class="h_link">Concuerror:</span>
+http://concuerror.com
+
 <span class="h_link">Maple:</span>
 https://github.com/jieyu/maple
 
@@ -1150,7 +1136,8 @@ https://github.com/jieyu/maple
 <!-- >>> Slide -->
 
 ---
-
+count: false
+class: no_number
 ### Selected Literature
 C. Flanagan and P. Godefroid (2005),
 *Dynamic Partial-Order Reduction for Model Checking Software*,

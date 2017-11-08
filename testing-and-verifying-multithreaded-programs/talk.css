@@ -136,3 +136,10 @@ a:visited
    display: inline-block; 
    vertical-align: top;
 }
+
+.footnote
+{
+   vertical-align: bottom;
+   font-size: 1em;
+}
+
