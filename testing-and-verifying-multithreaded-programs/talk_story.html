@@ -24,14 +24,37 @@ Software Developer @ Native Instruments
 ### Meeting C++
 November 10, 2017
 
-<!-- TODO INTRODUCTION, NI, research -->
-
 ???
+Good afternoon and welcome everybody. 
+My name is Susanne van den Elsen and I am a C++ software developer at Native Instruments here in 
+Berlin. 
+For those of you who don't know, Native Instruments is a company producing integrated software and 
+hardware for music production.
+
+<br/>
+<!-- TODO: refine -->
+In audio development, concurrency is a big topic, as at the core, there is the audio processing, 
+that has to run in real-time.
+This audio processing runs in a dedicated real-time thread.
+At the same time, it has to synchronize with user input through for example the GUI or the hardware.
+This synchronization has to happen smoothly so that the audio processing is never waiting too long 
+to deliver the next buffer in time.
+My interest is mainly in assuring the correctness of this synchronization.
+
+<br/>
+This is also where my background lies:
+Before joining Native Instruments, I was doing research at the Max Planck Institute for Software 
+Systems.
+My research area was in automated software verification and one of my projects focused specifically 
+on verification of multi-threaded programs.
+This will also be the topic of my talk today.
+
+<br/>
 My goal in this talk is to first provide an insight into why testing and verifying the correctness 
-of multi-threaded programs is challenging, and why traditional testing tools are inadequate for 
-meeting those challenges.
-Then I will present a technique, called Systematic Exploration, which is designed to overcome 
-excatly those challenges.
+of multi-threaded programs is particularly challenging, and why traditional testing tools are 
+inadequate for the job.
+Then I will present a technique, called Systematic Exploration, which explicitly addresses those 
+challenges.
 I will demonstrate Systematic Exploration using a tool that I built in the context of my research on 
 the topic.
 
@@ -53,13 +76,16 @@ layout: false
 Let's look at why testing and verifying multi-threaded programs is challenging.
 
 When testing sequential programs, there are different types of bugs to look out for.
-These include errors like:
-<!-- TODO -->
+These include bugs like
+- null pointer dereference
+- use-after-free errors
+- using uninitialized variables
+- buffer overflows (attempt to store data past the end of allocated storage)
+- ... and many many more.
 
-All these bugs can occur in multi-threaded programs too..., plus more.
-Programming with threads introduces a whole new class of potential bugs, which I will refer to as 
-"Concurrency Bugs"
-
+All these bugs can occur in multi-threaded programs too.
+But on top of that, there are bugs that are specific to programs that use multi-threading.
+I will refer to this class of bugs as "Concurrency Bugs"
 
 <!-- <<< -->
 
@@ -68,8 +94,11 @@ Programming with threads introduces a whole new class of potential bugs, which I
 <!-- >>> Slide -->
 
 ---
+layout: true
+#### Challenges in Testing and Verifying Multi-Threaded Programs
 # Concurrency Bugs
 
+---
 ???
 In general, concurrency bugs arise from the fact that multiple threads are sharing the same 
 resources.
@@ -97,7 +126,6 @@ thread instructions.
 
 ---
 count: false
-# Concurrency Bugs
 ##### Data Races
 
 ```cpp
@@ -112,16 +140,116 @@ t2.join();
 
 ???
 Data Races: Arise when two threads
-- may access the same memory location concurrently; and
-- at least one of the accesses is a write
+- access the same memory location; and
+- at least one of the accesses is a write; and
+- there is no mechanism in place to avoid the accesses from happening concurrently
 
 Since the C++11 memory model we can reason about memory accesses and dataraces are deemed undefined 
 behaviour (so it is very important to make sure your programs are datarace free)
 
 ---
 count: false
-# Concurrency Bugs
 ##### Deadlocks
+
+<div class="code_left" style="width: 50%;"><pre><code class="language-cpp">
+mutex m1, m2;
+
+thread t1([&m1, &m2]{ 
+   lock_guard<mutex> lock1(m1);
+   lock_guard<mutex> lock2(m2);
+});
+
+thread t2([&m1, &m2]{ 
+   lock_guard<mutex> lock2(m2);
+   lock_guard<mutex> lock1(m1);
+});
+
+t1.join();
+t2.join();
+</div></code></pre>
+
+???
+The third example of a concurrency bug is a deadlock. In the rest of the talk I will focus on 
+finding deadlocks.
+Deadlock is a situation where a set of threads is blocked indefinitely because each of them is 
+waiting for one of the others to release a held resource.
+
+In this minimal example two threads are locking the same two threads, but in reversed order.
+
+--
+count: false
+<div class="code_right" style="width: 45%;"><pre><code class="language-cpp">
+t1             t2
+
+lock m1;
+               lock m2;
+</div></code></pre>
+
+???
+If thread1 first locks mutex1 and subsequently thread2 locks mutex2, both threads for their next 
+instruction are waiting for the other to release the mutex they acquired, and none of them can 
+make progress.
+
+BRIDGE ==>:
+<!-- TODO: memory errors, and ... -->
+So race conditions, data races and deadlocks are examples of concurrency bugs.
+Just like there are tools specifically tailored to detect for example typical memory-related errors, 
+concurrency bugs ask for tools that specialize in detecting them. 
+Luckily there are such tools available, the most well-known probably being ThreadSanitizer and 
+Helgrind.
+
+<!-- <<< -->
+
+<!-- subsubsection:Concurrency Bug Detectors -->
+
+---
+layout: true
+#### Challenges in Testing and Verifying Multi-Threaded Programs | Concurrency Bugs
+# Concurrency Bug Detectors
+
+<!-- >>> Slide -->
+
+---
+##### ThreadSanitizer / Helgrind
+
+<div class="mermaid" style="align: center; width: 100%; margin: 0px auto; margin-top: 3em;">
+   graph LR
+      input_program[Source/Binary<br/>Input Program]
+      exe_instr[Instrumented Executable]
+      input_program --> |Compiler/Binary<br/>Instrumentation| exe_instr
+      core[Analysis Core<br/><br/>-  Monitoring facilities<br/><br/>-  Datarace/Deadlock<br/>&nbsp&nbspDetection Algorithms]
+      core --> |Execute| exe_instr
+      exe_instr --> |Trace| core
+      core --> report[Bug Report]
+</div>
+
+???
+At a very high level, these tools work as follows:
+- They instrument the program under test so that it can be monitored by the core of the tool.
+- In the case of ThreadSanitizer, this instrumentation happens on the source-code level when 
+  compiling, while Helgrind instruments binary input programs.
+- The instrumented executable is then executed.
+  The instrumentation allows the analysis core to record interesting events in the running program 
+  and the order in which they happened. Such a record is also called a "trace" of the execution. 
+  Events that are tracked include:
+   - thread creation, joining and destruction;
+   - memory accesses;
+   - lock and unlock instructions
+- The analysis core deploys algorithms that are specifically tailored to detect potential dataraces
+  and deadlocks in a trace.
+- If bugs are found, they are reported to the user.
+
+<!-- <<< -->
+
+<!-- Slide -->
+
+---
+##### ThreadSanitizer / Helgrind
+
+```bash
+clang++ -fsanitize=thread -std=c++14 -pthread -g deadlock_pthread.cpp -o deadlock_pthread
+./deadlock_pthread
+```
 
 ```cpp
 mutex m1, m2;
@@ -141,76 +269,17 @@ t2.join();
 ```
 
 ???
-Deadlock is a situation where a set of threads is blocked indefinitely because each of them is 
-waiting for one of the others to release a held resource.
-
-BRIDGE ==>:
-<!-- TODO: memory errors, and ... -->
-Just like there are tools specifically tailored to detect typical memory errors, concurrency bugs
-ask for tools that specialize in detecting them. Luckily there are such tools available.
-
-<!-- <<< -->
-
-<!-- subsubsection:Concurrency Bug Detectors -->
-
----
-layout: true
-#### Challenges in Testing and Verifying Multi-Threaded Programs | Concurrency Bugs
-# Concurrency Bug Detectors
-
-<!-- >>> Slide -->
-
----
-
-???
-The most well-known concurrency error detectors are probably ThreadSanitizer and Helgrind.
-At a very high level, these tools work as follows:
-
-<!-- <<< -->
-
-<!-- >>> Slide -->
-
----
-count: false
-##### ThreadSanitizer / Helgrind
-
-<div class="mermaid" style="align: center; width: 100%; margin: 0px auto; margin-top: 3em;">
-   graph LR
-      input_program[Source/Binary<br/>Input Program]
-      exe_instr[Instrumented Executable]
-      input_program --> |Compiler/Binary<br/>Instrumentation| exe_instr
-      core[Analysis Core<br/><br/>-  Monitoring facilities<br/><br/>-  Datarace/Deadlock<br/>&nbsp&nbspDetection Algorithms]
-      core --> |Execute| exe_instr
-      exe_instr --> |Trace| core
-      core --> report[Bug Report]
-</div>
-
-???
-- They instrument the program under test so that it can be monitored by the core of the tool.
-- In the case of ThreadSanitizer, this instrumentation happens on the source-code level when 
-  compiling, while Helgrind instruments binary input programs.
-- The instrumented executable is then executed.
-  The instrumentation allows the analysis core to record interesting events in the running program 
-  and the order in which they happened. Such a record is also called a "trace" of the execution. 
-  Events that are tracked include:
-   - thread creation, joining and destruction;
-   - memory accesses;
-   - lock and unlock instructions
-- The analysis core deploys algorithms that are specifically tailored to detect potential dataraces
-  and deadlocks in a trace.
-- If bugs are found, they are reported to the user.
-
 Tools like ThreadSanitizer and Helgrind have been applied to large C++ programs and have 
-successfully found concurrency errors, particularly data races, in real software applications.
+successfully found concurrency errors in real software applications.
 
-Needless to say, if you're programming with threads, I highly encourage you to use these tools if 
-you don't already.
+If you're programming with threads, I highly encourage you to look into these tools if you haven't 
+so already.
 
-What these tools are good at is *detecting* concurrency bugs when they occur in the execution of 
-your program that they happended to monitor. However, as we'll see next, whether or not a potential 
-bug in the program occurs depends heavily on the actual runtime interleaving of threads.
+What these tools rely on when detecting bugs is that the bug is detectable in the execution that 
+they happended to monitor. However, as we'll see next, whether or not a potential bug in the program 
+occurs depends heavily on the actual interleaving of the program's threads at runtime.
 
-The following small bank account program illustrates this dependence.
+The following small background_thread program illustrates this dependence.
 
 <!-- <<< -->
 
@@ -220,16 +289,17 @@ The following small bank account program illustrates this dependence.
 layout: true
 #### Challenges in Testing and Verifying Multi-Threaded Programs | Concurrency Bugs
 # Dependence on Thread Interleaving
-<!-- <div class="h_example">bank_account.cpp</div> -->
 
 <!-- example:background_thread.cpp -->
+
+<!-- Slide -->
 
 ---
 
 <div class="code_left" style="width: 40%;"><pre><code class="language-cpp">
-struct background_thread_manager
+struct background_task_manager
 {
-   void run_thread() {
+   void run_background_task() {
       if (!m_mutex.try_lock())
          return;
       
@@ -254,17 +324,38 @@ struct background_thread_manager
 };
 </code></pre></div>
 
+???
+The background_task_manager is a wrapper class around a background thread that has a specific 
+task associated with it.
+Users of the manager can trigger the background thread by calling the run_background_task() 
+function.
+The purpose of the manager is to make sure that the background thread can only be triggered 
+if it is not currently running.
+
+To determine whether the background_thread is currently running, the manager has a mutex.
+The intended semantics of the mutex is that when it's locked, this either means that the background 
+thread is being created, or that it is currently running and performing its task.
+
+So when a client calls run_background_task() it first try's to lock the mutex. If it doesn't 
+succeed it returns immediately.
+If it does, it first checks if it has to join a finished background_thread.
+After that, it spawns a new one, unlocks the mutex and returns.
+
+The spawn background_thread first locks the mutex, to prevents other callers from triggering it,
+performs its task, and when it's finished, unlocking the mutex again. At this point, callers may 
+trigger the background task again.
+
 --
 <div class="code_right" style="width: 59%;"><pre><code class="language-cpp">
 TEST(DeadlockTest)
 {
-   background_thread_manager m;
-   m.run_thread();
+   background_task_manager manager;
+   manager.run_background_task();
    
-   thread t2([&m]() { m.run_thread(); });
+   thread t2([&m]() { manager.run_background_task(); });
    t2.join();
    
-   m.join_thread();
+   manager.join_thread();
 }
 </code></pre></div>
 
@@ -273,10 +364,10 @@ TEST(DeadlockTest)
 <!-- >>> Slide -->
 
 ---
-<div class="code_left" style="width: 40%;"><pre><code class="language-cpp">
-struct background_thread_manager
+<div class="code_left" style="width: 30%;"><pre><code class="language-cpp">
+struct background_task_manager
 {
-   void run_thread() {
+   void run_background_task() {
       if (!m_mutex.try_lock())
          return;
       
@@ -300,26 +391,26 @@ struct background_thread_manager
    mutex m_mutex;
 };
 </code></pre></div>
-<div class="code_right" style="width: 59%;"><pre><code class="language-cpp">
-main                          m_thread          | m_mutex
-                                                |
-                                                |
-m_mutex.try_lock()                              | locked
-m_thread.joinable() == false                    |
-m_thread.spawn()                                |
-m_mutex.unlock()                                | unlocked
-                              m_mutex.lock()    | locked
-                              // perform task   |
-                              m_mutex.unlock()  | unlocked
-m_mutex.try_lock()                              | locked
-m_thread.joinable() == true                     |
-m_thread.join()                                 |
-m_thread.spawn()                                |
-m_mutex.unlock()                                | unlocked
-                              m_mutex.lock()    | locked
-                              // perform task   |
-                              m_mutex.unlock()  | unlocked
-m_thread.join()                                 |    
+<div class="code_right" style="width: 69%;"><pre><code class="language-cpp">
+main                          t2                            m_thread
+
+
+m_mutex.try_lock()
+m_thread.joinable() == false
+m_thread.spawn()
+m_mutex.unlock()
+                                                            m_mutex.lock()
+                                                            // perform task
+                                                            m_mutex.unlock()
+                              m_mutex.try_lock()
+                              m_thread.joinable() == true
+                              m_thread.join()
+                              m_thread.spawn()
+                              m_mutex.unlock()
+                                                            m_mutex.lock()
+                                                            // perform task
+                                                            m_mutex.unlock()
+manager.join_thread()
 </code></pre></div>
 
 <!-- <<< -->
@@ -327,10 +418,10 @@ m_thread.join()                                 |
 <!-- >>> Slide -->
 
 ---
-<div class="code_left" style="width: 40%;"><pre><code class="language-cpp">
-struct background_thread_manager
+<div class="code_left" style="width: 30%;"><pre><code class="language-cpp">
+struct background_task_manager
 {
-   void run_thread() {
+   void run_background_task() {
       if (!m_mutex.try_lock())
          return;
       
@@ -354,20 +445,19 @@ struct background_thread_manager
    mutex m_mutex;
 };
 </code></pre></div>
-<div class="code_right" style="width: 59%;"><pre><code class="language-cpp">
-main                          m_thread          | m_mutex
-                                                |
-                                                |
-m_mutex.try_lock()                              | locked
-m_thread.joinable() == false                    |
-m_thread.spawn()                                |
-m_mutex.unlock()                                | unlocked
-                                                |
-m_mutex.try_lock()                              | locked
-m_thread.joinable() == true                     |
-                                                |
-DEADLOCK:                                       |
-m_thread.join()               m_mutex.lock()    |
+<div class="code_right" style="width: 69%;"><pre><code class="language-cpp">
+main                          t2                            m_thread
+
+
+m_mutex.try_lock()
+m_thread.joinable() == false
+m_thread.spawn()
+m_mutex.unlock()
+                              m_mutex.try_lock()
+                              m_thread.joinable() == true
+                              m_thread.join()
+                                                            m_mutex.lock()
+DEADLOCK
 </code></pre></div>
 
 ???
@@ -392,7 +482,7 @@ layout: true
 
 ???
 The order in which threads get to execute is *not* under the programmer's control, it is under 
-the control of the OS scheduler.
+the control of the OS (or the VM's) scheduler.
 
 --
 count: false
@@ -400,13 +490,13 @@ count: false
 e.g.
 
 ???
-The OS scheduler makes it scheduling decisions based on a scheduler policy, which may vary from 
+The scheduler makes it scheduling decisions based on a scheduler policy, which may vary from 
 OS to OS.
 The policy may prescribe, among other things:
 
 --
 count: false
-- preemptive / non-preemptive
+- may threads be preempted?
 
 ???
 - Whether or not executing threads may be preempted, that is, whether the scheduler may force a 
@@ -415,7 +505,7 @@ count: false
 
 --
 count: false
-- assignment of priorities
+- how are priorities assigned?
 
 ???
 - If and how threads get assigned priorities
@@ -445,10 +535,10 @@ count: false
 
 --
 count: false
-- state of the cache
+- what's in the cache
 
 ???
-- Cache: e.g. is the current thread slowed down by cache misses
+- Cache: e.g. if one thread is slowed down by cache misses
 
 <!-- <<< -->
 
@@ -475,14 +565,19 @@ count: false
 
 --
 count: false
-- Running tests repeatedly does not guarantee that interleavings will be different
+- Interleavings are not happening uniformly at random
+
+???
+Even if you would know your program has 10 different possible interleavings, running your test 
+10 times would not guarantee that a buggy interleaving will occur.
+It would not even guarantee that you don't see the same interleaving even time.
 
 --
 count: false
-- "Heisenbugs" may even disappear when you try to find them
+- "Heisenbugs" seem to disappear when you try to find them
 
 ???
-So-called Heisenbugs: for example as a result of debugging statements in the code, which also may 
+So-called Heisenbugs: debugging statements or instrumentation instruction in the code, may 
 have a dramatic effect on the scheduling choices, and may render the erronous interleaving way less 
 likely to occur.
 
@@ -493,6 +588,17 @@ count: false
 
 ???
 If you've been lucky enough to find the bug, the bug is typically very hard to reproduce.
+
+--
+count: false
+##### It's hard to know whether a bug is fixed
+--
+count: false
+- The bug may still exist on other interleavings
+
+--
+count: false
+- The "fix" may have just made it less likely to occur
 
 ???
 BRIDGE ==>:
@@ -524,57 +630,223 @@ runtime. In my tool, this is taken care of by the RecordReplay Library
 
 <!-- <<< -->
 
----
-layout: true
-#### Systematic Exploration
-
 <!-- >>> Slide -->
-
-<!-- <<< -->
 
 ---
 layout: true
 #### Systematic Exploration
 # RecordReplay library: Taking "Control" over the Scheduler
 
-<!-- >>> Slide -->
-
 ---
 <div class="mermaid" style="align: center; width: 60%; margin: 0px auto;">
 graph TD
    sut[Souce Code]
-   ir[LLVM IR]
-   ir_instr[Instrumented IR]
-   scheduler[Run Time Scheduler Library]
+   source_instr[Instrumented Source]
+   scheduler[Scheduler Library]
    exe_instr[Instrumented Executable]
-   sut --> |Clang| ir
-   ir --> |RecordReplay Instrumentation Pass| ir_instr
-   ir_instr --> exe_instr
+   sut --> |Instrumentation Pass| source_instr
+   source_instr --> exe_instr
    scheduler --> exe_instr
 </div>
 
 ???
 The RecordReplay library which has two components: 
 - a Scheduler Library and
-- a compiler instrumentation pass built on top of the LLVM compiler infrastructure.
+- a LLVM compiler instrumentation pass instrumenting the input program's source code with calls
+to the Scheduler library.
+- The instrumented source code is then linked to the Scheduler Library into an instrumented 
+executable
 
-- The instrumentation process starts with the program's source code.
-- This source code is compiled to LLVM Intermediate Representation using Clang
-- It instruments the program's intermediate representation by inserting calls to functions from the 
-  Scheduler library, which allow the Scheduler to:
-  * control which of the program's threads gets to execute in every scheduling round; and
-  * record the execution's trace
-  Calls to the scheduler are inserted before thread creation/joining, memory instructions, and 
-  lock instructions
-- Then the instrumented source code is linked to the Scheduler library into an executable.
+---
+<div style="width: 55%; float: left;">
+</div>
+<div style="width: 40%; float: right;">
+   <img src='./images/scheduler1.png' height="400"/>
+</div>
 
-<!-- 
-NOTE: 
-LLVM IR: low-level assembly-like language that is designed so that many higher level langauges can 
-be mapped to it;
-Choice for LLVM route makes it possible to apply the tool to other languages that have a compiler
-frontend that translated to LLVM IR;
--->
+???
+The Scheduler object maintains a ThreadPool which at any point during the execution of the program
+contains an entry for every active program thread.
+This entry contains a representation of the next instruction of the thread, which is initially 
+empty.
+It also contains a semaphore, which allows the scheduler thread to control that thread.
+
+---
+count: false
+<div style="width: 55%; float: left;">
+<pre><code class="language-cpp">
+scheduler::post_instruction(lock, mut.addr, debug_info);
+mut.lock();
+</code></pre>
+</div>
+<div style="width: 40%; float: right;">
+   <img src='./images/scheduler1.png' height="400"/>
+</div>
+
+???
+Every memory instruction, lock or unlock instruction, thread creation abd joining instruction
+in the original source code is instrumented. That is, before each such instruction, the 
+instrumentation pass has inserted a call to the function scheduler::post_instruction().
+
+Inside the post_instruction function, the calling thread sets the instruction field in its 
+associated entry in the thread pool.
+
+---
+count: false
+<div style="width: 55%; float: left;">
+<pre><code class="language-cpp">
+scheduler::post_instruction(lock, mut.addr, debug_info);
+mut.lock();
+</code></pre>
+</div>
+<div style="width: 40%; float: right;">
+   <img src='./images/scheduler2.png' height="400"/>
+</div>
+
+???
+Then it waits on its semaphore.
+
+---
+count: false
+<div style="width: 55%; float: left;">
+<pre><code class="language-cpp">
+scheduler::post_instruction(lock, mut.addr, debug_info);
+mut.lock();
+</code></pre>
+</div>
+<div style="width: 40%; float: right;">
+   <img src='./images/scheduler3.png' height="400"/>
+</div>
+
+---
+count: false
+<div style="width: 55%; float: left;"><pre><code class="language-cpp">
+scheduler::scheduler_thread(schedule)
+{
+   trace_t trace;
+   unsigned int round = 0;
+   
+   while (!done)
+   {
+      // wait until all active threads posted an instruction
+      
+      int next_id = schedule[round];
+      
+      // record the thread pool and the next instruction
+      trace.push_back(thread_pool.instructions(), 
+                      thread_pool[next_tid].instruction);
+      
+      // allow the next thread to progress until its next 
+      // post_instruction call
+      thread_pool.semaphores()[next_tid].post();
+      
+      ++round;
+   }
+}
+</code></pre></div>
+<div style="width: 40%; float: right;">
+   <img src='./images/scheduler4.png' height="400"/>
+</div>
+
+???
+The scheduler thread gets as input a schedule, which is a sequence of thread id's.
+At every scheduling round, the scheduler thread first waits until all the threads that are 
+registered in the thread pool have an instruction posted.
+Then it looks up in the schedule which thread it should schedule in the current round.
+It adds the instruction posted by that thread to the execution trace, together with a snapshot 
+of the current thread pool.
+
+---
+count: false
+<div style="width: 55%; float: left;"><pre><code class="language-cpp">
+scheduler::scheduler_thread(schedule)
+{
+   trace_t trace;
+   unsigned int round = 0;
+   
+   while (!done)
+   {
+      // wait until all active threads posted an instruction
+      
+      int next_id = schedule[round];
+      
+      // record the thread pool and the next instruction
+      trace.push_back(thread_pool.instructions(), 
+                      thread_pool[next_tid].instruction);
+      
+      // allow the next thread to progress until its next 
+      // post_instruction call
+      thread_pool.semaphores()[next_tid].post();
+      
+      ++round;
+   }
+}
+</code></pre></div>
+<div style="width: 40%; float: right;">
+   <img src='./images/scheduler5.png' height="400"/>
+</div>
+
+???
+For the selected thread, it sets the associated semaphore to true,
+notifies the thread that it may continue executing, and increases the round.
+
+---
+count: false
+<div style="width: 55%; float: left;">
+<pre><code class="language-cpp">
+scheduler::post_instruction(lock, mut.addr, debug_info);
+mut.lock();
+
+.
+. // other instructions
+.
+
+scheduler::post_instruction(spawn, thr.id, debug_info);
+std::thread thr(start_routine);
+</code></pre>
+</div>
+<div style="width: 40%; float: right;">
+   <img src='./images/scheduler5.png' height="400"/>
+</div>
+
+???
+The respective thread is no longer blocked on its semaphore, and can execute its original 
+instruction, in this case locking a mutex.
+It keeps executing until the next call to scheduler::post_instruction.
+
+---
+count: false
+<div style="width: 55%; float: left;">
+<pre><code class="language-cpp">
+scheduler::post_instruction(lock, mut.addr, debug_info);
+mut.lock();
+
+.
+. // other instructions
+.
+
+scheduler::post_instruction(spawn, thr.id, debug_info);
+std::thread thr(start_routine);
+</code></pre>
+</div>
+<div style="width: 40%; float: right;">
+   <img src='./images/scheduler6.png' height="400"/>
+</div>
+
+???
+It then again sets its instruction field in the thread pool and blocks on its semaphore.
+
+---
+count: false
+<div style="width: 55%; float: left;">
+</div>
+<div style="width: 40%; float: right;">
+   <img src='./images/scheduler7.png' height="400"/>
+</div>
+
+???
+At each point in time, there is at most one thread that is not blocked on its semaphore.
+This forces the underlying operating system's scheduler to schedule exactly that thread.
 
 ---
 <div class="mermaid" style="align: left; width: 50%; margin: 0px auto;">
@@ -647,13 +919,10 @@ count: false
 ???
 - The exploration starts with a certain schedule, in this case a non-preemptive one that prioritizes
   threads in the order in which they were created.
-- The trace contains for each node in the branch the set of threads that are enabled in that state. 
-- And the algorithm maintains for each node the set of threads it has already scheduled from that 
-  state.
-- Then it backtracks the annotated trace until it finds a state in which there is an enabled thread 
-  that has not been scheduled from that state yet.
-- It appends that thread's id to the schedule up to that state and reexecutes the program under the 
-  resulting schedule.
+- The algorithm backtracks the currnet trace until it finds a node where it can branch by 
+  scheduling another thread.
+- It creates a new schedule by taking the schedule up to that node, and appending the next thread's 
+  id to it.
 
 ---
 count: false 
@@ -706,25 +975,8 @@ layout: true
 # Prune the State Space
 
 ---
-
---
-count: false
 ##### Challenge
 Explore a subset of the possbile interleavings, but still provide coverage guarantees
---
-count: false
-- Complete coverage: all concurrency bugs in the program are found
---
-count: false
-- Partial coverage: all concurrency bugs with a certain property are found
-   e.g.: 
---
-count: false
-   - all bugs reachable by a schedule of length 10
---
-count: false
-   - all bugs reachable by a schedule with at most 2 context-switches
-   
 
 ???
 The challenge is to choose that subset so carefully that coverage guarantees can still be provided.
@@ -734,6 +986,7 @@ are found.
 
 StateSpaceExplorer implements several state space pruning algorithms, each providing different 
 coverage guarantees. In the rest of this talk I will discuss one of them: Partial Order Reduction.
+
 
 <!-- <<< -->
 

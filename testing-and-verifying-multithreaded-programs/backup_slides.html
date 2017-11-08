@@ -162,6 +162,47 @@ From the viewpoint of the programmer, this interleaving is nondeterministic.
 
 <!-- <<< -->
 
+<!-- >>> Slide -->
+
+---
+<div class="mermaid" style="align: center; width: 60%; margin: 0px auto;">
+graph TD
+   sut[Souce Code]
+   ir[LLVM IR]
+   ir_instr[Instrumented IR]
+   scheduler[Run Time Scheduler Library]
+   exe_instr[Instrumented Executable]
+   sut --> |Clang| ir
+   ir --> |RecordReplay Instrumentation Pass| ir_instr
+   ir_instr --> exe_instr
+   scheduler --> exe_instr
+</div>
+
+???
+The RecordReplay library which has two components: 
+- a Scheduler Library and
+- a compiler instrumentation pass built on top of the LLVM compiler infrastructure.
+
+- The instrumentation process starts with the program's source code.
+- This source code is compiled to LLVM Intermediate Representation using Clang
+- It instruments the program's intermediate representation by inserting calls to functions from the 
+  Scheduler library, which allow the Scheduler to:
+  * control which of the program's threads gets to execute in every scheduling round; and
+  * record the execution's trace
+  Calls to the scheduler are inserted before thread creation/joining, memory instructions, and 
+  lock instructions
+- Then the instrumented source code is linked to the Scheduler library into an executable.
+
+<!-- 
+NOTE: 
+LLVM IR: low-level assembly-like language that is designed so that many higher level langauges can 
+be mapped to it;
+Choice for LLVM route makes it possible to apply the tool to other languages that have a compiler
+frontend that translated to LLVM IR;
+-->
+
+<!-- <<< -->
+
 <!-- backup_slides:Instrumentation>
 
 ---

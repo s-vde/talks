@@ -29,189 +29,21 @@ count: false
    .right[<img src='./generated_trees/background_thread.cpp/bounded_search/2/trees/full_schedules.png' width="1100"/>]
 </div>
 
----
-layout: true
-# Automated Verification
+<!-- Coverage Guarantees -->
 
----
-
----
-<img src='https://g.gravizo.com/svg?
-digraph verification {
-   graph [
-      margin=1,
-      fontname="Open Sans",
-      rankdir=LR
-   ];
-   node [
-      shape=rectangle
-      width=1.5,
-      style=filled,
-      color=black,
-      fillcolor=lightblue2
-   ];
-   edge [
-      arrowsize=0.5
-   ];
-   program [color=transparent, fillcolor=transparent, fontcolor=transparent];
-   model [color=transparent, fillcolor=transparent, fontcolor=transparent];
-   specification [color=transparent, fillcolor=transparent, fontcolor=transparent];
-   verification_algorithm [label="verification\nalgorithm"];
-   yes [shape="oval", width=0.75, color=transparent, fillcolor=transparent, fontcolor=transparent];
-   no [shape="oval", width=0.75, color=transparent, fillcolor=transparent, fontcolor=transparent];
-   counter_example [color=transparent, fillcolor=transparent, fontcolor=transparent];
-   program -> model [color=transparent, fillcolor=transparent, fontcolor=transparent];
-   model -> verification_algorithm [color=transparent, fillcolor=transparent, fontcolor=transparent];
-   specification -> verification_algorithm [color=transparent, fillcolor=transparent, fontcolor=transparent];
-   verification_algorithm -> yes [color=transparent, fillcolor=transparent, fontcolor=transparent];
-   verification_algorithm -> no [color=transparent, fillcolor=transparent, fontcolor=transparent];
-   no -> counter_example [dir=none, color=transparent, fillcolor=transparent, fontcolor=transparent];
- }
-'/>
-
----
-count:false
-<img src='https://g.gravizo.com/svg?
-digraph verification {
-   graph [
-      margin=1,
-      fontname="Open Sans",
-      rankdir=LR
-   ];
-   node [
-      shape=rectangle
-      width=1.5,
-      style=filled,
-      pencolor=black,
-      fillcolor=lightblue2
-   ];
-   edge [
-      arrowsize=0.5
-   ];
-   program;
-   model;
-   specification [color=transparent, fillcolor=transparent, fontcolor=transparent];
-   verification_algorithm [label="verification\nalgorithm"];
-   yes [shape="oval", width=0.75, color=transparent, fillcolor=transparent, fontcolor=transparent];
-   no [shape="oval", width=0.75, color=transparent, fillcolor=transparent, fontcolor=transparent];
-   counter_example [color=transparent, fillcolor=transparent, fontcolor=transparent];
-   program -> model;
-   model -> verification_algorithm;
-   specification -> verification_algorithm [color=transparent, fillcolor=transparent, fontcolor=transparent];
-   verification_algorithm -> yes [color=transparent, fillcolor=transparent, fontcolor=transparent];
-   verification_algorithm -> no [color=transparent, fillcolor=transparent, fontcolor=transparent];
-   no -> counter_example [dir=none, color=transparent, fillcolor=transparent, fontcolor=transparent];
- }
- }
-'/>
-
----
-count:false
-<img src='https://g.gravizo.com/svg?
-digraph verification {
-   graph [
-      margin=1,
-      fontname="Open Sans",
-      rankdir=LR
-   ];
-   node [
-      shape=rectangle
-      width=1.5,
-      style=filled,
-      pencolor=black,
-      fillcolor=lightblue2
-   ];
-   edge [
-      arrowsize=0.5
-   ];
-   program;
-   model;
-   specification;
-   verification_algorithm [label="verification\nalgorithm"];
-   yes [shape="oval", width=0.75, color=transparent, fillcolor=transparent, fontcolor=transparent];
-   no [shape="oval", width=0.75, color=transparent, fillcolor=transparent, fontcolor=transparent];
-   counter_example [color=transparent, fillcolor=transparent, fontcolor=transparent];
-   program -> model;
-   model -> verification_algorithm;
-   specification -> verification_algorithm;
-   verification_algorithm -> yes [color=transparent, fillcolor=transparent, fontcolor=transparent];
-   verification_algorithm -> no [color=transparent, fillcolor=transparent, fontcolor=transparent];
-   no -> counter_example [dir=none, color=transparent, fillcolor=transparent, fontcolor=transparent];
- }
- }
-'/>
-
----
-count:false
-<img src='https://g.gravizo.com/svg?
-digraph verification {
-   graph [
-      margin=1,
-      fontname="Open Sans",
-      rankdir=LR
-   ];
-   node [
-      shape=rectangle
-      width=1.5,
-      style=filled,
-      pencolor=black,
-      fillcolor=lightblue2
-   ];
-   edge [
-      arrowsize=0.5
-   ];
-   program;
-   model;
-   specification;
-   verification_algorithm [label="verification\nalgorithm"];
-   yes [shape="oval", width=0.75, fillcolor=lightgreen];
-   no [shape="oval", width=0.75, color=transparent, fillcolor=transparent, fontcolor=transparent];
-   counter_example [color=transparent, fillcolor=transparent, fontcolor=transparent];
-   program -> model;
-   model -> verification_algorithm;
-   specification -> verification_algorithm;
-   verification_algorithm -> yes;
-   verification_algorithm -> no [color=transparent, fillcolor=transparent, fontcolor=transparent];
-   no -> counter_example [dir=none, color=transparent, fillcolor=transparent, fontcolor=transparent];
- }
- }
-'/>
-
----
-count:false
-<img src='https://g.gravizo.com/svg?
-digraph verification {
-   graph [
-      margin=1,
-      fontname="Open Sans",
-      rankdir=LR
-   ];
-   node [
-      shape=rectangle
-      width=1.5,
-      style=filled,
-      pencolor=black,
-      fillcolor=lightblue2
-   ];
-   edge [
-      arrowsize=0.5
-   ];
-   program;
-   model;
-   specification;
-   verification_algorithm [label="verification\nalgorithm"];
-   yes [shape="oval", width=0.75, fillcolor=lightgreen];
-   no [shape="oval", width=0.75, fillcolor=red];
-   counter_example [label="counterexample"];
-   program -> model;
-   model -> verification_algorithm;
-   specification -> verification_algorithm;
-   verification_algorithm -> yes;
-   verification_algorithm -> no;
-   no -> counter_example [dir=none];
- }
- }
-'/>
+--
+count: false
+- Complete coverage: all concurrency bugs in the program are found
+--
+count: false
+- Partial coverage: all concurrency bugs with a certain property are found
+   e.g.: 
+--
+count: false
+   - all bugs reachable by a schedule of length 10
+--
+count: false
+   - all bugs reachable by a schedule with at most 2 context-switches
 
 <!--
 }

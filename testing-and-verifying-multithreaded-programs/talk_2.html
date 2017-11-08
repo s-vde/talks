@@ -116,36 +116,6 @@ scheduler::_post_instruction(instr_t instruction)
 </code></pre>
 </div>
 
-<div class="code_right" style="width: 54%;">
-<pre><code class="language-cpp">
-scheduler::scheduler_thread(schedule_t schedule,
-                            selection_strategy)
-{
-   trace_t trace;
-   unsigned int round = 0;
-   
-   while (!done)
-   {
-      // wait until all active threads posted an instruction
-      
-      // compute the next thread to be scheduled
-      if (round < schedule.size())
-         int next_id = schedule[round];
-      else
-         int next_tid = 
-            selection_strategy(m_task_pool, trace);
-      
-      // record the task_pool and the next instruction
-      trace.push_back(m_task_pool, m_task_pool[next_tid]);
-      
-      // allow the next thread to progress until its next 
-      // wrapper call
-      m_controllable_threads[next_tid].post();
-   }
-}
-</code></pre>
-</div>
-
 ???
 - The scheduling routine runs in the scheduler thread, which has access to all the Scheduler 
   datastructures.
