@@ -35,6 +35,13 @@ body
    font-family: 'Open Sans';
 }
 
+hr 
+{ 
+   margin-top: 1.25em;
+   margin-bottom: 1.25em;
+   border:solid #ffffff 0.5px;
+}
+
 h1, h2, h3, h4, h5
 {
    font-family: 'Yanone Kaffeesatz';
@@ -69,6 +76,18 @@ color: #003d4d;
 
 .no_number .remark-slide-number {
   display: none;
+}
+
+.author
+{
+   font-family: 'Yanone Kaffeesatz';
+   font-size: 28pt;
+}
+
+.venue
+{
+   font-family: 'Yanone Kaffeesatz';
+   font-size: 20pt;
 }
 
 .slide_title

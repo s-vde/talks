@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <title>Testing and Verifying Multi-Threaded Programs</title>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+      <link rel="stylesheet" type="text/css" href="talk.css"/>
+   </head>
+   <body>
+      <textarea id="source">
+
+
+
+
+
+<!-- section:Title -->
+
+class: slide_title, no_number
+count: false
+
+# Testing and Verifying Multi-Threaded Software
+### Susanne van den Elsen
+Software Developer @ Native Instruments
+
+### Women Who Code Berlin
+November 21, 2017
+
+???
+Good afternoon, welcome everybody and thank you for coming,
+- My name is Susanne van den Elsen and I am a C++ Software Developer @ Native Instruments
+- Before joining NI I was doing research @ MPI-SWS
+- Research focus: automated software verification
+- In one of my projects I specifically looked at automated verification of multi-threaded software
+  which is also the topic of my talk today
+- In particular, I would like to give an introduction to systematic exploration of multi-threaded
+  programs and demonstrate a systematic exploration tool I developed in the context of my research.
+
+<!--
+}
+end_section:section:Title -->
+
+
+
+ 
+<!-- <<< -->
+
+<!-- >>> Slide -->
+
+---
+
+<div class="h_example" style="margin-bottom: 2em;">data_race.cpp</div>
+<div class="code_left" style="width: 35%;"><pre><code class="language-cpp">
+int main()
+{
+   int x;
+   
+   thread thr1([&x](){
+      x = 1;
+   });
+   
+   thread thr1([&x](){
+      x = 2;
+   });
+   
+   thr1.join();
+   thr2.join();
+}
+</code></pre></div>
+
+<!-- TODO: NOTES -->
+
+--
+count: false
+<div class="code_right" style="width: 60%;"><pre><code class="language-bash">
+clang++ -fsanitize=thread -std=c++14 -g data_race.cpp \
+   -o data_race
+
+./data_race
+</code></pre></div>
+
+???
+Compiling the program to be analyzed with the -fsanitize flag will instrument the program with calls
+to the TSan runtime library and link the runtime library to the final executable.
+
+--
+exclude: true
+<br/>
+<img src='./generated_trees/trace_analysis/data_race.png' height="250"/>
+
+<!-- TODO: Explain how the happens-before data race detection works? -->
+
+<!-- <<< -->
+
+<!-- >>> Slide -->
+
+---
+
+<div class="h_example" style="margin-bottom: 2em;">deadlock.cpp</div>
+<div class="code_left" style="width: 35%;"><pre><code class="language-cpp">
+int main()
+{
+   mutex m1, m2;
+   
+   thread thr1([&m1, &m2](){
+      lock_guard<mutex> lock1(m1);
+      lock_guard<mutex> lock2(m2);
+   });
+   
+   thread thr1([&m1, &m2](){
+      lock_guard<mutex> lock2(m2);
+      lock_guard<mutex> lock1(m1);
+   });
+   
+   thr1.join();
+   thr2.join();
+}
+</code></pre></div>
+
+???
+In this example, two threads lock the same two locks, but in reversed order. Lock order inversion
+is a recipe for deadlock.
+
+--
+count: false
+<div class="code_right" style="width: 60%;"><pre><code class="language-bash">
+clang++ -std=c++14 -g deadlock.cpp -o deadlock
+
+valgrind --tool=helgrind ./deadlock
+</code></pre></div>
+
+???
+The program to be analysed is compiled as usual but with debug symbols.
+Then the binary is run on Valgrind's synthetic CPU, after the Helgrind tool has added 
+instrumentation code to the it.
+
+BRIDGE:
+- ThreadSanitizer and Helgrind are very successful and have uncovered many concurrency bugs, 
+particularly dataraces, in large applications. 
+- However, these tools depend on the error actually being detectable in the execution they 
+happended to monitor. These tools do not meet the second challenge that multi-threading poses for 
+testing: nondeterminism.
+
+<!-- TODO: Explain how lock inversion analysis works? -->
+
+<!-- <<< -->
+
+<!-- >>> Slide -->
+
+---
+
+```bash
+clang++ -std=c++14 -g bank_account.cpp -o bank_account
+valgrind --tool=helgrind ./bank_account
+```
+
+<!-- <<< -->
+
+
+
+<!-- >>> Slide -->
+
+---
+
+```bash
+clang++ -std=c++14 -g background_thread.cpp -o background_thread
+valgrind --tool=helgrind ./background_thread
+```
+
+<!-- <<< -->
+
+<!-- section:Systematic Exploration -->
+
+---
+
+--
+count: false
+- Buggy schedules are stored so that the bug can be reproduced
+
+<!-- <<< -->
+
+---
+exclude: true
+# RecordReplay Library
+<div class="mermaid" style="align: center; width: 60%; margin: 0px auto;">
+   graph LR
+      schedule[Schedule<br/><br/>00001111] --> instr_exe[Instrumented Executable]
+      instr_exe --> trace[Trace<br/><br/>0 lock mutex</br>0 load x1<br/>0 store x1<br/>0 unlock mutex<br/>1 load x1<br/>1 load x2<br/>1 store x3<br/>1 store x1]
+</div></div>
+
+<!-- >>> Slide -->
+
+---
+layout: true
+#### Systematic Exploration
+# Exploration Algorithms
+
+---
+<div class="mermaid" style="align: center; width: 80%; margin: 0px auto;">
+   graph TD
+      exploration[Exploration Algorithm]
+      
+      exploration --> |00001111| instr_exe1[Instrumented<br/>Executable]
+      instr_exe1 --> |trace| exploration
+      
+      exploration --> |00011110| instr_exe2[Instrumented<br/>Executable]
+      instr_exe2 --> |trace| exploration
+      
+      exploration --> |....| instr_exei[Instrumented<br/>Executable]
+      instr_exei --> |trace| exploration
+      
+      exploration --> |11110000| instr_exen[Instrumented<br/>Executable]
+      instr_exen --> |trace| exploration
+</div>
+
+<!-- >>> Slide -->
+
+---
+
+<!-- TODO: dependence, happens-before -->
+
+<!-- >>> Slide -->
+
+---
+
+##### :) Complete
+Explores at least one schedule per equivalence class
+
+--
+count: false
+##### :) Ideally non-redundant
+Ideally explores exactly one schedule per equivalence class
+
+--
+count: false
+##### :( No obvious coverage versus resources trade-off 
+- For large programs with many dependencies between threads, partial order reduction may still be 
+infeasible
+- No iterative approach with incomplete but quantifiable coverage guarantees
+
+<!-- <<< -->
+
+
+
+
+
+      </textarea>
+      
+      <script src="../libs/mermaid/dist/mermaid.js"></script>
+      <link rel="stylesheet" href="../libs/mermaid/dist/mermaid.forest.css">
+      <script src="https://gnab.github.io/remark/downloads/remark-latest.min.js"></script>
+      <script>
+         var slideshow = remark.create({ 
+            ratio: '16:9',
+            highlightLanguage: 'cpp',
+            highlightStyle: 'github',
+            highlightLines: true
+         });
+         mermaid.initialize({ 
+            startOnLoad: false,
+            cloneCssStyles: false
+         });
+         function initMermaid(s) {
+            var diagrams = document.querySelectorAll('.mermaid');
+            var i;
+            for (i=0; i < diagrams.length; i++) {
+               if(diagrams[i].offsetWidth>0){
+                  mermaid.init(undefined, diagrams[i]);
+               }
+            }
+         }
+         slideshow.on('afterShowSlide', initMermaid);
+         initMermaid(slideshow.getSlides()[slideshow.getCurrentSlideIndex()]);
+      </script>
+      
+   </body>
+</html>
