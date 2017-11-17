@@ -199,20 +199,48 @@ def main(argv):
                 #  # 5: nodesep
                 #  10),
                 # -----
+                # # NOTE: To be generated with penwidth=8 and ranksep=3
+                # os.path.join(test_programs, "background_thread.cpp"):
+                # # 0: name_filter
+                # (["m"],
+                #  # 1: command line options
+                #  "--opt 3 --c -std=c++14",
+                #  # 2: exploration modes
+                #  ["depth_first_search"],
+                #  # 3: bounds
+                #  [],
+                #  # 4: max nr explorations
+                #  1000,
+                #  # 5: nodesep
+                #  10)
                 # NOTE: To be generated with penwidth=8 and ranksep=3
-                os.path.join(test_programs, "background_thread.cpp"):
+                os.path.join(test_programs, "lock_free_queue_datarace.cpp"):
                 # 0: name_filter
-                (["m"],
+                (["this"],
                  # 1: command line options
-                 "--opt 3 --c -std=c++14",
+                 "--opt 1 --c -std=c++14",
                  # 2: exploration modes
-                 ["depth_first_search"],
+                 ["dpor"],
                  # 3: bounds
                  [],
                  # 4: max nr explorations
-                 1000,
+                 10,
                  # 5: nodesep
-                 10)
+                 10),
+                # NOTE: To be generated with penwidth=8 and ranksep=3
+                # os.path.join(test_programs, "lock_free_queue_two_steals.cpp"):
+                # # 0: name_filter
+                # (["this"],
+                #  # 1: command line options
+                #  "--opt 1 --c -std=c++14",
+                #  # 2: exploration modes
+                #  ["dpor"],
+                #  # 3: bounds
+                #  [],
+                #  # 4: max nr explorations
+                #  10,
+                #  # 5: nodesep
+                #  10)
                }
 
     for program, properties in programs.items():
