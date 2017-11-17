@@ -1,0 +1,1006 @@
+<!-- >>> Slide -->
+
+---
+count: false
+class: split-47
+
+.column[
+```
+TEST()
+{
+   lock_free_queue queue;
+
+   std::thread worker([&queue]{
+      const auto job = queue.steal();
+   });
+   
+*   queue.push(0);
+   queue.push(1);
+   queue.push(2);
+   
+   worker.join();
+}
+```
+
+
+<img src='./images/queue1.png' width="500"/>
+]
+
+.column[
+```cpp
+
+
+void lock_free_queue::push(const int job)
+{
+   const size_t tail = m_tail.load();
+
+   if (tail < m_head.load() + SIZE)
+   {
+      m_data[tail % SIZE] = job;
+      m_tail.store(tail + 1);
+   }
+}
+
+
+
+
+int lock_free_queue::steal()
+{
+   size_t head = m_head.load();
+
+   if (head < m_tail.load())
+   {
+      if (m_head.compare_exchange_strong(head, head + 1))
+         return m_data[head % SIZE];
+   }
+   
+   return -1;
+}
+
+//
+```
+]
+
+<!-- >>> Slide -->
+
+---
+count: false
+class: split-47
+
+.column[
+```
+TEST()
+{
+   lock_free_queue queue;
+
+   std::thread worker([&queue]{
+      const auto job = queue.steal();
+   });
+   
+*   queue.push(0);
+   queue.push(1);
+   queue.push(2);
+   
+   worker.join();
+}
+```
+
+
+<img src='./images/queue2.png' width="500"/>
+]
+
+.column[
+```cpp
+
+
+void lock_free_queue::push(const int job)
+{
+   const size_t tail = m_tail.load();
+
+   if (tail < m_head.load() + SIZE)
+   {
+*      m_data[tail % SIZE] = job;
+      m_tail.store(tail + 1);
+   }
+}
+
+
+
+
+int lock_free_queue::steal()
+{
+   size_t head = m_head.load();
+
+   if (head < m_tail.load())
+   {
+      if (m_head.compare_exchange_strong(head, head + 1))
+         return m_data[head % SIZE];
+   }
+   
+   return -1;
+}
+
+//
+```
+]
+
+<!-- >>> Slide -->
+
+---
+count: false
+class: split-47
+
+.column[
+```
+TEST()
+{
+   lock_free_queue queue;
+
+   std::thread worker([&queue]{
+      const auto job = queue.steal();
+   });
+   
+*   queue.push(0);
+   queue.push(1);
+   queue.push(2);
+   
+   worker.join();
+}
+```
+
+
+<img src='./images/queue3.png' width="500"/>
+]
+
+.column[
+```cpp
+
+
+void lock_free_queue::push(const int job)
+{
+   const size_t tail = m_tail.load();
+
+   if (tail < m_head.load() + SIZE)
+   {
+      m_data[tail % SIZE] = job;
+*      m_tail.store(tail + 1);
+   }
+}
+
+
+
+
+int lock_free_queue::steal()
+{
+   size_t head = m_head.load();
+
+   if (head < m_tail.load())
+   {
+      if (m_head.compare_exchange_strong(head, head + 1))
+         return m_data[head % SIZE];
+   }
+   
+   return -1;
+}
+
+//
+```
+]
+
+<!-- >>> Slide -->
+
+---
+count: false
+class: split-47
+
+.column[
+```
+TEST()
+{
+   lock_free_queue queue;
+
+   std::thread worker([&queue]{
+      const auto job = queue.steal();
+   });
+   
+   queue.push(0);
+*   queue.push(1);
+   queue.push(2);
+   
+   worker.join();
+}
+```
+
+
+<img src='./images/queue3.png' width="500"/>
+]
+
+.column[
+```cpp
+
+
+void lock_free_queue::push(const int job)
+{
+   const size_t tail = m_tail.load();
+
+   if (tail < m_head.load() + SIZE)
+   {
+      m_data[tail % SIZE] = job;
+      m_tail.store(tail + 1);
+   }
+}
+
+
+
+
+int lock_free_queue::steal()
+{
+   size_t head = m_head.load();
+
+   if (head < m_tail.load())
+   {
+      if (m_head.compare_exchange_strong(head, head + 1))
+         return m_data[head % SIZE];
+   }
+   
+   return -1;
+}
+
+//
+```
+]
+
+<!-- >>> Slide -->
+
+---
+count: false
+class: split-47
+
+.column[
+```
+TEST()
+{
+   lock_free_queue queue;
+
+   std::thread worker([&queue]{
+      const auto job = queue.steal();
+   });
+   
+   queue.push(0);
+*   queue.push(1);
+   queue.push(2);
+   
+   worker.join();
+}
+```
+
+
+<img src='./images/queue4.png' width="500"/>
+]
+
+.column[
+```cpp
+
+
+void lock_free_queue::push(const int job)
+{
+   const size_t tail = m_tail.load();
+
+   if (tail < m_head.load() + SIZE)
+   {
+*      m_data[tail % SIZE] = job;
+      m_tail.store(tail + 1);
+   }
+}
+
+
+
+
+int lock_free_queue::steal()
+{
+   size_t head = m_head.load();
+
+   if (head < m_tail.load())
+   {
+      if (m_head.compare_exchange_strong(head, head + 1))
+         return m_data[head % SIZE];
+   }
+   
+   return -1;
+}
+
+//
+```
+]
+
+<!-- >>> Slide -->
+
+---
+count: false
+class: split-47
+
+.column[
+```
+TEST()
+{
+   lock_free_queue queue;
+
+   std::thread worker([&queue]{
+      const auto job = queue.steal();
+   });
+   
+   queue.push(0);
+*   queue.push(1);
+   queue.push(2);
+   
+   worker.join();
+}
+```
+
+
+<img src='./images/queue5.png' width="500"/>
+]
+
+.column[
+```cpp
+
+
+void lock_free_queue::push(const int job)
+{
+   const size_t tail = m_tail.load();
+
+   if (tail < m_head.load() + SIZE)
+   {
+      m_data[tail % SIZE] = job;
+*      m_tail.store(tail + 1);
+   }
+}
+
+
+
+
+int lock_free_queue::steal()
+{
+   size_t head = m_head.load();
+
+   if (head < m_tail.load())
+   {
+      if (m_head.compare_exchange_strong(head, head + 1))
+         return m_data[head % SIZE];
+   }
+   
+   return -1;
+}
+
+//
+```
+]
+
+<!-- >>> Slide -->
+
+---
+count: false
+class: split-47
+
+.column[
+```
+TEST()
+{
+   lock_free_queue queue;
+
+   std::thread worker([&queue]{
+      const auto job = queue.steal();
+   });
+   
+   queue.push(0);
+   queue.push(1);
+*   queue.push(2);
+   
+   worker.join();
+}
+```
+
+
+<img src='./images/queue5.png' width="500"/>
+]
+
+.column[
+```cpp
+
+
+void lock_free_queue::push(const int job)
+{
+   const size_t tail = m_tail.load();
+
+   if (tail < m_head.load() + SIZE)
+   {
+      m_data[tail % SIZE] = job;
+      m_tail.store(tail + 1);
+   }
+}
+
+
+
+
+int lock_free_queue::steal()
+{
+   size_t head = m_head.load();
+
+   if (head < m_tail.load())
+   {
+      if (m_head.compare_exchange_strong(head, head + 1))
+         return m_data[head % SIZE];
+   }
+   
+   return -1;
+}
+
+//
+```
+]
+
+<!-- >>> Slide -->
+
+---
+count: false
+class: split-47
+
+.column[
+```
+TEST()
+{
+   lock_free_queue queue;
+
+   std::thread worker([&queue]{
+*      const auto job = queue.steal();
+   });
+   
+   queue.push(0);
+   queue.push(1);
+   queue.push(2);
+   
+   worker.join();
+}
+```
+
+
+<img src='./images/queue5.png' width="500"/>
+]
+
+.column[
+```cpp
+
+
+void lock_free_queue::push(const int job)
+{
+   const size_t tail = m_tail.load();
+
+   if (tail < m_head.load() + SIZE)
+   {
+      m_data[tail % SIZE] = job;
+      m_tail.store(tail + 1);
+   }
+}
+
+
+
+
+int lock_free_queue::steal()
+{
+   size_t head = m_head.load();
+
+   if (head < m_tail.load())
+   {
+      if (m_head.compare_exchange_strong(head, head + 1))
+         return m_data[head % SIZE];
+   }
+   
+   return -1;
+}
+
+//
+```
+]
+
+<!-- >>> Slide -->
+
+---
+count: false
+class: split-47
+
+.column[
+```
+TEST()
+{
+   lock_free_queue queue;
+
+   std::thread worker([&queue]{
+*      const auto job = queue.steal();
+   });
+   
+   queue.push(0);
+   queue.push(1);
+   queue.push(2);
+   
+   worker.join();
+}
+```
+
+
+<img src='./images/queue6.png' width="500"/>
+]
+
+.column[
+```cpp
+
+
+void lock_free_queue::push(const int job)
+{
+   const size_t tail = m_tail.load();
+
+   if (tail < m_head.load() + SIZE)
+   {
+      m_data[tail % SIZE] = job;
+      m_tail.store(tail + 1);
+   }
+}
+
+
+
+
+int lock_free_queue::steal()
+{
+   size_t head = m_head.load();
+
+   if (head < m_tail.load())
+   {
+*      if (m_head.compare_exchange_strong(head, head + 1))
+         return m_data[head % SIZE];
+   }
+   
+   return -1;
+}
+
+//
+```
+]
+
+<!-- >>> Slide -->
+
+---
+count: false
+class: split-47
+
+.column[
+```
+TEST()
+{
+   lock_free_queue queue;
+
+   std::thread worker([&queue]{
+*      const auto job = queue.steal();
+   });
+   
+   queue.push(0);
+   queue.push(1);
+   queue.push(2);
+   
+   worker.join();
+}
+```
+
+
+<img src='./images/queue6.png' width="500"/>
+]
+
+.column[
+```cpp
+
+
+void lock_free_queue::push(const int job)
+{
+   const size_t tail = m_tail.load();
+
+   if (tail < m_head.load() + SIZE)
+   {
+      m_data[tail % SIZE] = job;
+      m_tail.store(tail + 1);
+   }
+}
+
+
+
+
+int lock_free_queue::steal()
+{
+   size_t head = m_head.load();
+
+   if (head < m_tail.load())
+   {
+      if (m_head.compare_exchange_strong(head, head + 1))
+*         return m_data[head % SIZE];
+   }
+   
+   return -1;
+}
+
+//
+```
+]
+
+<!-- example: lock_free-queue_bug -->
+
+<!-- >>> Slide -->
+
+---
+class: split-47
+
+.column[
+```
+TEST()
+{
+   lock_free_queue queue;
+
+   std::thread worker([&queue]{
+      const auto job = queue.steal();
+   });
+   
+   queue.push(0);
+*   queue.push(1);
+   queue.push(2);
+   
+   worker.join();
+}
+```
+
+
+<img src='./images/queue5.png' width="500"/>
+]
+
+.column[
+```cpp
+
+
+void lock_free_queue::push(const int job)
+{
+   const size_t tail = m_tail.load();
+
+   if (tail < m_head.load() + SIZE)
+   {
+      m_data[tail % SIZE] = job;
+*      m_tail.store(tail + 1);
+   }
+}
+
+
+
+
+int lock_free_queue::steal()
+{
+   size_t head = m_head.load();
+
+   if (head < m_tail.load())
+   {
+      if (m_head.compare_exchange_strong(head, head + 1))
+         return m_data[head % SIZE];
+   }
+   
+   return -1;
+}
+
+//
+```
+]
+
+---
+count: false
+class: split-47
+
+.column[
+```
+TEST()
+{
+   lock_free_queue queue;
+
+   std::thread worker([&queue]{
+      const auto job = queue.steal();
+   });
+   
+   queue.push(0);
+   queue.push(1);
+*   queue.push(2);
+   
+   worker.join();
+}
+```
+
+
+<img src='./images/queue5.png' width="500"/>
+]
+
+.column[
+```cpp
+
+
+void lock_free_queue::push(const int job)
+{
+   const size_t tail = m_tail.load();
+
+   if (tail < m_head.load() + SIZE)
+   {
+      m_data[tail % SIZE] = job;
+      m_tail.store(tail + 1);
+   }
+}
+
+
+
+
+int lock_free_queue::steal()
+{
+   size_t head = m_head.load();
+
+   if (head < m_tail.load())
+   {
+      if (m_head.compare_exchange_strong(head, head + 1))
+         return m_data[head % SIZE];
+   }
+   
+   return -1;
+}
+
+//
+```
+]
+
+<!-- >>> Slide -->
+
+---
+count: false
+class: split-47
+
+.column[
+```
+TEST()
+{
+   lock_free_queue queue;
+
+   std::thread worker([&queue]{
+      const auto job = queue.steal();
+   });
+   
+   queue.push(0);
+   queue.push(1);
+*   queue.push(2);
+   
+   worker.join();
+}
+```
+
+
+<img src='./images/queue5.png' width="500"/>
+]
+
+.column[
+```cpp
+
+
+void lock_free_queue::push(const int job)
+{
+*   const size_t tail = m_tail.load();
+
+   if (tail < m_head.load() + SIZE)
+   {
+      m_data[tail % SIZE] = job;
+      m_tail.store(tail + 1);
+   }
+}
+
+
+
+
+int lock_free_queue::steal()
+{
+   size_t head = m_head.load();
+
+   if (head < m_tail.load())
+   {
+      if (m_head.compare_exchange_strong(head, head + 1))
+         return m_data[head % SIZE];
+   }
+   
+   return -1;
+}
+
+//
+```
+]
+
+<!-- >>> Slide -->
+
+---
+count: false
+class: split-47
+
+.column[
+```
+TEST()
+{
+   lock_free_queue queue;
+
+   std::thread worker([&queue]{
+*      const auto job = queue.steal();
+   });
+   
+   queue.push(0);
+   queue.push(1);
+*   queue.push(2);
+   
+   worker.join();
+}
+```
+
+
+<img src='./images/queue5.png' width="500"/>
+]
+
+.column[
+```cpp
+
+
+void lock_free_queue::push(const int job)
+{
+*   const size_t tail = m_tail.load();
+
+   if (tail < m_head.load() + SIZE)
+   {
+      m_data[tail % SIZE] = job;
+      m_tail.store(tail + 1);
+   }
+}
+
+
+
+
+int lock_free_queue::steal()
+{
+   size_t head = m_head.load();
+
+   if (head < m_tail.load())
+   {
+      if (m_head.compare_exchange_strong(head, head + 1))
+         return m_data[head % SIZE];
+   }
+   
+   return -1;
+}
+
+//
+```
+]
+
+<!-- >>> Slide -->
+
+---
+count: false
+class: split-47
+
+.column[
+```
+TEST()
+{
+   lock_free_queue queue;
+
+   std::thread worker([&queue]{
+*      const auto job = queue.steal();
+   });
+   
+   queue.push(0);
+   queue.push(1);
+*   queue.push(2);
+   
+   worker.join();
+}
+```
+
+
+<img src='./images/queue6.png' width="500"/>
+]
+
+.column[
+```cpp
+
+
+void lock_free_queue::push(const int job)
+{
+*   const size_t tail = m_tail.load();
+
+   if (tail < m_head.load() + SIZE)
+   {
+      m_data[tail % SIZE] = job;
+      m_tail.store(tail + 1);
+   }
+}
+
+
+
+
+int lock_free_queue::steal()
+{
+   size_t head = m_head.load();
+
+   if (head < m_tail.load())
+   {
+*      if (m_head.compare_exchange_strong(head, head + 1))
+         return m_data[head % SIZE];
+   }
+   
+   return -1;
+}
+
+//
+```
+]
+
+<!-- >>> Slide -->
+
+---
+count: false
+class: split-47
+
+.column[
+```
+TEST()
+{
+   lock_free_queue queue;
+
+   std::thread worker([&queue]{
+*      const auto job = queue.steal();
+   });
+   
+   queue.push(0);
+   queue.push(1);
+*   queue.push(2);
+   
+   worker.join();
+}
+```
+
+
+<img src='./images/queue6.png' width="500"/>
+]
+
+.column[
+```cpp
+
+
+void lock_free_queue::push(const int job)
+{
+   const size_t tail = m_tail.load();
+
+   if (tail < m_head.load() + SIZE)
+   {
+*      m_data[tail % SIZE] = job;
+      m_tail.store(tail + 1);
+   }
+}
+
+
+
+
+int lock_free_queue::steal()
+{
+   size_t head = m_head.load();
+
+   if (head < m_tail.load())
+   {
+      if (m_head.compare_exchange_strong(head, head + 1))
+*         return m_data[head % SIZE];
+   }
+   
+   return -1;
+}
+
+//
+```
+]

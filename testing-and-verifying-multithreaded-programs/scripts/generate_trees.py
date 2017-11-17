@@ -226,7 +226,12 @@ def main(argv):
                  # 4: max nr explorations
                  10,
                  # 5: nodesep
-                 10),
+                 7,
+                 # 6: name conversion
+                 [("this[0][0][0]", "m_queue"),
+                  ("this[0][1][0][0][0]", "m_head"),
+                  ("this[0][2][0][0][0]", "m_tail"),
+                 ]),
                 # NOTE: To be generated with penwidth=8 and ranksep=3
                 # os.path.join(test_programs, "lock_free_queue_two_steals.cpp"):
                 # # 0: name_filter
@@ -291,15 +296,19 @@ def main(argv):
                         generate_animation = properties[3][index][1]
 
                     generate = \
-                        "python3 %s -i %s -o %s -f \'[%s]\' -a %s -s %d" \
+                        "python3 %s -i %s -o %s -f \'[%s]\' -m \'[%s]\' -a %s -s %d" \
                         % (search_tree,
                            output_dir,
                            trees_dir,
                            ",".join(list(map(lambda variable:
                                              "\"%s\"" % variable,
                                          properties[0]))),
+                           ",".join(list(map(lambda (variable, name):
+                                             "(\"%s\", \"%s\")" % (variable, name),
+                                         properties[6]))),
                            generate_animation,
                            properties[5])
+                    print (generate)
                     os.system(generate)
 
 # ------------------------------------------------------------------------------

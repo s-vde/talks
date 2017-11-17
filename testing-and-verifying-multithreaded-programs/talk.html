@@ -39,32 +39,30 @@ count: false
 
 ???
 Good afternoon and welcome everybody. 
-My name is Susanne van den Elsen and I am a C++ software developer at Native Instruments here in 
-Berlin. 
-For those of you who don't know, Native Instruments is a company producing integrated software and 
-hardware for music production.
-
-<br/>
-Before joining Native Instruments, I was doing research at the Max Planck Institute for Software 
-Systems.
-My research area was in automated software verification and one of my projects focused on 
-verification of multi-threaded programs.
-This will also be the topic of my talk today.
-
-<br/>
-My goal in this talk is to first provide an insight into why testing and verifying the correctness 
-of multi-threaded programs is particularly challenging, and why traditional testing tools are 
-inadequate for the task.
-Then I will present a technique, called Systematic Exploration, which explicitly addresses those 
-challenges.
-I will demonstrate Systematic Exploration using a tool that I built in the context of my research on 
-the topic.
+My name is Susanne van den Elsen and I am a software developer at Native Instruments.
+At Native Instruments, we create software and hardware for digital music production.
 
 
 
 
 
-<!-- section:Challenge In Testing And Verifying Mulit-Threaded Programs -->
+<!-- section:Concurrency In Audio Development -->
+
+<!-- >>> Slide -->
+
+---
+class: slide_section, no_number
+count: false
+layout: false
+# Concurrency In Audio Development
+
+<!-- TODO -->
+
+
+
+
+
+<!-- section:Challenges in Testing and Verifying Multi-Threaded Programs -->
 
 <!-- >>> Slide -->
 
@@ -74,202 +72,487 @@ count: false
 layout: false
 # Challenges in Testing and Verifying Multi-Threaded Programs
 
-???
-Let's look at why testing and verifying multi-threaded programs is challenging.
+<!-- >>> Slide -->
 
-When testing sequential programs, there are different types of bugs to look out for.
-These include bugs like
-- null pointer dereference
-- use-after-free errors
-- using uninitialized variables
-- buffer overflows (attempt to store data past the end of allocated storage)
-- ... and many many more.
+---
+class: split-47
 
-All these bugs can occur in multi-threaded programs too.
-But on top of that, there are bugs that are specific to programs that use multi-threading.
-I will refer to this class of bugs as "Concurrency Bugs"
+.column[
+```
+#define SIZE 2
 
-<!-- <<< -->
+class lock_free_queue
+{
+public:
+   void push(const int job);
+   int steal();
 
-<!-- subsection:Concurrency Bugs -->
+private:
+   std::array<int, SIZE> m_data;
+   std::atomic<size_t> m_head{ 0 };
+   std::atomic<size_t> m_tail{ 0 };
+};
+//
+```
+
+
+<img src='./images/queue1.png' width="500"/>
+]
+
+--
+count: false
+.column[
+```cpp
+
+
+void lock_free_queue::push(const int job)
+{
+   const size_t tail = m_tail.load();
+
+   if (tail < m_head.load() + SIZE)
+   {
+      m_data[tail % SIZE] = job;
+      m_tail.store(tail + 1);
+   }
+}
+
+
+
+
+int lock_free_queue::steal()
+{
+   size_t head = m_head.load();
+
+   if (head < m_tail.load())
+   {
+      if (m_head.compare_exchange_strong(head, head + 1))
+         return m_data[head % SIZE];
+   }
+   
+   return -1;
+}
+
+//
+```
+]
 
 <!-- >>> Slide -->
 
 ---
-layout: true
-#### Challenges in Testing and Verifying Multi-Threaded Programs
-# Concurrency Bugs
+class: split-47
 
----
-???
-In general, concurrency bugs arise from the fact that multiple threads are sharing the same 
-resources.
-In this talk I focus on three types of bugs.
+.column[
+```
+TEST()
+{
+   lock_free_queue queue;
 
---
-count: false
-##### Race Conditions
-
-```cpp
-atomic<int> x = 0;
-
-thread t1([&x]{ x.store(1); });
-thread t2([&x]{ x.store(2); });
-
-t1.join();
-t2.join();
-
-assert(x.load() == 2);
+   std::thread worker([&queue]{
+      const auto job = queue.steal();
+   });
+   
+   queue.push(0);
+   queue.push(1);
+   queue.push(2);
+   
+   worker.join();
+}
 ```
 
-???
-Race conditions: Arise when the program's correctness depends on the relative timing or ordering of 
-thread instructions.
 
----
-count: false
-##### Data Races
+<img src='./images/queue1.png' width="500"/>
+]
 
+.column[
 ```cpp
-int x = 0;
 
-thread t1([&x]{ x = 1; });
-thread t2([&x]{ x = 2; });
 
-t1.join();
-t2.join();
+void lock_free_queue::push(const int job)
+{
+   const size_t tail = m_tail.load();
+
+   if (tail < m_head.load() + SIZE)
+   {
+      m_data[tail % SIZE] = job;
+      m_tail.store(tail + 1);
+   }
+}
+
+
+
+
+int lock_free_queue::steal()
+{
+   size_t head = m_head.load();
+
+   if (head < m_tail.load())
+   {
+      if (m_head.compare_exchange_strong(head, head + 1))
+         return m_data[head % SIZE];
+   }
+   
+   return -1;
+}
+
+//
 ```
-
-???
-Data Races: Arise when two threads
-- access the same memory location; and
-- at least one of the accesses is a write; and
-- there is no mechanism in place to avoid the accesses from happening concurrently
-
-Since the C++11 memory model we can reason about memory accesses and dataraces are deemed undefined 
-behaviour (so it is very important to make sure your programs are datarace free)
-
----
-count: false
-##### Deadlocks
-
-<div class="code_left" style="width: 50%;"><pre><code class="language-cpp">
-mutex m1, m2;
-
-thread t1([&m1, &m2]{ 
-   lock_guard<mutex> lock1(m1);
-   lock_guard<mutex> lock2(m2);
-});
-
-thread t2([&m1, &m2]{ 
-   lock_guard<mutex> lock2(m2);
-   lock_guard<mutex> lock1(m1);
-});
-
-t1.join();
-t2.join();
-</div></code></pre>
-
-???
-The third example of a concurrency bug is a deadlock. In the rest of the talk I will focus on 
-finding deadlocks.
-Deadlock is a situation where a set of threads is blocked indefinitely, for example because each of
-them is waiting for one of the others to release a held resource.
-
-In this minimal example two threads are locking the same two threads, but in reversed order.
-
---
-count: false
-<div class="code_right" style="width: 45%;"><pre><code class="language-cpp">
-t1             t2
-
-lock m1;
-               lock m2;
-</div></code></pre>
-
-???
-If thread1 first locks mutex1 and subsequently thread2 locks mutex2, both threads for their next 
-instruction are waiting for the other to release the mutex they acquired, and none of them can 
-make progress.
-
-BRIDGE ==>:
-<!-- TODO: memory errors, and ... -->
-So race conditions, data races and deadlocks are examples of concurrency bugs.
-Just like there are tools specifically tailored to detect for example typical memory-related errors, 
-concurrency bugs ask for tools that specialize in detecting them. 
-Luckily there are such tools available, the most well-known probably being ThreadSanitizer and 
-Helgrind.
-
-<!-- <<< -->
-
-<!-- subsubsection:Concurrency Bug Detectors -->
-
----
-layout: true
-#### Challenges in Testing and Verifying Multi-Threaded Programs | Concurrency Bugs
-# Concurrency Bug Detectors
+]
 
 <!-- >>> Slide -->
 
 ---
-##### ThreadSanitizer / Helgrind
-
-<div class="mermaid" style="align: center; width: 100%; margin: 0px auto; margin-top: 3em;">
-   graph LR
-      input_program[Source/Binary<br/>Input Program]
-      exe_instr[Instrumented Executable]
-      input_program --> |Compiler/Binary<br/>Instrumentation| exe_instr
-      core[Analysis Core<br/><br/>-  Monitoring facilities<br/><br/>-  Datarace/Deadlock<br/>&nbsp&nbspDetection Algorithms]
-      core --> |Execute| exe_instr
-      exe_instr --> |Trace| core
-      core --> report[Bug Report]
-</div>
-
-???
-At a very high level, these tools work as follows:
-- They instrument the program under test so that it can be monitored by the core of the tool.
-- In the case of ThreadSanitizer, this instrumentation happens on the source-code level when 
-  compiling, while Helgrind instruments binary input programs.
-- The instrumented executable is then executed.
-  The instrumentation allows the analysis core to record interesting events in the running program 
-  and the order in which they happened. Such a record is also called a "trace" of the execution. 
-  Events that are tracked include:
-   - thread creation, joining and destruction;
-   - memory accesses;
-   - lock and unlock instructions
-- The analysis core deploys algorithms that are specifically tailored to detect potential dataraces
-  and deadlocks in a trace.
-- If bugs are found, they are reported to the user.
-
-<!-- <<< -->
-
-<!-- Slide -->
-
----
-##### ThreadSanitizer / Helgrind
-
-```bash
-clang++ -fsanitize=thread -std=c++14 -pthread -g deadlock_pthread.cpp -o deadlock_pthread
-./deadlock_pthread
-```
+<img src='./images/queue1.png' height="200"/>
 
 ```cpp
-mutex m1, m2;
+// main                                worker
 
-thread t1([&m1, &m2]{ 
-   lock_guard<mutex> lock1(m1);
-   lock_guard<mutex> lock2(m2);
-});
-
-thread t2([&m1, &m2]{ 
-   lock_guard<mutex> lock2(m2);
-   lock_guard<mutex> lock1(m1);
-});
-
-t1.join();
-t2.join();
+*queue.push(0) {
+   const size_t tail = m_tail.load();
+   if (tail < m_head.load() + SIZE) {
+      m_data[tail % SIZE] = 0;
+      m_tail.store(tail + 1);
+   }
+}
+queue.push(1) {
+   const size_t tail = m_tail.load();
+   if (tail < m_head.load() + SIZE) {
+      m_data[tail % SIZE] = 1;
+      m_tail.store(tail + 1);
+   }
+}
+...
 ```
 
+---
+count: false
+<img src='./images/queue2.png' height="200"/>
+
+```cpp
+// main                                worker
+
+queue.push(0) {
+   const size_t tail = m_tail.load();
+   if (tail < m_head.load() + SIZE) {
+*     m_data[tail % SIZE] = 0;
+      m_tail.store(tail + 1);
+   }
+}
+queue.push(1) {
+   const size_t tail = m_tail.load();
+   if (tail < m_head.load() + SIZE) {
+      m_data[tail % SIZE] = 1;
+      m_tail.store(tail + 1);
+   }
+}
+...
+```
+
+---
+count: false
+<img src='./images/queue3.png' height="200"/>
+
+```cpp
+// main                                worker
+
+queue.push(0) {
+   const size_t tail = m_tail.load();
+   if (tail < m_head.load() + SIZE) {
+      m_data[tail % SIZE] = 0;
+*     m_tail.store(tail + 1);
+   }
+}
+queue.push(1) {
+   const size_t tail = m_tail.load();
+   if (tail < m_head.load() + SIZE) {
+      m_data[tail % SIZE] = 1;
+      m_tail.store(tail + 1);
+   }
+}
+...
+```
+
+---
+count: false
+<img src='./images/queue3.png' height="200"/>
+
+```cpp
+// main                                worker
+
+queue.push(0) {
+   const size_t tail = m_tail.load();
+   if (tail < m_head.load() + SIZE) {
+      m_data[tail % SIZE] = 0;
+      m_tail.store(tail + 1);
+   }
+}
+*queue.push(1) {
+   const size_t tail = m_tail.load();
+   if (tail < m_head.load() + SIZE) {
+      m_data[tail % SIZE] = 1;
+      m_tail.store(tail + 1);
+   }
+}
+...
+```
+
+---
+count: false
+<img src='./images/queue4.png' height="200"/>
+
+```cpp
+// main                                worker
+
+queue.push(0) {
+   const size_t tail = m_tail.load();
+   if (tail < m_head.load() + SIZE) {
+      m_data[tail % SIZE] = 0;
+      m_tail.store(tail + 1);
+   }
+}
+queue.push(1) {
+   const size_t tail = m_tail.load();
+   if (tail < m_head.load() + SIZE) {
+*     m_data[tail % SIZE] = 1;
+      m_tail.store(tail + 1);
+   }
+}
+...
+```
+
+---
+count: false
+<img src='./images/queue5.png' height="200"/>
+
+```cpp
+// main                                worker
+
+queue.push(0) {
+   const size_t tail = m_tail.load();
+   if (tail < m_head.load() + SIZE) {
+      m_data[tail % SIZE] = 0;
+      m_tail.store(tail + 1);
+   }
+}
+queue.push(1) {
+   const size_t tail = m_tail.load();
+   if (tail < m_head.load() + SIZE) {
+     m_data[tail % SIZE] = 1;
+*    m_tail.store(tail + 1);
+   }
+}
+...
+```
+
+<!-- >>> Slide -->
+
+---
+<img src='./images/queue5.png' height="200"/>
+```cpp
+// main                                worker
+
+queue.push(0);
+queue.push(1);
+*queue.push(2) {
+   const size_t tail = m_tail.load();
+   if (tail < m_head.load() + SIZE);
+}
+// -----------------------------------------------------------------------------------------------
+                                       queue.steal() {
+                                          size_t head = m_head.load();
+                                          if (head < m_tail.load()) {
+                                             if (m_head.compare_exchange_strong(head, head + 1)) { 
+                                                return m_data[head % SIZE];
+                                             }
+                                          }
+                                       }               
+```
+
+---
+count: false
+<img src='./images/queue5.png' height="200"/>
+```cpp
+// main                                worker
+
+queue.push(0);
+queue.push(1);
+queue.push(2) {
+   const size_t tail = m_tail.load();
+   if (tail < m_head.load() + SIZE);
+}
+// -----------------------------------------------------------------------------------------------
+*                                      queue.steal() {
+                                          size_t head = m_head.load();
+                                          if (head < m_tail.load()) {
+                                             if (m_head.compare_exchange_strong(head, head + 1)) { 
+                                                return m_data[head % SIZE];
+                                             }
+                                          }
+                                       }               
+```
+
+---
+count: false
+<img src='./images/queue6.png' height="200"/>
+```cpp
+// main                                worker
+
+queue.push(0);
+queue.push(1);
+queue.push(2) {
+   const size_t tail = m_tail.load();
+   if (tail < m_head.load() + SIZE);
+}
+// -----------------------------------------------------------------------------------------------
+                                       queue.steal() {
+                                          size_t head = m_head.load();
+                                          if (head < m_tail.load()) {
+*                                            if (m_head.compare_exchange_strong(head, head + 1)) { 
+                                                return m_data[head % SIZE];
+                                             }
+                                          }
+                                       }               
+```
+
+---
+count: false
+<img src='./images/queue6.png' height="200"/>
+```cpp
+// main                                worker
+
+queue.push(0);
+queue.push(1);
+queue.push(2) {
+   const size_t tail = m_tail.load();
+   if (tail < m_head.load() + SIZE);
+}
+// -----------------------------------------------------------------------------------------------
+                                       queue.steal() {
+                                          size_t head = m_head.load();
+                                          if (head < m_tail.load()) {
+                                             if (m_head.compare_exchange_strong(head, head + 1)) { 
+*                                               return m_data[head % SIZE];
+                                             }
+                                          }
+                                       }               
+```
+
+<!-- >>> Slide -->
+
+---
+<img src='./images/queue5.png' height="200"/>
+```cpp
+// main                                worker
+
+queue.push(0);
+queue.push(1);
+*queue.push(2) {
+   const size_t tail = m_tail.load();
+// -----------------------------------------------------------------------------------------------
+                                       queue.steal() {
+                                          size_t head = m_head.load();
+                                          if (head < m_tail.load()) {
+                                             if (m_head.compare_exchange_strong(head, head + 1)) {
+// -----------------------------------------------------------------------------------------------
+   if (tail < m_head.load() + SIZE) {
+      m_data[tail % SIZE] = 2;                 return m_data[head % SIZE];
+
+
+//
+```
+
+---
+count: false
+<img src='./images/queue5.png' height="200"/>
+```cpp
+// main                                worker
+
+queue.push(0);
+queue.push(1);
+queue.push(2) {
+   const size_t tail = m_tail.load();
+// -----------------------------------------------------------------------------------------------
+*                                      queue.steal() {
+                                          size_t head = m_head.load();
+                                          if (head < m_tail.load()) {
+                                             if (m_head.compare_exchange_strong(head, head + 1)) {
+// -----------------------------------------------------------------------------------------------
+   if (tail < m_head.load() + SIZE) {
+      m_data[tail % SIZE] = 2;                 return m_data[head % SIZE];
+
+
+//
+```
+
+---
+count: false
+<img src='./images/queue6.png' height="200"/>
+```cpp
+// main                                worker
+
+queue.push(0);
+queue.push(1);
+queue.push(2) {
+   const size_t tail = m_tail.load();
+// -----------------------------------------------------------------------------------------------
+                                       queue.steal() {
+                                          size_t head = m_head.load();
+                                          if (head < m_tail.load()) {
+*                                            if (m_head.compare_exchange_strong(head, head + 1)) {
+// -----------------------------------------------------------------------------------------------
+   if (tail < m_head.load() + SIZE) {
+      m_data[tail % SIZE] = 2;                 return m_data[head % SIZE];
+
+
+//
+```
+
+---
+count: false
+<img src='./images/queue6.png' height="200"/>
+```cpp
+// main                                worker
+
+queue.push(0);
+queue.push(1);
+queue.push(2) {
+   const size_t tail = m_tail.load();
+// -----------------------------------------------------------------------------------------------
+                                       queue.steal() {
+                                          size_t head = m_head.load();
+                                          if (head < m_tail.load()) {
+                                             if (m_head.compare_exchange_strong(head, head + 1)) {
+// -----------------------------------------------------------------------------------------------
+*  if (tail < m_head.load() + SIZE) {
+      m_data[tail % SIZE] = 2;                 return m_data[head % SIZE];
+
+
+//
+```
+
+---
+count: false
+<img src='./images/queue6.png' height="200"/>
+```cpp
+// main                                worker
+
+queue.push(0);
+queue.push(1);
+queue.push(2) {
+   const size_t tail = m_tail.load();
+// -----------------------------------------------------------------------------------------------
+                                       queue.steal() {
+                                          size_t head = m_head.load();
+                                          if (head < m_tail.load()) {
+                                             if (m_head.compare_exchange_strong(head, head + 1)) {
+// -----------------------------------------------------------------------------------------------
+   if (tail < m_head.load() + SIZE) {
+*     m_data[tail % SIZE] = 2;                 return m_data[head % SIZE];
+
+
+//
+```
+
+---
 ???
 Tools like ThreadSanitizer and Helgrind have been applied to large C++ programs and have 
 successfully found concurrency errors in real software applications.
@@ -281,188 +564,6 @@ What these tools rely on when detecting bugs is that the bug is detectable in th
 they happended to monitor. However, as we'll see next, whether or not a potential bug in the program 
 occurs depends heavily on the actual interleaving of the program's threads at runtime.
 
-The following small background_thread program illustrates this dependence.
-
-<!-- <<< -->
-
-<!-- subsubsection:Dependence on Thread Interleaving -->
-
----
-layout: true
-#### Challenges in Testing and Verifying Multi-Threaded Programs | Concurrency Bugs
-# Dependence on Thread Interleaving
-
-<!-- example:background_thread.cpp -->
-
-<!-- Slide -->
-
----
-
-<div class="code_left" style="width: 40%;"><pre><code class="language-cpp">
-struct background_task_manager
-{
-   void run_background_task() {
-      if (!m_mutex.try_lock())
-         return;
-      
-      join_thread();
-   
-      m_thread([this]() {
-         m_mutex.lock();
-         // perform task
-         m_mutex.unlock();
-      });
-   
-      m_mutex.unlock();
-   }
-   
-   void join_thread() {
-      if (m_thread.joinable())
-         m_thread.join();
-   }
-   
-   thread m_thread;
-   mutex m_mutex;
-};
-</code></pre></div>
-
-???
-The background_task_manager is a wrapper class around a background thread that has a specific 
-task associated with it.
-Users of the manager can trigger the background thread by calling the run_background_task() 
-function.
-The purpose of the manager is to make sure that the background thread can only be triggered 
-if it is not currently running.
-
-To determine whether the background_thread is currently running, the manager has a mutex.
-The intended semantics of the mutex is that when it's locked, this either means that the background 
-thread is being created, or that it is currently running and performing its task.
-
-So when a client calls run_background_task() it first try's to lock the mutex. If it doesn't 
-succeed it returns immediately.
-If it does, it first checks if it has to join a finished background_thread.
-After that, it spawns a new one, unlocks the mutex and returns.
-
-The spawn background_thread first locks the mutex, to prevents other callers from triggering it,
-performs its task, and when it's finished, unlocking the mutex again. At this point, callers may 
-trigger the background task again.
-
---
-<div class="code_right" style="width: 59%;"><pre><code class="language-cpp">
-TEST(DeadlockTest)
-{
-   background_task_manager manager;
-   manager.run_background_task();
-   
-   thread t2([&m]() { manager.run_background_task(); });
-   t2.join();
-   
-   manager.join_thread();
-}
-</code></pre></div>
-
-<!-- <<< -->
-
-<!-- >>> Slide -->
-
----
-<div class="code_left" style="width: 30%;"><pre><code class="language-cpp">
-struct background_task_manager
-{
-   void run_background_task() {
-      if (!m_mutex.try_lock())
-         return;
-      
-      join_thread();
-   
-      m_thread([this]() {
-         m_mutex.lock();
-         // perform task
-         m_mutex.unlock();
-      });
-   
-      m_mutex.unlock();
-   }
-   
-   void join_thread() {
-      if (m_thread.joinable())
-         m_thread.join();
-   }
-   
-   thread m_thread;
-   mutex m_mutex;
-};
-</code></pre></div>
-<div class="code_right" style="width: 69%;"><pre><code class="language-cpp">
-main                          t2                            m_thread
-
-
-m_mutex.try_lock()
-m_thread.joinable() == false
-m_thread.spawn()
-m_mutex.unlock()
-                                                            m_mutex.lock()
-                                                            // perform task
-                                                            m_mutex.unlock()
-                              m_mutex.try_lock()
-                              m_thread.joinable() == true
-                              m_thread.join()
-                              m_thread.spawn()
-                              m_mutex.unlock()
-                                                            m_mutex.lock()
-                                                            // perform task
-                                                            m_mutex.unlock()
-manager.join_thread()
-</code></pre></div>
-
-<!-- <<< -->
-
-<!-- >>> Slide -->
-
----
-<div class="code_left" style="width: 30%;"><pre><code class="language-cpp">
-struct background_task_manager
-{
-   void run_background_task() {
-      if (!m_mutex.try_lock())
-         return;
-      
-      join_thread();
-   
-      m_thread([this]() {
-         m_mutex.lock();
-         // perform task
-         m_mutex.unlock();
-      });
-   
-      m_mutex.unlock();
-   }
-   
-   void join_thread() {
-      if (m_thread.joinable())
-         m_thread.join();
-   }
-   
-   thread m_thread;
-   mutex m_mutex;
-};
-</code></pre></div>
-<div class="code_right" style="width: 69%;"><pre><code class="language-cpp">
-main                          t2                            m_thread
-
-
-m_mutex.try_lock()
-m_thread.joinable() == false
-m_thread.spawn()
-m_mutex.unlock()
-                              m_mutex.try_lock()
-                              m_thread.joinable() == true
-                              m_thread.join()
-                                                            m_mutex.lock()
-DEADLOCK
-</code></pre></div>
-
-???
 Whether or not the executing the unit test reveals the deadlock depends on the interleaving of the 
 program's threads at runtime.
 
@@ -546,8 +647,8 @@ count: false
 
 ---
 layout: true
-#### Challenges in Testing and Verifying Multi-Threaded Programs | Nondeterminism
-# Implications
+#### Challenges in Testing and Verifying Multi-Threaded Programs
+# Implications of Nondeterminism
 
 <!-- >>> Slide -->
 

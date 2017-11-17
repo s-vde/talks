@@ -1,4 +1,117 @@
 
+<!-- subsection:Concurrency Bugs -->
+
+<!-- >>> Slide -->
+
+---
+layout: true
+#### Challenges in Testing and Verifying Multi-Threaded Programs
+# Concurrency Bugs
+
+---
+???
+In general, concurrency bugs arise from the fact that multiple threads are sharing the same 
+resources.
+In this talk I focus on three types of bugs.
+
+--
+count: false
+##### Race Conditions
+
+```cpp
+atomic<int> x = 0;
+
+thread t1([&x]{ x.store(1); });
+thread t2([&x]{ x.store(2); });
+
+t1.join();
+t2.join();
+
+assert(x.load() == 2);
+```
+
+???
+Race conditions: Arise when the program's correctness depends on the relative timing or ordering of 
+thread instructions.
+
+---
+count: false
+##### Data Races
+
+```cpp
+int x = 0;
+
+thread t1([&x]{ x = 1; });
+thread t2([&x]{ x = 2; });
+
+t1.join();
+t2.join();
+```
+
+???
+Data Races: Arise when two threads
+- access the same memory location; and
+- at least one of the accesses is a write; and
+- there is no mechanism in place to avoid the accesses from happening concurrently
+
+Since the C++11 memory model we can reason about memory accesses and dataraces are deemed undefined 
+behaviour (so it is very important to make sure your programs are datarace free)
+
+---
+count: false
+##### Deadlocks
+
+<div class="code_left" style="width: 50%;"><pre><code class="language-cpp">
+mutex m1, m2;
+
+thread t1([&m1, &m2]{ 
+   lock_guard<mutex> lock1(m1);
+   lock_guard<mutex> lock2(m2);
+});
+
+thread t2([&m1, &m2]{ 
+   lock_guard<mutex> lock2(m2);
+   lock_guard<mutex> lock1(m1);
+});
+
+t1.join();
+t2.join();
+</div></code></pre>
+
+???
+The third example of a concurrency bug is a deadlock. In the rest of the talk I will focus on 
+finding deadlocks.
+Deadlock is a situation where a set of threads is blocked indefinitely, for example because each of
+them is waiting for one of the others to release a held resource.
+
+In this minimal example two threads are locking the same two threads, but in reversed order.
+
+--
+count: false
+<div class="code_right" style="width: 45%;"><pre><code class="language-cpp">
+t1             t2
+
+lock m1;
+               lock m2;
+</div></code></pre>
+
+???
+If thread1 first locks mutex1 and subsequently thread2 locks mutex2, both threads for their next 
+instruction are waiting for the other to release the mutex they acquired, and none of them can 
+make progress.
+
+BRIDGE ==>:
+<!-- TODO: memory errors, and ... -->
+So race conditions, data races and deadlocks are examples of concurrency bugs.
+Just like there are tools specifically tailored to detect for example typical memory-related errors, 
+concurrency bugs ask for tools that specialize in detecting them. 
+Luckily there are such tools available, the most well-known probably being ThreadSanitizer and 
+Helgrind.
+
+<!-- <<< -->
+
+
+
 <br/>
 <!-- TODO: refine -->
 In audio development, concurrency is a big topic, as at the core, there is the audio processing, 

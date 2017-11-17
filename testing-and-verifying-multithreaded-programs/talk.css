@@ -22,7 +22,7 @@
 
 .remark-code, .remark-inline-code 
 { 
-   font-size: 0.9em;
+   font-size: 13.5pt;
    font-family: 'Ubuntu Mono'; 
 }
 
@@ -73,6 +73,19 @@ background-color: #008fb3;
 background-color: #e6faff;
 color: #003d4d;
 */
+
+.column:first-of-type {float: left}
+.column:last-of-type {float: right}
+
+.split-47 .column:first-of-type 
+{
+   width: 47%;
+   margin-right: 0.5em;
+}
+.split-47 .column:last-of-type 
+{
+   width: 53%
+}
 
 .no_number .remark-slide-number {
   display: none;
@@ -145,15 +158,17 @@ a:visited
 
 .code_left
 {
-   margin-top: -2em;
-   display: inline-block; 
+   /*margin-top: -2em;*/
+   display: inline-block;
+   vertical-align: top; 
 }
 
 .code_right
 {
-   margin-top: -2em;
+   /*margin-top: -2em;*/
    display: inline-block; 
    vertical-align: top;
+   float: right;
 }
 
 .footnote

@@ -15,26 +15,15 @@
 class lock_free_queue
 {
 public:
-   lock_free_queue();
-
    void push(const int job);
    int steal();
 
 private:
-   std::array<int, SIZE> m_jobs;
-   std::atomic<size_t> m_head;
-   std::atomic<size_t> m_tail;
+   std::array<int, SIZE> m_data;
+   std::atomic<size_t> m_head{ 0 };
+   std::atomic<size_t> m_tail{ 0 };
 
 }; // end class lock_free_queue
-
-//--------------------------------------------------------------------------------------------------
-
-lock_free_queue::lock_free_queue()
-: m_jobs({})
-, m_head(0)
-, m_tail(0)
-{
-}
 
 //--------------------------------------------------------------------------------------------------
 
@@ -45,7 +34,7 @@ void lock_free_queue::push(const int job)
    // if (tail < m_head.load() + SIZE - 1) // CORRECT
    if (tail < m_head.load() + SIZE) // BUG
    {
-      m_jobs[tail % SIZE] = job;
+      m_data[tail % SIZE] = job;
       m_tail.store(tail + 1);
    }
 }
@@ -63,7 +52,7 @@ int lock_free_queue::steal()
 
       if (m_head.compare_exchange_strong(head, head + 1))
       {
-         return m_jobs[head % SIZE];
+         return m_data[head % SIZE];
       }
 
       // else: another thread has updated m_head in the meanwhile
