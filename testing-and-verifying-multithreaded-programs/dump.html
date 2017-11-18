@@ -1,114 +1,195 @@
 
-<!-- subsection:Concurrency Bugs -->
-
-<!-- >>> Slide -->
-
 ---
-layout: true
-#### Challenges in Testing and Verifying Multi-Threaded Programs
-# Concurrency Bugs
-
----
-???
-In general, concurrency bugs arise from the fact that multiple threads are sharing the same 
-resources.
-In this talk I focus on three types of bugs.
-
---
-count: false
-##### Race Conditions
-
-```cpp
-atomic<int> x = 0;
-
-thread t1([&x]{ x.store(1); });
-thread t2([&x]{ x.store(2); });
-
-t1.join();
-t2.join();
-
-assert(x.load() == 2);
-```
+<div style="width: 55%; float: left;">
+</div>
+<div style="width: 40%; float: right;">
+   <img src='./images/scheduler1.png' height="400"/>
+</div>
 
 ???
-Race conditions: Arise when the program's correctness depends on the relative timing or ordering of 
-thread instructions.
+The Scheduler object maintains a ThreadPool which at any point during the execution of the program
+contains an entry for every active program thread.
+This entry contains the next instruction of the corresponding thread, and is initially empty.
+It also contains a semaphore, which allows the scheduler to control the thread.
 
 ---
 count: false
-##### Data Races
-
-```cpp
-int x = 0;
-
-thread t1([&x]{ x = 1; });
-thread t2([&x]{ x = 2; });
-
-t1.join();
-t2.join();
-```
+<div style="width: 55%; float: left;">
+<pre><code class="language-cpp">
+scheduler::post_instruction(lock, mut.addr, debug_info);
+mut.lock();
+</code></pre>
+</div>
+<div style="width: 40%; float: right;">
+   <img src='./images/scheduler1.png' height="400"/>
+</div>
 
 ???
-Data Races: Arise when two threads
-- access the same memory location; and
-- at least one of the accesses is a write; and
-- there is no mechanism in place to avoid the accesses from happening concurrently
+Every memory instruction, lock or unlock instruction, thread creation abd joining instruction
+in the original source code is instrumented. That is, before each such instruction, the 
+instrumentation pass has inserted a call to scheduler's member the function 
+post_instruction().
 
-Since the C++11 memory model we can reason about memory accesses and dataraces are deemed undefined 
-behaviour (so it is very important to make sure your programs are datarace free)
+Inside the post_instruction function, the calling thread sets the instruction field in its 
+associated entry in the thread pool.
 
 ---
 count: false
-##### Deadlocks
-
-<div class="code_left" style="width: 50%;"><pre><code class="language-cpp">
-mutex m1, m2;
-
-thread t1([&m1, &m2]{ 
-   lock_guard<mutex> lock1(m1);
-   lock_guard<mutex> lock2(m2);
-});
-
-thread t2([&m1, &m2]{ 
-   lock_guard<mutex> lock2(m2);
-   lock_guard<mutex> lock1(m1);
-});
-
-t1.join();
-t2.join();
-</div></code></pre>
+<div style="width: 55%; float: left;">
+<pre><code class="language-cpp">
+scheduler::post_instruction(lock, mut.addr, debug_info);
+mut.lock();
+</code></pre>
+</div>
+<div style="width: 40%; float: right;">
+   <img src='./images/scheduler2.png' height="400"/>
+</div>
 
 ???
-The third example of a concurrency bug is a deadlock. In the rest of the talk I will focus on 
-finding deadlocks.
-Deadlock is a situation where a set of threads is blocked indefinitely, for example because each of
-them is waiting for one of the others to release a held resource.
+Then it waits on its semaphore.
 
-In this minimal example two threads are locking the same two threads, but in reversed order.
-
---
+---
 count: false
-<div class="code_right" style="width: 45%;"><pre><code class="language-cpp">
-t1             t2
+<div style="width: 55%; float: left;">
+<pre><code class="language-cpp">
+scheduler::post_instruction(lock, mut.addr, debug_info);
+mut.lock();
+</code></pre>
+</div>
+<div style="width: 40%; float: right;">
+   <img src='./images/scheduler3.png' height="400"/>
+</div>
 
-lock m1;
-               lock m2;
-</div></code></pre>
+---
+count: false
+<div style="width: 55%; float: left;"><pre><code class="language-cpp">
+scheduler::scheduler_thread(schedule)
+{
+   trace_t trace;
+   unsigned int round = 0;
+   
+   while (!done)
+   {
+      // wait until all active threads posted an instruction
+      
+      int next_id = schedule[round];
+      
+      // record the thread pool and the next instruction
+      trace.push_back(thread_pool.instructions(), 
+                      thread_pool[next_tid].instruction);
+      
+      // allow the next thread to progress until its next 
+      // post_instruction call
+      thread_pool.semaphores()[next_tid].post();
+      
+      ++round;
+   }
+}
+</code></pre></div>
+<div style="width: 40%; float: right;">
+   <img src='./images/scheduler4.png' height="400"/>
+</div>
 
 ???
-If thread1 first locks mutex1 and subsequently thread2 locks mutex2, both threads for their next 
-instruction are waiting for the other to release the mutex they acquired, and none of them can 
-make progress.
+The scheduler thread gets as input a schedule, which is a sequence of thread id's.
+At every scheduling round, the scheduler thread first waits until all the threads that are 
+registered in the thread pool have an instruction posted.
+Then it looks up in the schedule which thread it should schedule in the current round.
+It adds the instruction posted by that thread to the execution trace, together with a snapshot 
+of the current thread pool.
 
-BRIDGE ==>:
-<!-- TODO: memory errors, and ... -->
-So race conditions, data races and deadlocks are examples of concurrency bugs.
-Just like there are tools specifically tailored to detect for example typical memory-related errors, 
-concurrency bugs ask for tools that specialize in detecting them. 
-Luckily there are such tools available, the most well-known probably being ThreadSanitizer and 
-Helgrind.
+---
+count: false
+<div style="width: 55%; float: left;"><pre><code class="language-cpp">
+scheduler::scheduler_thread(schedule)
+{
+   trace_t trace;
+   unsigned int round = 0;
+   
+   while (!done)
+   {
+      // wait until all active threads posted an instruction
+      
+      int next_id = schedule[round];
+      
+      // record the thread pool and the next instruction
+      trace.push_back(thread_pool.instructions(), 
+                      thread_pool[next_tid].instruction);
+      
+      // allow the next thread to progress until its next 
+      // post_instruction call
+      thread_pool.semaphores()[next_tid].post();
+      
+      ++round;
+   }
+}
+</code></pre></div>
+<div style="width: 40%; float: right;">
+   <img src='./images/scheduler5.png' height="400"/>
+</div>
 
-<!-- <<< -->
+???
+For the selected thread, it sets the associated semaphore to true,
+notifies the thread that it may continue executing, and increases the round.
+
+---
+count: false
+<div style="width: 55%; float: left;">
+<pre><code class="language-cpp">
+scheduler::post_instruction(lock, mut.addr, debug_info);
+mut.lock();
+
+.
+. // other instructions
+.
+
+scheduler::post_instruction(spawn, thr.id, debug_info);
+std::thread thr(start_routine);
+</code></pre>
+</div>
+<div style="width: 40%; float: right;">
+   <img src='./images/scheduler5.png' height="400"/>
+</div>
+
+???
+The respective thread is no longer blocked on its semaphore, and can execute its original 
+instruction, in this case locking a mutex.
+It keeps executing until the next call to scheduler::post_instruction.
+
+---
+count: false
+<div style="width: 55%; float: left;">
+<pre><code class="language-cpp">
+scheduler::post_instruction(lock, mut.addr, debug_info);
+mut.lock();
+
+.
+. // other instructions
+.
+
+scheduler::post_instruction(spawn, thr.id, debug_info);
+std::thread thr(start_routine);
+</code></pre>
+</div>
+<div style="width: 40%; float: right;">
+   <img src='./images/scheduler6.png' height="400"/>
+</div>
+
+???
+It then again sets its instruction field in the thread pool and blocks on its semaphore.
+
+---
+count: false
+<div style="width: 55%; float: left;">
+</div>
+<div style="width: 40%; float: right;">
+   <img src='./images/scheduler7.png' height="400"/>
+</div>
+
+???
+At each point in time, there is at most one thread that is not blocked on its semaphore.
+This forces the underlying operating system's scheduler to schedule exactly that thread.
+
 
 
 

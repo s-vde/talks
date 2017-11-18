@@ -214,26 +214,7 @@ def main(argv):
                 #  # 5: nodesep
                 #  10)
                 # NOTE: To be generated with penwidth=8 and ranksep=3
-                os.path.join(test_programs, "lock_free_queue_datarace.cpp"):
-                # 0: name_filter
-                (["this"],
-                 # 1: command line options
-                 "--opt 1 --c -std=c++14",
-                 # 2: exploration modes
-                 ["dpor"],
-                 # 3: bounds
-                 [],
-                 # 4: max nr explorations
-                 10,
-                 # 5: nodesep
-                 7,
-                 # 6: name conversion
-                 [("this[0][0][0]", "m_queue"),
-                  ("this[0][1][0][0][0]", "m_head"),
-                  ("this[0][2][0][0][0]", "m_tail"),
-                 ]),
-                # NOTE: To be generated with penwidth=8 and ranksep=3
-                # os.path.join(test_programs, "lock_free_queue_two_steals.cpp"):
+                # os.path.join(test_programs, "lock_free_queue_datarace.cpp"):
                 # # 0: name_filter
                 # (["this"],
                 #  # 1: command line options
@@ -245,7 +226,30 @@ def main(argv):
                 #  # 4: max nr explorations
                 #  10,
                 #  # 5: nodesep
-                #  10)
+                #  7,
+                #  # 6: name conversion
+                #  [("this[0][0][0]", "m_queue"),
+                #   ("this[0][1][0][0][0]", "m_head"),
+                #   ("this[0][2][0][0][0]", "m_tail")]),
+                # -----
+                # NOTE: To be generated with penwidth=8 and ranksep=3
+                os.path.join(test_programs, "lock_free_queue_datarace.cpp"):
+                # 0: name_filter
+                (["this"],
+                 # 1: command line options
+                 "--opt 1 --c -std=c++14",
+                 # 2: exploration modes
+                 ["depth_first_search"],
+                 # 3: bounds
+                 [],
+                 # 4: max nr explorations
+                 5,
+                 # 5: nodesep
+                 8,
+                 # 6: name conversion
+                 [("this[0][0][0]", "m_queue"),
+                  ("this[0][1][0][0][0]", "m_head"),
+                  ("this[0][2][0][0][0]", "m_tail")])
                }
 
     for program, properties in programs.items():
@@ -289,8 +293,8 @@ def main(argv):
                     generate_animation = "True"
 
                     if mode == "depth_first_search":
-                        # generate_animation = "Until:5"
-                        generate_animation = "False"
+                        generate_animation = "Until:3"
+                        # generate_animation = "False"
 
                     if mode == "bounded_search":
                         generate_animation = properties[3][index][1]

@@ -46,22 +46,6 @@ At Native Instruments, we create software and hardware for digital music product
 
 
 
-<!-- section:Concurrency In Audio Development -->
-
-<!-- >>> Slide -->
-
----
-class: slide_section, no_number
-count: false
-layout: false
-# Concurrency In Audio Development
-
-<!-- TODO -->
-
-
-
-
-
 <!-- section:Challenges in Testing and Verifying Multi-Threaded Programs -->
 
 <!-- >>> Slide -->
@@ -71,6 +55,88 @@ class: slide_section, no_number
 count: false
 layout: false
 # Challenges in Testing and Verifying Multi-Threaded Programs
+
+<!-- >>> Slide -->
+
+---
+layout: true
+#### Challenges in Testing and Verifying Multi-Threaded Programs
+# Concurrency Bugs
+
+---
+???
+In general, concurrency bugs arise from the fact that multiple threads are sharing the same 
+resources.
+Well-known bugs include
+
+--
+count: false
+##### Deadlocks, Race Conditions, and ...
+
+--
+count: false
+##### Data Races
+
+```cpp
+int x = 0;
+
+thread t1([&x]{ x = 1; });
+thread t2([&x]{ x = 2; });
+
+t1.join();
+t2.join();
+```
+
+???
+Data Races: Arise when two threads
+- access the same memory location; and
+- at least one of the accesses is a write; and
+- there is no mechanism in place to avoid the accesses from happening concurrently
+
+Since the C++11 memory model we can reason about memory accesses and dataraces are deemed undefined 
+behaviour (so it is very important to make sure your programs are datarace free)
+
+BRIDGE ==>:
+<!-- TODO: memory errors, and ... -->
+Just like there are tools specifically tailored to detect for example typical memory-related errors, 
+concurrency bugs ask for tools that specialize in detecting them. 
+Luckily there are such tools available, the most well-known probably being ThreadSanitizer and 
+Helgrind.
+
+<!-- >>> Slide -->
+
+---
+layout: false
+#### Challenges in Testing and Verifying Multi-Threaded Programs
+# Concurrency Bug Detectors
+
+```bash
+clang++ -fsanitize=thread -std=c++14 -g data_race.cpp -o data_race
+./data_race
+```
+
+--
+count: false
+<img src='./images/tsan_datarace.png' width="85%"/>
+
+???
+Tools like ThreadSanitizer and Helgrind have been applied to large C++ programs and have 
+successfully found concurrency errors in real software applications.
+
+If you're programming with threads, I highly encourage you to look into these tools if you haven't 
+so already.
+
+What these tools rely on when detecting bugs is that the bug is detectable in the execution that 
+they happended to monitor. However, as we'll see next, whether or not a potential bug in the program 
+occurs depends heavily on the actual interleaving of the program's threads at runtime.
+
+<!-- >>> Slide -->
+
+---
+layout: false
+#### Challenges in Testing and Verifying Multi-Threaded Programs
+# Dependence on Thread Interleaving
+
 
 <!-- >>> Slide -->
 
@@ -552,25 +618,12 @@ queue.push(2) {
 //
 ```
 
----
 ???
-Tools like ThreadSanitizer and Helgrind have been applied to large C++ programs and have 
-successfully found concurrency errors in real software applications.
-
-If you're programming with threads, I highly encourage you to look into these tools if you haven't 
-so already.
-
-What these tools rely on when detecting bugs is that the bug is detectable in the execution that 
-they happended to monitor. However, as we'll see next, whether or not a potential bug in the program 
-occurs depends heavily on the actual interleaving of the program's threads at runtime.
-
 Whether or not the executing the unit test reveals the deadlock depends on the interleaving of the 
 program's threads at runtime.
 
 This brings me to the second challenge for testing and verifying multi-threaded programs:
 From the viewpoint of the programmer, this interleaving is nondeterministic.
-
-<!-- <<< -->
 
 <!-- subsection:Nondeterminism -->
 
@@ -764,197 +817,6 @@ to the Scheduler library.
 executable
 
 ---
-<div style="width: 55%; float: left;">
-</div>
-<div style="width: 40%; float: right;">
-   <img src='./images/scheduler1.png' height="400"/>
-</div>
-
-???
-The Scheduler object maintains a ThreadPool which at any point during the execution of the program
-contains an entry for every active program thread.
-This entry contains the next instruction of the corresponding thread, and is initially empty.
-It also contains a semaphore, which allows the scheduler to control the thread.
-
----
-count: false
-<div style="width: 55%; float: left;">
-<pre><code class="language-cpp">
-scheduler::post_instruction(lock, mut.addr, debug_info);
-mut.lock();
-</code></pre>
-</div>
-<div style="width: 40%; float: right;">
-   <img src='./images/scheduler1.png' height="400"/>
-</div>
-
-???
-Every memory instruction, lock or unlock instruction, thread creation abd joining instruction
-in the original source code is instrumented. That is, before each such instruction, the 
-instrumentation pass has inserted a call to scheduler's member the function 
-post_instruction().
-
-Inside the post_instruction function, the calling thread sets the instruction field in its 
-associated entry in the thread pool.
-
----
-count: false
-<div style="width: 55%; float: left;">
-<pre><code class="language-cpp">
-scheduler::post_instruction(lock, mut.addr, debug_info);
-mut.lock();
-</code></pre>
-</div>
-<div style="width: 40%; float: right;">
-   <img src='./images/scheduler2.png' height="400"/>
-</div>
-
-???
-Then it waits on its semaphore.
-
----
-count: false
-<div style="width: 55%; float: left;">
-<pre><code class="language-cpp">
-scheduler::post_instruction(lock, mut.addr, debug_info);
-mut.lock();
-</code></pre>
-</div>
-<div style="width: 40%; float: right;">
-   <img src='./images/scheduler3.png' height="400"/>
-</div>
-
----
-count: false
-<div style="width: 55%; float: left;"><pre><code class="language-cpp">
-scheduler::scheduler_thread(schedule)
-{
-   trace_t trace;
-   unsigned int round = 0;
-   
-   while (!done)
-   {
-      // wait until all active threads posted an instruction
-      
-      int next_id = schedule[round];
-      
-      // record the thread pool and the next instruction
-      trace.push_back(thread_pool.instructions(), 
-                      thread_pool[next_tid].instruction);
-      
-      // allow the next thread to progress until its next 
-      // post_instruction call
-      thread_pool.semaphores()[next_tid].post();
-      
-      ++round;
-   }
-}
-</code></pre></div>
-<div style="width: 40%; float: right;">
-   <img src='./images/scheduler4.png' height="400"/>
-</div>
-
-???
-The scheduler thread gets as input a schedule, which is a sequence of thread id's.
-At every scheduling round, the scheduler thread first waits until all the threads that are 
-registered in the thread pool have an instruction posted.
-Then it looks up in the schedule which thread it should schedule in the current round.
-It adds the instruction posted by that thread to the execution trace, together with a snapshot 
-of the current thread pool.
-
----
-count: false
-<div style="width: 55%; float: left;"><pre><code class="language-cpp">
-scheduler::scheduler_thread(schedule)
-{
-   trace_t trace;
-   unsigned int round = 0;
-   
-   while (!done)
-   {
-      // wait until all active threads posted an instruction
-      
-      int next_id = schedule[round];
-      
-      // record the thread pool and the next instruction
-      trace.push_back(thread_pool.instructions(), 
-                      thread_pool[next_tid].instruction);
-      
-      // allow the next thread to progress until its next 
-      // post_instruction call
-      thread_pool.semaphores()[next_tid].post();
-      
-      ++round;
-   }
-}
-</code></pre></div>
-<div style="width: 40%; float: right;">
-   <img src='./images/scheduler5.png' height="400"/>
-</div>
-
-???
-For the selected thread, it sets the associated semaphore to true,
-notifies the thread that it may continue executing, and increases the round.
-
----
-count: false
-<div style="width: 55%; float: left;">
-<pre><code class="language-cpp">
-scheduler::post_instruction(lock, mut.addr, debug_info);
-mut.lock();
-
-.
-. // other instructions
-.
-
-scheduler::post_instruction(spawn, thr.id, debug_info);
-std::thread thr(start_routine);
-</code></pre>
-</div>
-<div style="width: 40%; float: right;">
-   <img src='./images/scheduler5.png' height="400"/>
-</div>
-
-???
-The respective thread is no longer blocked on its semaphore, and can execute its original 
-instruction, in this case locking a mutex.
-It keeps executing until the next call to scheduler::post_instruction.
-
----
-count: false
-<div style="width: 55%; float: left;">
-<pre><code class="language-cpp">
-scheduler::post_instruction(lock, mut.addr, debug_info);
-mut.lock();
-
-.
-. // other instructions
-.
-
-scheduler::post_instruction(spawn, thr.id, debug_info);
-std::thread thr(start_routine);
-</code></pre>
-</div>
-<div style="width: 40%; float: right;">
-   <img src='./images/scheduler6.png' height="400"/>
-</div>
-
-???
-It then again sets its instruction field in the thread pool and blocks on its semaphore.
-
----
-count: false
-<div style="width: 55%; float: left;">
-</div>
-<div style="width: 40%; float: right;">
-   <img src='./images/scheduler7.png' height="400"/>
-</div>
-
-???
-At each point in time, there is at most one thread that is not blocked on its semaphore.
-This forces the underlying operating system's scheduler to schedule exactly that thread.
-
----
 <div class="mermaid" style="align: left; width: 50%; margin: 0px auto;">
 graph LR
    schedule[0.0.0.1.1.0.2.2.0]
@@ -1012,14 +874,14 @@ The next slide illustrates this on the background_thread example I introduced ea
 layout: true
 #### Systematic Exploration
 # Depth-First Exploration
-<span class="h_example">background_thread.cpp</span>
+<span class="h_example">lock_free_queue.cpp</span>
 
 ---
 
 ---
 count: false
-<div class="animation_no_shift_up" style="margin-right: 6em; margin-top: -4em;">
-   .right[<img src='./generated_trees/background_thread.cpp/depth_first_search/trees/animations/0.png' height="500"/>]
+<div class="animation_no_shift_up" style="margin-right: 3em; margin-top: -7em;">
+   .right[<img src='./generated_trees/lock_free_queue_datarace.cpp/depth_first_search/trees/animations/0.png' height="550"/>]
 </div>
 
 ???
@@ -1032,22 +894,16 @@ count: false
 
 ---
 count: false 
-<div class="animation_no_shift_up" style="margin-right: 6em; margin-top: -4em;">
-   .right[<img src='./generated_trees/background_thread.cpp/depth_first_search/trees/animations/1.png' height="500"/>]
+<div class="animation_no_shift_up" style="margin-right: 3em; margin-top: -7em;">
+   .right[<img src='./generated_trees/lock_free_queue_datarace.cpp/depth_first_search/trees/animations/1.png' height="550"/>]
 </div>
-
-
 
 ---
 count: false 
-<div class="animation_no_shift_up" style="margin-right: 6em; margin-top: -4em;">
-   .right[<img src='./generated_trees/background_thread.cpp/depth_first_search/trees/animations/2.png' height="500"/>]
+<div class="animation_no_shift_up" style="margin-right: 3em; margin-top: -7em;">
+   .right[<img src='./generated_trees/lock_free_queue_datarace.cpp/depth_first_search/trees/animations/2.png' height="550"/>]
 </div>
----
-count: false 
-<div class="animation_no_shift_up" style="margin-right: 6em; margin-top: -4em;">
-   .right[<img src='./generated_trees/background_thread.cpp/depth_first_search/trees/animations/3.png' height="500"/>]
-</div>
+
 
 <!-- >>> Slide -->
 
@@ -1088,126 +944,11 @@ Explore a subset of the possbile interleavings, but still provide coverage guara
 The challenge is to choose that subset so carefully that coverage guarantees can still be provided.
 
 StateSpaceExplorer implements several state space pruning algorithms, each providing different 
-coverage guarantees. In the rest of this talk I will discuss one of them: Partial Order Reduction.
-
-
-<!-- <<< -->
-
----
-layout: true
-#### Systematic Exploration
-# Dynamic Partial Order Reduction
-
-<!-- >>> Slide -->
-
----
-```cpp
-partial_order_reduction(program, equivalence_relation)
-{
-   for (equivalence_class : equivalence_classes(program, equivalence_relation))
-   {
-      schedule = representative(equivalence_class);
-      run(program, schedule);
-   }
-}
-```
-
-.footnote[Due to Flanagan and Godefroid (2005)]
-
-???
-Dynamic Partial Order Reduction is due to Flanagan and Godefroid.
-The idea behind partial order reduction is to group schedules whose resulting executions are 
-semantically equivalent, at least with respect to the class of concurrency bugs we're checking the 
-input program against.
-
-The exploration algorithm makes sure that by the time it's finished it has, for each such 
-equivalence class of schedules, seen at least one (and ideally exactly one) representative 
-execution.
-
-BRIDGE FROM:
-At the heart of the equivalence relation is the concept of dependence. For verifying against dataraces, deadlocks
-and assertion failures the following dependence relation can be used.
-
-<!-- <<< -->
-
-<!-- >>> Slide -->
-
----
-
-##### Dependence Relation
-<div style="float: left; width: 55%;">
-Two instructions are <i>dependent</i> iff
-<ul>
-   <li> they are carried out by the same thread; or</li>
-   <li>memory instructions:
-      <ul>
-         <li>they operate on the same memory location; and</li>
-         <li>at least one of them is a write</li>
-      </ul>
-   </li>
-<li>lock instructions:
-   <ul>
-      <li>they are coenabled; and</li>
-      <li>can enable or disable each other</li>
-   </ul>
-</div>
-
---
-count: false
-<div style="vertical-align: top; float: right; width: 45%;"><pre><code class="language-cpp">
+coverage guarantees.
 
 
 
 
-
-
-
-// coenabled, and disable each other
-dependent(   1 Lock m,     2 Lock m    );
-
-// coenabled, and enable/disable each other       
-dependent(   1 Trylock m,  2 Unlock m  );
-
-// not coenabled
-!dependent(  1 Lock m,     2 Unlock m  );
-</code></pre></div>
-
-???
-<!-- TODO -->
-
-<!-- <<< -->
-
-<!-- >>> Slide -->
-
----
-layout: true
-#### Systematic Exploration
-# Partial Order Reduction
-<span class="h_example">background_thread.cpp</span>
----
----
-count: false
-<div class="animation_dpor" style="margin-top: -7em">
-   .right[<img src='./generated_trees/background_thread.cpp/dpor/trees/animations/0.png' height="560"/>]
-</div>
----
-count: false
-<div class="animation_dpor" style="margin-top: -7em">
-   .right[<img src='./generated_trees/background_thread.cpp/dpor/trees/animations/1.png' height="560"/>]
-</div>
----
-count: false
-<div class="animation_dpor" style="margin-top: -7em">
-   .right[<img src='./generated_trees/background_thread.cpp/dpor/trees/animations/2.png' height="560"/>]
-</div>
-
-<!-- <<< -->
-
-
-
-
-
-<!-- section:Outro -->
 
 <!-- >>> Slide -->
 
