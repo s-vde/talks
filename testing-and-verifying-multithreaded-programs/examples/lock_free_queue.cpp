@@ -16,7 +16,7 @@ class lock_free_queue
 {
 public:
    void push(const int job);
-   int steal();
+   int front();
 
 private:
    std::array<int, SIZE> m_data;
@@ -41,7 +41,7 @@ void lock_free_queue::push(const int job)
 
 //--------------------------------------------------------------------------------------------------
 
-int lock_free_queue::steal()
+int lock_free_queue::front()
 {
    size_t head = m_head.load();
 
@@ -50,10 +50,8 @@ int lock_free_queue::steal()
       // in the meanwhile, m_tail may have been incremented, but this is not a problem since 
       // head < m_tail will still hold
 
-      if (m_head.compare_exchange_strong(head, head + 1))
-      {
-         return m_data[head % SIZE];
-      }
+      m_head.store(head + 1);
+      return m_data[head % SIZE];
 
       // else: another thread has updated m_head in the meanwhile
    }

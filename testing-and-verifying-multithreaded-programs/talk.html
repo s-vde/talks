@@ -17,8 +17,8 @@
 class: slide_title, no_number
 count: false
 
-# Testing and Verifying Multi-Threaded Software
-<hr width="25%">
+.title[Testing and Verifying Multi-Threaded Software]
+<br/><br/>
 <div class="author" style="margin-bottom: 0.25em;">Susanne van den Elsen</div>
 <div style="height: 60;">
    <div class="author" style="width: 50%; margin-top: 0.15em; text-align: right; float: left;">
@@ -28,8 +28,7 @@ count: false
       <img src="./images/native-instruments.png" height="60"/>
    </div>
 </div>
-<br/><br/>
-<hr width="25%">
+<br/><br/><br/><br/>
 <div class="venue">
    Women Who Code Berlin |
    November 21, 2017
@@ -38,7 +37,7 @@ count: false
 
 
 ???
-Good afternoon and welcome everybody. 
+Good evening and welcome everybody. 
 My name is Susanne van den Elsen and I am a software developer at Native Instruments.
 At Native Instruments, we create software and hardware for digital music production.
 
@@ -46,24 +45,11 @@ At Native Instruments, we create software and hardware for digital music product
 
 
 
-<!-- section:Challenges in Testing and Verifying Multi-Threaded Programs -->
-
 <!-- >>> Slide -->
 
 ---
-class: slide_section, no_number
-count: false
-layout: false
-# Challenges in Testing and Verifying Multi-Threaded Programs
-
-<!-- >>> Slide -->
-
----
-layout: true
-#### Challenges in Testing and Verifying Multi-Threaded Programs
 # Concurrency Bugs
 
----
 ???
 In general, concurrency bugs arise from the fact that multiple threads are sharing the same 
 resources.
@@ -106,8 +92,6 @@ Helgrind.
 <!-- >>> Slide -->
 
 ---
-layout: false
-#### Challenges in Testing and Verifying Multi-Threaded Programs
 # Concurrency Bug Detectors
 
 ```bash
@@ -117,6 +101,7 @@ clang++ -fsanitize=thread -std=c++14 -g data_race.cpp -o data_race
 
 --
 count: false
+<br/>
 <img src='./images/tsan_datarace.png' width="85%"/>
 
 ???
@@ -133,14 +118,15 @@ occurs depends heavily on the actual interleaving of the program's threads at ru
 <!-- >>> Slide -->
 
 ---
-layout: false
-#### Challenges in Testing and Verifying Multi-Threaded Programs
+layout: true
 # Dependence on Thread Interleaving
 
 
 <!-- >>> Slide -->
 
 ---
+--
+count: false
 class: split-47
 
 .column[
@@ -151,7 +137,7 @@ class lock_free_queue
 {
 public:
    void push(const int job);
-   int steal();
+   int front();
 
 private:
    std::array<int, SIZE> m_data;
@@ -160,17 +146,13 @@ private:
 };
 //
 ```
-
-
-<img src='./images/queue1.png' width="500"/>
+<div style="margin-top:-1em;"><img src='./images/queue0.png' width="100%" /></div>
 ]
 
 --
 count: false
 .column[
 ```cpp
-
-
 void lock_free_queue::push(const int job)
 {
    const size_t tail = m_tail.load();
@@ -185,14 +167,14 @@ void lock_free_queue::push(const int job)
 
 
 
-int lock_free_queue::steal()
+int lock_free_queue::front()
 {
    size_t head = m_head.load();
 
    if (head < m_tail.load())
    {
-      if (m_head.compare_exchange_strong(head, head + 1))
-         return m_data[head % SIZE];
+      m_head.store(head + 1);
+      return m_data[head % SIZE];
    }
    
    return -1;
@@ -213,26 +195,22 @@ TEST()
 {
    lock_free_queue queue;
 
-   std::thread worker([&queue]{
-      const auto job = queue.steal();
+   std::thread consumer([&queue]{
+      const auto job = queue.front();
    });
    
-   queue.push(0);
-   queue.push(1);
-   queue.push(2);
+   queue.push("A");
+   queue.push("B");
+   queue.push("C");
    
-   worker.join();
+   consumer.join();
 }
 ```
-
-
-<img src='./images/queue1.png' width="500"/>
+<div style="margin-top:-1em;"><img src='./images/queue0.png' width="100%" /></div>
 ]
 
 .column[
 ```cpp
-
-
 void lock_free_queue::push(const int job)
 {
    const size_t tail = m_tail.load();
@@ -247,14 +225,14 @@ void lock_free_queue::push(const int job)
 
 
 
-int lock_free_queue::steal()
+int lock_free_queue::front()
 {
    size_t head = m_head.load();
 
    if (head < m_tail.load())
    {
-      if (m_head.compare_exchange_strong(head, head + 1))
-         return m_data[head % SIZE];
+      m_head.store(head + 1);
+      return m_data[head % SIZE];
    }
    
    return -1;
@@ -267,22 +245,46 @@ int lock_free_queue::steal()
 <!-- >>> Slide -->
 
 ---
-<img src='./images/queue1.png' height="200"/>
+<img src='./images/queue0.png' height="200"/>
 
 ```cpp
-// main                                worker
+// main                                consumer
 
-*queue.push(0) {
+*queue.push("A") {
    const size_t tail = m_tail.load();
    if (tail < m_head.load() + SIZE) {
-      m_data[tail % SIZE] = 0;
+      m_data[tail % SIZE] = "A";
       m_tail.store(tail + 1);
    }
 }
-queue.push(1) {
+queue.push("B") {
    const size_t tail = m_tail.load();
    if (tail < m_head.load() + SIZE) {
-      m_data[tail % SIZE] = 1;
+      m_data[tail % SIZE] = "B";
+      m_tail.store(tail + 1);
+   }
+}
+...
+```
+
+---
+count: false
+<img src='./images/queue1.png' height="200"/>
+
+```cpp
+// main                                consumer
+
+queue.push("A") {
+   const size_t tail = m_tail.load();
+   if (tail < m_head.load() + SIZE) {
+*     m_data[tail % SIZE] = "A";
+      m_tail.store(tail + 1);
+   }
+}
+queue.push("B") {
+   const size_t tail = m_tail.load();
+   if (tail < m_head.load() + SIZE) {
+      m_data[tail % SIZE] = "B";
       m_tail.store(tail + 1);
    }
 }
@@ -294,43 +296,43 @@ count: false
 <img src='./images/queue2.png' height="200"/>
 
 ```cpp
-// main                                worker
+// main                                consumer
 
-queue.push(0) {
+queue.push("A") {
    const size_t tail = m_tail.load();
    if (tail < m_head.load() + SIZE) {
-*     m_data[tail % SIZE] = 0;
-      m_tail.store(tail + 1);
-   }
-}
-queue.push(1) {
-   const size_t tail = m_tail.load();
-   if (tail < m_head.load() + SIZE) {
-      m_data[tail % SIZE] = 1;
-      m_tail.store(tail + 1);
-   }
-}
-...
-```
-
----
-count: false
-<img src='./images/queue3.png' height="200"/>
-
-```cpp
-// main                                worker
-
-queue.push(0) {
-   const size_t tail = m_tail.load();
-   if (tail < m_head.load() + SIZE) {
-      m_data[tail % SIZE] = 0;
+      m_data[tail % SIZE] = "A";
 *     m_tail.store(tail + 1);
    }
 }
-queue.push(1) {
+queue.push("B") {
    const size_t tail = m_tail.load();
    if (tail < m_head.load() + SIZE) {
-      m_data[tail % SIZE] = 1;
+      m_data[tail % SIZE] = "B";
+      m_tail.store(tail + 1);
+   }
+}
+...
+```
+
+---
+count: false
+<img src='./images/queue2.png' height="200"/>
+
+```cpp
+// main                                consumer
+
+queue.push("A") {
+   const size_t tail = m_tail.load();
+   if (tail < m_head.load() + SIZE) {
+      m_data[tail % SIZE] = "A";
+      m_tail.store(tail + 1);
+   }
+}
+*queue.push("B") {
+   const size_t tail = m_tail.load();
+   if (tail < m_head.load() + SIZE) {
+      m_data[tail % SIZE] = "B";
       m_tail.store(tail + 1);
    }
 }
@@ -342,19 +344,19 @@ count: false
 <img src='./images/queue3.png' height="200"/>
 
 ```cpp
-// main                                worker
+// main                                consumer
 
-queue.push(0) {
+queue.push("A") {
    const size_t tail = m_tail.load();
    if (tail < m_head.load() + SIZE) {
-      m_data[tail % SIZE] = 0;
+      m_data[tail % SIZE] = "A";
       m_tail.store(tail + 1);
    }
 }
-*queue.push(1) {
+queue.push("B") {
    const size_t tail = m_tail.load();
    if (tail < m_head.load() + SIZE) {
-      m_data[tail % SIZE] = 1;
+*     m_data[tail % SIZE] = "B";
       m_tail.store(tail + 1);
    }
 }
@@ -366,44 +368,20 @@ count: false
 <img src='./images/queue4.png' height="200"/>
 
 ```cpp
-// main                                worker
+// main                                consumer
 
-queue.push(0) {
+queue.push("A") {
    const size_t tail = m_tail.load();
    if (tail < m_head.load() + SIZE) {
-      m_data[tail % SIZE] = 0;
+      m_data[tail % SIZE] = "A";
       m_tail.store(tail + 1);
    }
 }
-queue.push(1) {
+queue.push("B") {
    const size_t tail = m_tail.load();
    if (tail < m_head.load() + SIZE) {
-*     m_data[tail % SIZE] = 1;
-      m_tail.store(tail + 1);
-   }
-}
-...
-```
-
----
-count: false
-<img src='./images/queue5.png' height="200"/>
-
-```cpp
-// main                                worker
-
-queue.push(0) {
-   const size_t tail = m_tail.load();
-   if (tail < m_head.load() + SIZE) {
-      m_data[tail % SIZE] = 0;
-      m_tail.store(tail + 1);
-   }
-}
-queue.push(1) {
-   const size_t tail = m_tail.load();
-   if (tail < m_head.load() + SIZE) {
-     m_data[tail % SIZE] = 1;
-*    m_tail.store(tail + 1);
+      m_data[tail % SIZE] = "B";
+*     m_tail.store(tail + 1);
    }
 }
 ...
@@ -412,23 +390,44 @@ queue.push(1) {
 <!-- >>> Slide -->
 
 ---
-<img src='./images/queue5.png' height="200"/>
+<img src='./images/queue4.png' height="200"/>
 ```cpp
-// main                                worker
+// main                                consumer
 
-queue.push(0);
-queue.push(1);
-*queue.push(2) {
+queue.push("A");
+queue.push("B");
+*queue.push("C") {
    const size_t tail = m_tail.load();
    if (tail < m_head.load() + SIZE);
 }
 // -----------------------------------------------------------------------------------------------
-                                       queue.steal() {
+                                       queue.front() {
                                           size_t head = m_head.load();
                                           if (head < m_tail.load()) {
-                                             if (m_head.compare_exchange_strong(head, head + 1)) { 
-                                                return m_data[head % SIZE];
-                                             }
+                                             m_head.store(head + 1); 
+                                             return m_data[head % SIZE];
+                                          }
+                                       }               
+```
+
+---
+count: false
+<img src='./images/queue4.png' height="200"/>
+```cpp
+// main                                consumer
+
+queue.push("A");
+queue.push("B");
+queue.push("C") {
+   const size_t tail = m_tail.load();
+   if (tail < m_head.load() + SIZE);
+}
+// -----------------------------------------------------------------------------------------------
+*                                      queue.front() {
+                                          size_t head = m_head.load();
+                                          if (head < m_tail.load()) {
+                                             m_head.store(head + 1); 
+                                             return m_data[head % SIZE];
                                           }
                                        }               
 ```
@@ -437,67 +436,42 @@ queue.push(1);
 count: false
 <img src='./images/queue5.png' height="200"/>
 ```cpp
-// main                                worker
+// main                                consumer
 
-queue.push(0);
-queue.push(1);
-queue.push(2) {
+queue.push("A");
+queue.push("B");
+queue.push("C") {
    const size_t tail = m_tail.load();
    if (tail < m_head.load() + SIZE);
 }
 // -----------------------------------------------------------------------------------------------
-*                                      queue.steal() {
+                                       queue.front() {
                                           size_t head = m_head.load();
                                           if (head < m_tail.load()) {
-                                             if (m_head.compare_exchange_strong(head, head + 1)) { 
-                                                return m_data[head % SIZE];
-                                             }
+*                                            m_head.store(head + 1); 
+                                             return m_data[head % SIZE];
                                           }
                                        }               
 ```
 
 ---
 count: false
-<img src='./images/queue6.png' height="200"/>
+<img src='./images/queue5.png' height="200"/>
 ```cpp
-// main                                worker
+// main                                consumer
 
-queue.push(0);
-queue.push(1);
-queue.push(2) {
+queue.push("A");
+queue.push("B");
+queue.push("C") {
    const size_t tail = m_tail.load();
    if (tail < m_head.load() + SIZE);
 }
 // -----------------------------------------------------------------------------------------------
-                                       queue.steal() {
+                                       queue.front() {
                                           size_t head = m_head.load();
                                           if (head < m_tail.load()) {
-*                                            if (m_head.compare_exchange_strong(head, head + 1)) { 
-                                                return m_data[head % SIZE];
-                                             }
-                                          }
-                                       }               
-```
-
----
-count: false
-<img src='./images/queue6.png' height="200"/>
-```cpp
-// main                                worker
-
-queue.push(0);
-queue.push(1);
-queue.push(2) {
-   const size_t tail = m_tail.load();
-   if (tail < m_head.load() + SIZE);
-}
-// -----------------------------------------------------------------------------------------------
-                                       queue.steal() {
-                                          size_t head = m_head.load();
-                                          if (head < m_tail.load()) {
-                                             if (m_head.compare_exchange_strong(head, head + 1)) { 
-*                                               return m_data[head % SIZE];
-                                             }
+                                             m_head.store(head + 1); 
+*                                            return m_data[head % SIZE];
                                           }
                                        }               
 ```
@@ -505,23 +479,44 @@ queue.push(2) {
 <!-- >>> Slide -->
 
 ---
-<img src='./images/queue5.png' height="200"/>
+<img src='./images/queue4.png' height="200"/>
 ```cpp
-// main                                worker
+// main                                consumer
 
-queue.push(0);
-queue.push(1);
-*queue.push(2) {
+queue.push("A");
+queue.push("B");
+*queue.push("C") {
    const size_t tail = m_tail.load();
 // -----------------------------------------------------------------------------------------------
-                                       queue.steal() {
+                                       queue.front() {
                                           size_t head = m_head.load();
                                           if (head < m_tail.load()) {
-                                             if (m_head.compare_exchange_strong(head, head + 1)) {
+                                             m_head.store(head + 1);
 // -----------------------------------------------------------------------------------------------
    if (tail < m_head.load() + SIZE) {
-      m_data[tail % SIZE] = 2;                 return m_data[head % SIZE];
+      m_data[tail % SIZE] = "C";             return m_data[head % SIZE];
 
+//
+```
+
+---
+count: false
+<img src='./images/queue4.png' height="200"/>
+```cpp
+// main                                consumer
+
+queue.push("A");
+queue.push("B");
+queue.push("C") {
+   const size_t tail = m_tail.load();
+// -----------------------------------------------------------------------------------------------
+*                                      queue.front() {
+                                          size_t head = m_head.load();
+                                          if (head < m_tail.load()) {
+                                             m_head.store(head + 1);
+// -----------------------------------------------------------------------------------------------
+   if (tail < m_head.load() + SIZE) {
+      m_data[tail % SIZE] = "C";             return m_data[head % SIZE];
 
 //
 ```
@@ -530,90 +525,64 @@ queue.push(1);
 count: false
 <img src='./images/queue5.png' height="200"/>
 ```cpp
-// main                                worker
+// main                                consumer
 
-queue.push(0);
-queue.push(1);
-queue.push(2) {
+queue.push("A");
+queue.push("B");
+queue.push("C") {
    const size_t tail = m_tail.load();
 // -----------------------------------------------------------------------------------------------
-*                                      queue.steal() {
+                                       queue.front() {
                                           size_t head = m_head.load();
                                           if (head < m_tail.load()) {
-                                             if (m_head.compare_exchange_strong(head, head + 1)) {
+*                                            m_head.store(head + 1);
 // -----------------------------------------------------------------------------------------------
    if (tail < m_head.load() + SIZE) {
-      m_data[tail % SIZE] = 2;                 return m_data[head % SIZE];
-
+      m_data[tail % SIZE] = "C";             return m_data[head % SIZE];
 
 //
 ```
 
 ---
 count: false
-<img src='./images/queue6.png' height="200"/>
+<img src='./images/queue5.png' height="200"/>
 ```cpp
-// main                                worker
+// main                                consumer
 
-queue.push(0);
-queue.push(1);
-queue.push(2) {
+queue.push("A");
+queue.push("B");
+queue.push("C") {
    const size_t tail = m_tail.load();
 // -----------------------------------------------------------------------------------------------
-                                       queue.steal() {
+                                       queue.front() {
                                           size_t head = m_head.load();
                                           if (head < m_tail.load()) {
-*                                            if (m_head.compare_exchange_strong(head, head + 1)) {
-// -----------------------------------------------------------------------------------------------
-   if (tail < m_head.load() + SIZE) {
-      m_data[tail % SIZE] = 2;                 return m_data[head % SIZE];
-
-
-//
-```
-
----
-count: false
-<img src='./images/queue6.png' height="200"/>
-```cpp
-// main                                worker
-
-queue.push(0);
-queue.push(1);
-queue.push(2) {
-   const size_t tail = m_tail.load();
-// -----------------------------------------------------------------------------------------------
-                                       queue.steal() {
-                                          size_t head = m_head.load();
-                                          if (head < m_tail.load()) {
-                                             if (m_head.compare_exchange_strong(head, head + 1)) {
+                                             m_head.store(head + 1);
 // -----------------------------------------------------------------------------------------------
 *  if (tail < m_head.load() + SIZE) {
-      m_data[tail % SIZE] = 2;                 return m_data[head % SIZE];
-
+      m_data[tail % SIZE] = "C";             return m_data[head % SIZE];
 
 //
 ```
 
 ---
 count: false
-<img src='./images/queue6.png' height="200"/>
+<img src='./images/queue5.png' height="200"/>
 ```cpp
-// main                                worker
+// main                                consumer
 
-queue.push(0);
-queue.push(1);
-queue.push(2) {
+queue.push("A");
+queue.push("B");
+queue.push("C") {
    const size_t tail = m_tail.load();
 // -----------------------------------------------------------------------------------------------
-                                       queue.steal() {
+                                       queue.front() {
                                           size_t head = m_head.load();
                                           if (head < m_tail.load()) {
-                                             if (m_head.compare_exchange_strong(head, head + 1)) {
+                                             m_head.store(head + 1);
 // -----------------------------------------------------------------------------------------------
    if (tail < m_head.load() + SIZE) {
-*     m_data[tail % SIZE] = 2;                 return m_data[head % SIZE];
-
+*     m_data[tail % SIZE] = "C";             return m_data[head % SIZE];
 
 //
 ```
@@ -628,13 +597,10 @@ From the viewpoint of the programmer, this interleaving is nondeterministic.
 <!-- subsection:Nondeterminism -->
 
 ---
-layout: true
-#### Challenges in Testing and Verifying Multi-Threaded Programs
+layout: false
 # Nondeterminism
 
 <!-- >>> Slide -->
-
----
 
 ???
 The order in which threads get to execute is *not* under the programmer's control, it is under 
@@ -696,16 +662,10 @@ count: false
 ???
 - Cache: e.g. if one thread is slowed down by cache misses
 
-<!-- <<< -->
-
----
-layout: true
-#### Challenges in Testing and Verifying Multi-Threaded Programs
-# Implications of Nondeterminism
-
 <!-- >>> Slide -->
 
 ---
+# Implications of Nondeterminism
 
 ???
 What are the implications of nondeterminism for testing and verification of multi-threaded programs?
@@ -793,7 +753,6 @@ background-image: url(./images/github.png)
 
 ---
 layout: true
-#### Systematic Exploration
 # RecordReplay library: Taking "Control" over the Scheduler
 
 ---
@@ -843,7 +802,6 @@ Let's take a look at two algorithms implemented in the StateSpaceExplorer tool.
 
 ---
 layout: true
-#### Systematic Exploration
 # Depth-First Exploration
 
 <!-- >>> Slide -->
@@ -872,7 +830,6 @@ The next slide illustrates this on the background_thread example I introduced ea
 
 ---
 layout: true
-#### Systematic Exploration
 # Depth-First Exploration
 <span class="h_example">lock_free_queue.cpp</span>
 
@@ -933,7 +890,6 @@ and only explore a subset of the possible thread interleavings of an input progr
 
 ---
 layout: true
-#### Systematic Exploration
 # Prune the State Space
 
 ---

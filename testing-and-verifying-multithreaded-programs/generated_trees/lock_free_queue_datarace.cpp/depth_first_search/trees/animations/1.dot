@@ -28,7 +28,7 @@ digraph "" {
 	s	 [fontcolor=black];
 	"s.0"	 [fontcolor=black];
 	s -> "s.0"	 [fontcolor=black,
-		xlabel="   0 Store 0x7fff54a71960   "];
+		xlabel="   0 Store 0x7fff50bfd960   "];
 	"s.0.0"	 [fontcolor=black];
 	"s.0" -> "s.0.0"	 [fontcolor=black,
 		xlabel="   0 Spawn 1   "];
@@ -76,7 +76,7 @@ digraph "" {
 		xlabel="   1 Load m_tail   "];
 	"s.0.0.0.0.0.0.0.0.0.0.0.0.1.1.1.1"	 [fontcolor=transparent];
 	"s.0.0.0.0.0.0.0.0.0.0.0.0.1.1.1" -> "s.0.0.0.0.0.0.0.0.0.0.0.0.1.1.1.1"	 [fontcolor=transparent,
-		xlabel="   1 RMW m_head   "];
+		xlabel="   1 Store m_head   "];
 	"s.0.0.0.0.0.0.0.0.0.0.0.0.1.1.1.1.1"	 [fontcolor=transparent];
 	"s.0.0.0.0.0.0.0.0.0.0.0.0.1.1.1.1" -> "s.0.0.0.0.0.0.0.0.0.0.0.0.1.1.1.1.1"	 [fontcolor=transparent,
 		xlabel="   1 Load m_queue[0]   "];
@@ -97,7 +97,7 @@ digraph "" {
 		xlabel="   1 Load m_tail   "];
 	"s.0.0.0.0.0.0.0.0.0.0.0.1.1.1.1"	 [fontcolor=black];
 	"s.0.0.0.0.0.0.0.0.0.0.0.1.1.1" -> "s.0.0.0.0.0.0.0.0.0.0.0.1.1.1.1"	 [fontcolor=black,
-		xlabel="   1 RMW m_head   "];
+		xlabel="   1 Store m_head   "];
 	"s.0.0.0.0.0.0.0.0.0.0.0.1.1.1.1.1"	 [fontcolor=black];
 	"s.0.0.0.0.0.0.0.0.0.0.0.1.1.1.1" -> "s.0.0.0.0.0.0.0.0.0.0.0.1.1.1.1.1"	 [fontcolor=black,
 		xlabel="   1 Load m_queue[0]   "];
